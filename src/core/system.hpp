@@ -10,85 +10,54 @@
 namespace cones
 {
 
-    /**
-     * @brief Represents a system of coupled nonlinear equations: F(x) = 0.
-     *
-     * This class manages the equations (as ASTs) and the variable registry.
-     * It provides the interface for the numerical solver to obtain the
-     * residual vector and the Jacobian matrix.
-     */
     class System
     {
         std::vector<NodePtr> equations_;
         VariableRegistry registry_;
 
     public:
-        /**
-         * @brief Adds a new equation to the system.
-         * Expects an expression that evaluates to 0 at the solution.
-         */
-        void add_equation(NodePtr eq)
-        {
-            equations_.push_back(std::move(eq));
-        }
-
-        /**
-         * @brief Returns the variable registry for adding/mapping variable names.
-         */
+        void add_equation(NodePtr eq) { equations_.push_back(std::move(eq)); }
         VariableRegistry &registry() { return registry_; }
         const VariableRegistry &registry() const { return registry_; }
 
         /**
-         * @brief Number of equations in the system.
+         * @brief Evaluates the system residuals and Jacobian for active (non-fixed) variables.
          */
-        size_t num_equations() const { return equations_.size(); }
-
-        /**
-         * @brief Number of registered variables.
-         */
-        size_t num_variables() const { return registry_.size(); }
-
-        /**
-         * @brief Evaluates the system residuals F(x) and the Jacobian J(x).
-         *
-         * @param x Current guess for the variables.
-         * @param f Output: Residual vector F(x).
-         * @param j Output: Jacobian matrix J(x) where J_ij = dF_i / dx_j.
-         */
-        void evaluate(const Eigen::VectorXd &x, Eigen::VectorXd &f, Eigen::MatrixXd &j) const
+        void evaluate(Eigen::VectorXd &f, Eigen::MatrixXd &j) const
         {
             const int n = static_cast<int>(equations_.size());
-            const int m = static_cast<int>(registry_.size());
+            auto active_indices = registry_.get_active_indices();
+            const int m_active = static_cast<int>(active_indices.size());
 
             f.resize(n);
-            j.resize(n, m);
+            j.resize(n, m_active);
 
-            // For each equation Fi
+            // Pre-fill full value vector for AST (including fixed values)
+            std::vector<DualNumber> dual_vals;
+            dual_vals.reserve(registry_.size());
+            for (size_t i = 0; i < registry_.size(); ++i)
+            {
+                dual_vals.emplace_back(registry_.get_variable(i).value, 0.0);
+            }
+
             for (int i = 0; i < n; ++i)
             {
-                // For each variable xj, we calculate dFi/dxj
-                for (int j_idx = 0; j_idx < m; ++j_idx)
+                // For each equation Fi, calculate dFi/dxj ONLY for active xj
+                for (int active_j = 0; active_j < m_active; ++active_j)
                 {
-                    // Prepare input vector with Dual Numbers
-                    // We seed the derivative for variable j_idx
-                    std::vector<DualNumber> dual_x;
-                    dual_x.reserve(m);
-                    for (int k = 0; k < m; ++k)
-                    {
-                        dual_x.emplace_back(x(k), (k == j_idx ? 1.0 : 0.0));
-                    }
+                    int global_idx = active_indices[active_j];
 
-                    // Evaluate AST
-                    DualNumber res = equations_[i]->evaluate(dual_x);
+                    // Seed derivative for this active variable
+                    dual_vals[global_idx].der = 1.0;
 
-                    // On the first variable pass, store the function value
-                    if (j_idx == 0)
-                    {
+                    DualNumber res = equations_[i]->evaluate(dual_vals);
+
+                    if (active_j == 0)
                         f(i) = res.val;
-                    }
+                    j(i, active_j) = res.der;
 
-                    // Store the derivative in the Jacobian
-                    j(i, j_idx) = res.der;
+                    // Reset derivative for next variable
+                    dual_vals[global_idx].der = 0.0;
                 }
             }
         }
@@ -96,4 +65,4 @@ namespace cones
 
 } // namespace cones
 
-#endif // CONES_CORE_SYSTEM_HPP
+#endif

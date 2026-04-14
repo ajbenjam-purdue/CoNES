@@ -12,55 +12,52 @@ int main()
         System system;
         auto &reg = system.registry();
 
-        // Register variables
+        // 1. Register and configure variables (EES-style)
         int x_idx = reg.register_variable("x");
         int y_idx = reg.register_variable("y");
 
-        // Define System of Equations:
-        // 1. x^2 + y^2 - 25 = 0  (Circle)
-        // 2. x + y - 7 = 0       (Line)
+        reg.set_value(x_idx, 2.0);        // Initial guess
+        reg.set_value(y_idx, 5.0);        // Initial guess
+        reg.set_bounds(x_idx, 0.0, 10.0); // Physical limits
+        reg.set_bounds(y_idx, 0.0, 10.0);
 
-        // Eq 1 AST
+        // 2. Build equations
         auto x_node = std::make_shared<VariableNode>(x_idx, "x");
         auto y_node = std::make_shared<VariableNode>(y_idx, "y");
 
+        // Eq 1: x^2 + y^2 = 25
         auto x_sq = std::make_shared<PowNode>(x_node, 2.0);
         auto y_sq = std::make_shared<PowNode>(y_node, 2.0);
         auto sum_sq = std::make_shared<AddNode>(x_sq, y_sq);
         auto eq1 = std::make_shared<SubNode>(sum_sq, std::make_shared<ConstantNode>(25.0));
 
-        // Eq 2 AST
+        // Eq 2: x + y = 7
         auto sum_xy = std::make_shared<AddNode>(x_node, y_node);
         auto eq2 = std::make_shared<SubNode>(sum_xy, std::make_shared<ConstantNode>(7.0));
 
         system.add_equation(eq1);
         system.add_equation(eq2);
 
-        std::cout << "Solving System:" << std::endl;
+        std::cout << "Solving System with Robust Newton Solver:" << std::endl;
         std::cout << "1. " << eq1->to_string() << " = 0" << std::endl;
         std::cout << "2. " << eq2->to_string() << " = 0" << std::endl;
 
-        // Solver Configuration
-        NewtonSolver solver;
-        solver.set_verbose(true);
-        solver.set_tolerance(1e-9);
+        // 3. Solve
+        NewtonSolver solver(1e-9, 50, true);
+        solver.solve(system);
 
-        // Initial Guess (Starting near one of the solutions)
-        Eigen::VectorXd guess(2);
-        guess << 2.0, 5.0; // Near (3, 4)
-
-        std::cout << "\nInitial Guess: x=2.0, y=5.0" << std::endl;
-
-        Eigen::VectorXd solution = solver.solve(system, guess);
+        // 4. Extract results from Registry
+        double x_final = reg.get_variable(x_idx).value;
+        double y_final = reg.get_variable(y_idx).value;
 
         std::cout << std::fixed << std::setprecision(8);
         std::cout << "\nFinal Solution:" << std::endl;
-        std::cout << "x = " << solution(x_idx) << std::endl;
-        std::cout << "y = " << solution(y_idx) << std::endl;
+        std::cout << "x = " << x_final << std::endl;
+        std::cout << "y = " << y_final << std::endl;
 
-        // Validation
-        double res1 = std::pow(solution(x_idx), 2) + std::pow(solution(y_idx), 2) - 25.0;
-        double res2 = solution(x_idx) + solution(y_idx) - 7.0;
+        // 5. Validation
+        double res1 = std::pow(x_final, 2) + std::pow(y_final, 2) - 25.0;
+        double res2 = x_final + y_final - 7.0;
 
         std::cout << "\nFinal Residuals:" << std::endl;
         std::cout << "Eq 1 Residual: " << res1 << std::endl;
@@ -72,7 +69,7 @@ int main()
         }
         else
         {
-            std::cout << "\nResult: FAILURE (Residuals too high)" << std::endl;
+            std::cout << "\nResult: FAILURE" << std::endl;
             return 1;
         }
     }
