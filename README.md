@@ -51,7 +51,15 @@ A domain-specific language (DSL) designed for clear equation entry and property 
 4. **Execution Phase**: The Numerical Engine iterates until the residual vector norm is below the tolerance $\epsilon$.
 5. **Output**: Final variable values and convergence statistics are reported.
 
-## 4. Development Roadmap
+## 4. Developer Ease
+
+CoNES features a native `.vsix` language extension for VS Code. The packaged extension is available at `src\lang\cnes\cnes-0.0.1.vsix`, and the source at `src\lang\cnes\`. With the extension installed, `.cnes` files can be automatically identified and have their contents parsed and highlighted appropriately. Currently, there is no linting feature. To install locally:
+
+```bash
+code --install-extension [path\to\cnes]\cnes-0.0.1.vsix
+```
+
+## 5. Development Roadmap
 
  - **Phase 1**: Define the Expression AST using `std::variant` or inheritance.
  - **Phase 2**: Use Eigen for the linear step ($J \Delta x = -F$).

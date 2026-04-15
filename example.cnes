@@ -1,0 +1,30 @@
+// CoNES Example Script
+// Demonstrating basic arithmetic, definitions, and equations
+
+// 1. Constants and Definitions (Fixed Variables)
+g := 9.80665 [m/s^2]   // Acceleration due to gravity
+m := 10 [kg]           // Mass of the object
+h_start := 100 [m]     // Initial height
+
+// 2. Metadata and Guesses for Floating Variables
+t.guess := 4.5 [s]     // Estimated time to hit the ground
+t.lower := 0           // Time cannot be negative
+
+v_final.guess := 40 [m/s]
+v_final { _ : 0 : _ }  // Velocity should be positive for downward motion
+
+// 3. Equations (Relationships)
+// Final velocity equation: v = g * t
+v_final = g * t
+
+// Height equation: h = h_start - 0.5 * g * t^2
+// We want to find the time when height is 0
+0 = h_start - 0.5 * g * t^2
+
+// 4. Combined relationships
+KineticEnergy = 0.5 * m * v_final^2
+PotentialEnergy = m * g * h_start
+
+// At the bottom, KE should equal initial PE
+// (The solver will verify this or solve for unknowns)
+EnergyBalance = KineticEnergy - PotentialEnergy

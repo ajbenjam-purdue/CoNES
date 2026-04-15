@@ -1,0 +1,163 @@
+{
+    "scopeName": "source.cnes",
+    "name": "CoNES",
+    "patterns": [
+        { "include": "#comments" },
+        { "include": "#attribute-block" },
+        { "include": "#units" },
+        { "include": "#definitions" },
+        { "include": "#equations" },
+        { "include": "#dot-notation" },
+        { "include": "#numbers" },
+        { "include": "#keywords" },
+        { "include": "#functions" },
+        { "include": "#operators" },
+        { "include": "#identifiers" }
+    ],
+    "repository": {
+        "comments": {
+            "patterns": [
+                {
+                    "name": "comment.line.double-slash.cnes",
+                    "match": "//.*$"
+                },
+                {
+                    "name": "comment.block.cnes",
+                    "begin": "/\\*",
+                    "end": "\\*/"
+                }
+            ]
+        },
+        "numbers": {
+            "patterns": [
+                {
+                    "name": "constant.numeric.cnes",
+                    "match": "\\b[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?\\b"
+                }
+            ]
+        },
+        "keywords": {
+            "patterns": [
+                {
+                    "name": "keyword.control.cnes",
+                    "match": "\\b(routine)\\b"
+                }
+            ]
+        },
+        "functions": {
+            "patterns": [
+                {
+                    "name": "support.function.builtin.cnes",
+                    "match": "\\b(sin|cos|tan|log|exp|sqrt|pow|min|max|Pressure|Temperature|Enthalpy|Entropy)\\b"
+                },
+                {
+                    "name": "support.function.cnes",
+                    "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b(?=\\s*\\()"
+                }
+            ]
+        },
+        "definitions": {
+            "patterns": [
+                {
+                    "match": "([a-zA-Z_][a-zA-Z0-9_]*)\\s*(:=)",
+                    "captures": {
+                        "1": { "name": "variable.other.definition.cnes" },
+                        "2": { "name": "keyword.operator.assignment.definition.cnes" }
+                    }
+                }
+            ]
+        },
+        "equations": {
+            "patterns": [
+                {
+                    "match": "(?<!:)(=)",
+                    "captures": {
+                        "1": { "name": "keyword.operator.comparison.equation.cnes" }
+                    }
+                }
+            ]
+        },
+        "operators": {
+            "patterns": [
+                {
+                    "name": "keyword.operator.arithmetic.cnes",
+                    "match": "[+\\-*/^]"
+                },
+                {
+                    "name": "punctuation.separator.cnes",
+                    "match": "[:,.]"
+                },
+                {
+                    "name": "punctuation.brackets.cnes",
+                    "match": "[(){}\\[\\]]"
+                }
+            ]
+        },
+        "identifiers": {
+            "patterns": [
+                {
+                    "name": "constant.language.placeholder.cnes",
+                    "match": "\\b_\\b"
+                },
+                {
+                    "name": "variable.other.cnes",
+                    "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+                }
+            ]
+        },
+        "dot-notation": {
+            "patterns": [
+                {
+                    "match": "\\.(guess|lower|upper|unit)\\b",
+                    "name": "variable.other.property.cnes"
+                },
+                {
+                    "match": "\\.([a-zA-Z_][a-zA-Z0-9_]*)",
+                    "captures": {
+                        "1": { "name": "variable.other.property.generic.cnes" }
+                    }
+                }
+            ]
+        },
+        "units": {
+            "patterns": [
+                {
+                    "name": "string.other.unit.cnes",
+                    "begin": "\\[",
+                    "end": "\\]",
+                    "patterns": [
+                        {
+                            "name": "constant.other.unit.symbol.cnes",
+                            "match": "[a-zA-Z]+"
+                        },
+                        {
+                            "name": "keyword.operator.arithmetic.cnes",
+                            "match": "[*/^]"
+                        },
+                        { "include": "#numbers" }
+                    ]
+                }
+            ]
+        },
+        "attribute-block": {
+            "patterns": [
+                {
+                    "name": "meta.block.attributes.cnes",
+                    "begin": "\\{",
+                    "end": "\\}",
+                    "patterns": [
+                        { "include": "#numbers" },
+                        {
+                            "name": "constant.language.placeholder.cnes",
+                            "match": "\\b_\\b"
+                        },
+                        {
+                            "name": "punctuation.separator.cnes",
+                            "match": ":"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}
