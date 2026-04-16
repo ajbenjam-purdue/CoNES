@@ -2,17 +2,42 @@
     "scopeName": "source.cnes",
     "name": "CoNES",
     "patterns": [
-        { "include": "#comments" },
-        { "include": "#attribute-block" },
-        { "include": "#units" },
-        { "include": "#definitions" },
-        { "include": "#equations" },
-        { "include": "#dot-notation" },
-        { "include": "#numbers" },
-        { "include": "#keywords" },
-        { "include": "#functions" },
-        { "include": "#operators" },
-        { "include": "#identifiers" }
+        {
+            "include": "#comments"
+        },
+        {
+            "include": "#attribute-block"
+        },
+        {
+            "include": "#units"
+        },
+        {
+            "include": "#definitions"
+        },
+        {
+            "include": "#equations"
+        },
+        {
+            "include": "#dot-notation"
+        },
+        {
+            "include": "#numbers"
+        },
+        {
+            "include": "#keywords"
+        },
+        {
+            "include": "#functions"
+        },
+        {
+            "include": "#constants"
+        },
+        {
+            "include": "#operators"
+        },
+        {
+            "include": "#identifiers"
+        }
     ],
     "repository": {
         "comments": {
@@ -61,8 +86,12 @@
                 {
                     "match": "([a-zA-Z_][a-zA-Z0-9_]*)\\s*(:=)",
                     "captures": {
-                        "1": { "name": "variable.other.definition.cnes" },
-                        "2": { "name": "keyword.operator.assignment.definition.cnes" }
+                        "1": {
+                            "name": "variable.other.definition.cnes"
+                        },
+                        "2": {
+                            "name": "keyword.operator.assignment.definition.cnes"
+                        }
                     }
                 }
             ]
@@ -72,7 +101,9 @@
                 {
                     "match": "(?<!:)(=)",
                     "captures": {
-                        "1": { "name": "keyword.operator.comparison.equation.cnes" }
+                        "1": {
+                            "name": "keyword.operator.comparison.equation.cnes"
+                        }
                     }
                 }
             ]
@@ -114,8 +145,18 @@
                 {
                     "match": "\\.([a-zA-Z_][a-zA-Z0-9_]*)",
                     "captures": {
-                        "1": { "name": "variable.other.property.generic.cnes" }
+                        "1": {
+                            "name": "variable.other.property.generic.cnes"
+                        }
                     }
+                }
+            ]
+        },
+        "constants": {
+            "patterns": [
+                {
+                    "name": "constant.language.cnes",
+                    "match": "\\b(CONST_E|CONST_GRAV|CONST_PI|CONST_R|CONST_SIGMA|STD_PRESS_BAR|STD_PRESS_KPA|STD_PRESS_MPA|STD_PRESS_PA|STD_TEMP_C|STD_TEMP_K)\\b"
                 }
             ]
         },
@@ -134,7 +175,9 @@
                             "name": "keyword.operator.arithmetic.cnes",
                             "match": "[*/^]"
                         },
-                        { "include": "#numbers" }
+                        {
+                            "include": "#numbers"
+                        }
                     ]
                 }
             ]
@@ -146,7 +189,9 @@
                     "begin": "\\{",
                     "end": "\\}",
                     "patterns": [
-                        { "include": "#numbers" },
+                        {
+                            "include": "#numbers"
+                        },
                         {
                             "name": "constant.language.placeholder.cnes",
                             "match": "\\b_\\b"

@@ -2,18 +2,25 @@
   "name": "cnes",
   "displayName": "CoNES Language Support",
   "description": "Syntax highlighting for the CoNES (.cnes) language",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "ajbenjam",
   "engines": {
     "vscode": "^1.80.0"
   },
-  "categories": ["Programming Languages"],
+  "categories": [
+    "Programming Languages"
+  ],
   "contributes": {
     "languages": [
       {
         "id": "cnes",
-        "aliases": ["CoNES", "cnes"],
-        "extensions": [".cnes"],
+        "aliases": [
+          "CoNES",
+          "cnes"
+        ],
+        "extensions": [
+          ".cnes"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -24,5 +31,9 @@
         "path": "./syntaxes/cnes.tmLanguage.json"
       }
     ]
-  }
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:cnes"
+  ]
 }

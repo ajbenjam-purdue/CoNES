@@ -5,7 +5,7 @@ A high-performance C++ environment for solving large-scale systems of coupled no
 To compile the interpreter, copy the dependencies into CoNES/ and run:
 
 ```bash
-g++ -O3 -Wall -Wextra -I . src/main.cpp -o cnes.exe
+g++ -O3 -std=c++20 -I . src/main.cpp -o cnes.exe
 ```
 
 ### Interpreter Usage

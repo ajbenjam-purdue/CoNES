@@ -30,6 +30,32 @@ public:
         return &it->second;
     }
 
+    // Returns a vector of string {name, name, ...}
+    std::vector<std::string> get_constant_names() {
+        std::vector<std::string> names;
+        names.reserve(constants_.size());
+
+        for (const auto& [name, _] : constants_) {
+            names.push_back(name);
+        }
+
+        return names;
+    }
+
+    // Returns a vector of strings {unit:desc, unit:desc, ...}
+    std::vector<std::string> get_constant_descriptions() {
+        std::vector<std::string> descriptions;
+        descriptions.reserve(constants_.size());
+
+        std::string val;
+        for (const auto& [_, c] : constants_) {
+            val = c.unit+":"+c.desc;
+            descriptions.push_back(val);
+        }
+
+        return descriptions;
+    }
+
     /**
      * @brief Populates the registry with standard physical constants.
      */

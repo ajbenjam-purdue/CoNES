@@ -6,6 +6,7 @@
 #include "core/version.hpp"
 #include <iostream>
 #include <fstream>
+#include <format>
 #include <vector>
 #include <string>
 #include <iomanip>
@@ -25,6 +26,7 @@ void print_help() {
               << "  --list-substances  List all registered substances\n"
               << "  --list-functions   List all registered functions\n"
               << "  --list-constants   List all built-in constants\n"
+              << "  --out-constants    Write current constants available to the output stream, separated by pipes. If -v is passed after, includes descriptions (CONST_A:description A|...)\n"
               << "  --version          Show the current CoNES version\n"
               << "  --help, -h         Show this help message\n" << std::endl;
 }
@@ -66,15 +68,39 @@ int main(int argc, char* argv[]) {
             return 0;
         }
         if (arg == "--list-constants") {
-            std::cout << "Built-in Constants:\n"
-                      << " - CONST_GRAV: 9.80665 [m/s^2]\n"
-                      << " - CONST_R:    8.31446 [J/mol*K]\n"
-                      << " - STD_PRESS:  101325  [Pa]\n"
-                      << " - STD_TEMP:   273.15  [K]\n"
-                      << " - PI:         3.14159\n";
+            std::cout << "Built-in Constants:\n";
+            for (std::string c : system.constant_registry().get_constant_names())
+            {
+                std::cout << " - " << c << "\n";
+            }
+            return 0;
+        }
+        if (arg == "--out-constants") {
+            // Check for -v next
+            std::string next_arg;
+            for (int j = i + 1; j < argc; j++)
+            {
+                next_arg = argv[j];
+                verbose = verbose | (next_arg == "-v"); // Either is already verb OR next arg is verb
+            }
+
+            // Build n print
+            std::vector<std::string> const_names = system.constant_registry().get_constant_names();
+            std::vector<std::string> const_descriptions = system.constant_registry().get_constant_descriptions();
+            if (const_names.size() > 0) 
+            {
+                std::cout << const_names.front() << (verbose ? std::format(":{}", const_descriptions.front()) : "");
+                const_names.erase(const_names.begin());
+                const_descriptions.erase(const_descriptions.begin());
+            }
+            for (size_t i = 0; i < const_names.size(); i++)
+            {
+                std::cout << "|" << const_names.at(i) << (verbose ? std::format(":{}", const_descriptions.at(i)) : "");
+            }
             return 0;
         }
 
+        // Not specified: path
         if (arg[0] != '-') input_path = arg;
     }
 
