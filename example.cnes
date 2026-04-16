@@ -1,30 +1,33 @@
 // CoNES Example Script
-// Demonstrating basic arithmetic, definitions, and equations
+// Demonstrating the full feature set: Definitions, Equations, Units, and Constants
 
-// 1. Constants and Definitions (Fixed Variables)
-g := 9.80665 [m/s^2]   // Acceleration due to gravity
-m := 10 [kg]           // Mass of the object
+// 1. Physical Constants and Fixed Values
+// CONST_GRAV is built-in (9.80665 m/s^2)
+m := 10 [kg]           // Fixed mass
 h_start := 100 [m]     // Initial height
 
-// 2. Metadata and Guesses for Floating Variables
-t.guess := 4.5 [s]     // Estimated time to hit the ground
+// 2. Metadata for Solving
+t.guess := 4.5 [s]     
 t.lower := 0           // Time cannot be negative
 
-v_final.guess := 40 [m/s]
-v_final { _ : 0 : _ }  // Velocity should be positive for downward motion
-
 // 3. Equations (Relationships)
-// Final velocity equation: v = g * t
-v_final = g * t
+// Calculate potential energy at start
+PE = m * CONST_GRAV * h_start
 
-// Height equation: h = h_start - 0.5 * g * t^2
-// We want to find the time when height is 0
-0 = h_start - 0.5 * g * t^2
+// Energy Balance: In a vacuum, KE = PE at impact
+KE = 0.5 * m * v_impact^2
+KE = PE
 
-// 4. Combined relationships
-KineticEnergy = 0.5 * m * v_final^2
-PotentialEnergy = m * g * h_start
+// Calculate impact time from height
+0 = h_start - 0.5 * CONST_GRAV * t^2
 
-// At the bottom, KE should equal initial PE
-// (The solver will verify this or solve for unknowns)
-EnergyBalance = KineticEnergy - PotentialEnergy
+// 4. Unit Inheritance & Casting
+// v_impact will automatically inherit [m/s] from the KE equation
+// But we can also "cast" a value to a different unit
+T_amb := 25 [C]
+T_amb_K = T_amb [K]    // Automatically converts to 298.15 Kelvin
+
+// 5. Intelligent Property Lookups (Air)
+P_atm := 101325 [Pa]
+rho_air.guess := 1.2
+P_atm = Pressure(Air, T=T_amb_K, rho=rho_air) // Solves for density rho_air

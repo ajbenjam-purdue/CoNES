@@ -1,0 +1,12 @@
+// CoNES Unit System Test
+// 1. Unit Inheritance
+v := 10 [m/s]
+F := 5 [N]
+Power = v * F  // Should inherit [m/s] * [N]
+
+// 2. Unit Casting & Conversion
+T1 := 25 [C]   // 25 Celsius
+T2 = T1 [K]    // Should convert to 298.15 Kelvin
+
+// 3. Chain inheritance
+v_copy = v     // Should inherit [m/s]
