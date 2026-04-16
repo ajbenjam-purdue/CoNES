@@ -119,6 +119,15 @@ private:
         consume(TokenType::EQUALS, "Expect '=' in equation.");
         NodePtr rhs = expression();
         
+        // --- Unit Inheritance ---
+        if (auto var_node = std::dynamic_pointer_cast<VariableNode>(lhs)) {
+            auto& var_info = system_.registry().get_variable(system_.registry().get_index(var_node->to_string()));
+            if (var_info.unit.is_dimensionless()) {
+                Unit inherited = rhs->get_unit(system_.registry());
+                system_.registry().set_unit(var_info.index, inherited, inherited.to_string());
+            }
+        }
+
         // Equation is f(x) = g(x) -> f(x) - g(x) = 0
         system_.add_equation(std::make_shared<SubNode>(lhs, rhs));
     }
@@ -168,6 +177,32 @@ private:
     }
 
     NodePtr primary() {
+        NodePtr node = primary_base();
+
+        // --- Unit Casting: Expression [Unit] ---
+        if (match(TokenType::LBRACKET)) {
+            std::string unit_name = "";
+            while (!check(TokenType::RBRACKET) && !is_at_end()) {
+                unit_name += advance().lexeme;
+            }
+            consume(TokenType::RBRACKET, "Expect ']' after unit cast.");
+            
+            const VariableRegistry& reg = system_.registry();
+            Unit from = node->get_unit(reg);
+            Unit to = Unit::from_string(unit_name);
+            
+            // If casting a single variable, update its registry unit too
+            if (auto var_node = std::dynamic_pointer_cast<VariableNode>(node)) {
+                 system_.registry().set_unit(system_.registry().get_index(var_node->to_string()), to, unit_name);
+            }
+
+            node = std::make_shared<UnitCastNode>(node, from, to);
+        }
+
+        return node;
+    }
+
+    NodePtr primary_base() {
         if (match(TokenType::NUMBER)) {
             return std::make_shared<ConstantNode>(std::stod(previous().lexeme));
         }
@@ -217,7 +252,9 @@ private:
             if (constant && !system_.registry().get_variable(idx).is_fixed) {
                 system_.registry().set_value(idx, constant->value);
                 system_.registry().set_fixed(idx, true);
-                if (!constant->unit.empty()) system_.registry().set_unit(idx, constant->unit);
+                if (!constant->unit.empty()) {
+                    system_.registry().set_unit(idx, constant->unit);
+                }
             }
 
             return std::make_shared<VariableNode>(idx, name.lexeme);

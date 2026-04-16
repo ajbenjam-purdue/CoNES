@@ -123,9 +123,10 @@ int main(int argc, char* argv[]) {
                     const auto& v = reg.get_variable(i);
                     *out << std::left << std::setw(20) << v.name 
                          << std::setw(15) << std::fixed << std::setprecision(6) << v.value 
-                         << std::setw(10) << (v.unit.empty() ? "-" : "[" + v.unit + "]")
+                         << std::setw(10) << (v.unit_name.empty() ? "-" : "[" + v.unit_name + "]")
                          << (v.is_fixed ? "Fixed" : "Solved") << "\n";
                 }
+
                 *out << std::string(50, '=') << "\n";
                 *out << "Solve Time: " << duration.count() << " ms | DOF: " << system.registry().get_active_indices().size() << "\n";
                 *out << std::string(50, '=') << std::endl;

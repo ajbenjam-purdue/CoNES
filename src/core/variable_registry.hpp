@@ -1,6 +1,7 @@
 #ifndef CONES_CORE_VARIABLE_REGISTRY_HPP
 #define CONES_CORE_VARIABLE_REGISTRY_HPP
 
+#include "unit.hpp"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -18,7 +19,8 @@ namespace cones
         double lower_bound = -std::numeric_limits<double>::infinity();
         double upper_bound = std::numeric_limits<double>::infinity();
         bool is_fixed = false;
-        std::string unit = "";
+        Unit unit = Unit::Dimensionless();
+        std::string unit_name = "";
     };
 
     class VariableRegistry
@@ -35,7 +37,10 @@ namespace cones
 
             int index = static_cast<int>(variables_.size());
             name_to_index_[name] = index;
-            variables_.push_back({name, index});
+            Variable v;
+            v.name = name;
+            v.index = index;
+            variables_.push_back(v);
             return index;
         }
 
@@ -47,11 +52,24 @@ namespace cones
             variables_.at(index).upper_bound = upper;
         }
         void set_fixed(int index, bool fixed) { variables_.at(index).is_fixed = fixed; }
-        void set_unit(int index, const std::string &unit) { variables_.at(index).unit = unit; }
+        void set_unit(int index, const Unit &unit, const std::string& name = "") { 
+            variables_.at(index).unit = unit; 
+            if (!name.empty()) variables_.at(index).unit_name = name;
+        }
+        void set_unit(int index, const std::string& name) {
+            variables_.at(index).unit = Unit::from_string(name);
+            variables_.at(index).unit_name = name;
+        }
 
         // Getters
         const Variable &get_variable(int index) const { return variables_.at(index); }
         size_t size() const { return variables_.size(); }
+
+        int get_index(const std::string& name) const {
+            auto it = name_to_index_.find(name);
+            if (it == name_to_index_.end()) return -1;
+            return it->second;
+        }
 
         /**
          * @brief Returns the indices of variables that are NOT fixed, or the Degrees of Freedom (DOF) for the solver
