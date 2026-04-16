@@ -2,6 +2,7 @@
 #define CONES_CORE_EXPRESSION_HPP
 
 #include "dual_number.hpp"
+#include "function_registry.hpp"
 #include <memory>
 #include <vector>
 #include <string>
@@ -20,7 +21,52 @@ namespace cones
         virtual std::string to_string() const = 0;
     };
 
-    using NodePtr = std::shared_ptr<Node>;
+    using NodePtr = std::shared_ptr<Node>; // Convenience
+
+    // --- Custom/Intelligent Functions ---
+
+    /**
+     * @brief Argument for a custom function (name and the AST node to evaluate it).
+     */
+    struct NodeArg
+    {
+        std::string name;
+        NodePtr node;
+    };
+
+    class CustomFunctionNode : public Node
+    {
+        std::shared_ptr<IFunction> func_;
+        std::vector<NodeArg> args_;
+
+    public:
+        CustomFunctionNode(std::shared_ptr<IFunction> f, std::vector<NodeArg> a)
+            : func_(std::move(f)), args_(std::move(a)) {}
+
+        DualNumber evaluate(const std::vector<DualNumber> &v) const override
+        {
+            std::vector<FuncArg> eval_args;
+            for (const auto &arg : args_)
+            {
+                eval_args.push_back({arg.name, arg.node->evaluate(v)});
+            }
+            return func_->evaluate(eval_args);
+        }
+
+        std::string to_string() const override
+        {
+            std::string s = func_->name() + "(";
+            for (size_t i = 0; i < args_.size(); ++i)
+            {
+                if (!args_[i].name.empty())
+                    s += args_[i].name + "=";
+                s += args_[i].node->to_string();
+                if (i < args_.size() - 1)
+                    s += ", ";
+            }
+            return s + ")";
+        }
+    };
 
     // --- Leaf Nodes ---
 

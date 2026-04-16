@@ -3,6 +3,9 @@
 
 #include "expression.hpp"
 #include "variable_registry.hpp"
+#include "function_registry.hpp"
+#include "substance_manager.hpp"
+#include "constant_registry.hpp"
 #include <Eigen/Dense>
 #include <vector>
 #include <memory>
@@ -14,11 +17,17 @@ namespace cones
     {
         std::vector<NodePtr> equations_;
         VariableRegistry registry_;
+        FunctionRegistry function_registry_;
+        SubstanceManager substance_manager_;
+        ConstantRegistry constant_registry_;
 
     public:
         void add_equation(NodePtr eq) { equations_.push_back(std::move(eq)); }
         VariableRegistry &registry() { return registry_; }
         const VariableRegistry &registry() const { return registry_; }
+        FunctionRegistry &function_registry() { return function_registry_; }
+        SubstanceManager &substance_manager() { return substance_manager_; }
+        ConstantRegistry &constant_registry() { return constant_registry_; }
 
         /**
          * @brief Evaluates the system residuals and Jacobian for active (non-fixed) variables.

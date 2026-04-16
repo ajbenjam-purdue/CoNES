@@ -2,7 +2,7 @@
   "name": "cnes",
   "displayName": "CoNES Language Support",
   "description": "Syntax highlighting for the CoNES (.cnes) language",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "publisher": "ajbenjam",
   "engines": {
     "vscode": "^1.80.0"

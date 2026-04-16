@@ -2,6 +2,19 @@
 
 A high-performance C++ environment for solving large-scale systems of coupled nonlinear equations, utilizing symbolic-numerical hybrid techniques and a custom interpreted scripting language.
 
+To compile the interpreter, copy the dependencies into CoNES/ and run:
+
+```bash
+g++ -O3 -Wall -Wextra -I . src/main.cpp -o cnes.exe
+```
+
+### Interpreter Usage
+
+`cnes.exe` acts as a lightweight virtual machine with the following signature:
+
+```
+./cnes.exe [input_file.cnes] [-o output_file.txt] [-v] [--version] [--help]
+```
 
 ## 1. System of Equations Solver (Core Engine)
 
