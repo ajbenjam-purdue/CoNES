@@ -36,6 +36,9 @@
             "include": "#operators"
         },
         {
+            "include": "#substances"
+        },
+        {
             "include": "#identifiers"
         }
     ],
@@ -157,6 +160,14 @@
                 {
                     "name": "constant.language.cnes",
                     "match": "\\b(CONST_E|CONST_GRAV|CONST_PI|CONST_R|CONST_SIGMA|STD_PRESS_BAR|STD_PRESS_KPA|STD_PRESS_MPA|STD_PRESS_PA|STD_TEMP_C|STD_TEMP_K)\\b"
+                }
+            ]
+        },
+        "substances": {
+            "patterns": [
+                {
+                    "name": "substance.language.cnes",
+                    "match": "\\b(Air|Water)\\b"
                 }
             ]
         },
