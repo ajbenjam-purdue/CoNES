@@ -16,22 +16,6 @@
 using namespace cones;
 
 void print_help() {
-    // std::cout << Version::full() << " (Coupled Nonlinear Equation Solver)\n"
-    //           << "Usage: cnes [input.cnes] [options]\n"
-    //           << "Options:\n"
-    //           << "  -o <file>          Write results to a file\n"
-    //           << "  -v                 Verbose output (solver iterations)\n"
-    //           << "  -s, --silent       Suppress the execution summary table\n"
-    //           << "  --tol <val>        Override convergence tolerance (default: 1e-9)\n"
-    //           << "  --max-iter <val>   Override max solver iterations (default: 100)\n"
-    //           << "  --list-substances  List all registered substances\n"
-    //           << "  --out-substances   Write current substances available to the output stream, separated by pipes.\n"
-    //           << "  --list-functions   List all registered functions\n"
-    //           << "  --out-functions    Write current functions available to the output stream, separated by pipes.\n"
-    //           << "  --list-constants   List all built-in constants\n"
-    //           << "  --out-constants    Write current constants available to the output stream, separated by pipes. If -v is passed after, includes descriptions (CONST_A:description A|...)\n"
-    //           << "  --version          Show the current CoNES version\n"
-    //           << "  --help, -h         Show this help message\n" << std::endl;
 
     std::cout << Version::full() << " (Coupled Nonlinear Equation Solver)\n"
               << "Usage: cnes [input.cnes] [options]\n\n"
@@ -56,48 +40,64 @@ void print_help() {
 }
 
 int main(int argc, char* argv[]) {
-    // 1. Initialize System & Default Environment
-    System system;
-    system.constant_registry().load_standard_constants();
 
     // Get executable directory for portable material loading
     std::filesystem::path exe_path = std::filesystem::absolute(argv[0]).parent_path();
     std::filesystem::path materials_path = exe_path / "materials";
 
+    // Init System & Default Environment
+    System system;
+    system.constant_registry().load_standard_constants();
+
+    // Pull in ideal gases (src: engineeringtoolbox.com)
     auto air = std::make_shared<IdealGasSubstance>("Air", 287.05, 1005.0);
+    auto argon = std::make_shared<IdealGasSubstance>("Argon", 208.1, 520.0);
+    auto carbon_dioxide = std::make_shared<IdealGasSubstance>("CO2", 188.9, 845.9);
+    auto nitrogen = std::make_shared<IdealGasSubstance>("Nitrogen", 296.8, 1041.0);
+    auto oxygen = std::make_shared<IdealGasSubstance>("O2", 259.8, 918.9);
+    
+    // Register them
     system.substance_manager().register_substance(air);
+    system.substance_manager().register_substance(argon);
+    system.substance_manager().register_substance(carbon_dioxide);
+    system.substance_manager().register_substance(nitrogen);
+    system.substance_manager().register_substance(oxygen);
 
     // Automatically load Tabulated Substances from /materials relative to exe
     if (std::filesystem::exists(materials_path)) {
         for (const auto& entry : std::filesystem::directory_iterator(materials_path)) {
             if (entry.path().extension() == ".cnesbin") {
                 std::string fname = entry.path().stem().string(); // e.g., "Water_h"
-                std::string sub_name = fname.substr(0, fname.find('_'));
+                size_t underscore_pos = fname.find('_');
+                if (underscore_pos == std::string::npos) continue;
+
+                std::string sub_name = fname.substr(0, underscore_pos);
+                std::string prop_code = fname.substr(underscore_pos + 1);
                 
+                // Special handling for multi-word property codes (T_ph, etc.)
+                PropertyType prop = string_to_property(prop_code);
+                if (prop == PropertyType::UNKNOWN) {
+                    // Try T_ph / T_ps specifically if string_to_property is strict
+                    if (prop_code == "T_ph") prop = PropertyType::T_PH;
+                    else if (prop_code == "T_ps") prop = PropertyType::T_PS;
+                }
+                
+                if (prop == PropertyType::UNKNOWN) continue;
+
                 auto sub = std::dynamic_pointer_cast<TabulatedSubstance>(system.substance_manager().get(sub_name));
                 if (!sub) {
                     sub = std::make_shared<TabulatedSubstance>(sub_name);
                     system.substance_manager().register_substance(sub);
                 }
-                sub->load_table(entry.path().string());
+                sub->load_table(prop, entry.path().string());
             }
         }
     }
 
-    // Register Property Functions
-    system.function_registry().register_function(std::make_shared<GeneralPropertyFunction>("Pressure", PropertyType::PRESSURE, system.substance_manager(), "Yields the pressure in Pascals of the substance at the provided state."));
-    system.function_registry().register_function(std::make_shared<GeneralPropertyFunction>("Temperature", PropertyType::TEMPERATURE, system.substance_manager(), "Yields the temperature in Kelvin of the substance at the provided state."));
-    system.function_registry().register_function(std::make_shared<GeneralPropertyFunction>("Enthalpy", PropertyType::ENTHALPY, system.substance_manager(), "Yields the specific enthalpy in J/kg of the substance at the provided state."));
+    // Register Built-in Functions (Math & Property)
+    register_builtin_functions(system.function_registry(), system.substance_manager());
 
-    // Register Math Functions
-    system.function_registry().register_function(std::make_shared<MathFunction>("sin", "x", "Trigonometric sine (argument in radians)."));
-    system.function_registry().register_function(std::make_shared<MathFunction>("cos", "x", "Trigonometric cosine (argument in radians)."));
-    system.function_registry().register_function(std::make_shared<MathFunction>("tan", "x", "Trigonometric tangent (argument in radians)."));
-    system.function_registry().register_function(std::make_shared<MathFunction>("sqrt", "x", "Square root of a non-negative number."));
-    system.function_registry().register_function(std::make_shared<MathFunction>("log", "x", "Natural logarithm (base-e)."));
-    system.function_registry().register_function(std::make_shared<MathFunction>("exp", "x", "Exponential function (e^x)."));
-
-    // 2. Argument Parsing
+    // Argument Parsing
     std::string input_path = "";
     std::string output_path = "";
     bool verbose = false;
@@ -137,9 +137,22 @@ int main(int argc, char* argv[]) {
             return 0;
         }
         if (flag == "--out-functions") {
-            auto metadata = system.function_registry().get_function_metadata();
-            for (size_t i = 0; i < metadata.size(); ++i) {
-                std::cout << metadata[i] << (i < metadata.size() - 1 ? "|" : "");
+            // Check for -v in remaining args
+            bool verbose_out = false;
+            for (int j = i + 1; j < argc; j++) {
+                if (std::string(argv[j]) == "-v") { verbose_out = true; break; }
+            }
+
+            if (verbose_out) {
+                auto metadata = system.function_registry().get_function_metadata();
+                for (size_t i = 0; i < metadata.size(); ++i) {
+                    std::cout << metadata[i] << (i < metadata.size() - 1 ? "|" : "");
+                }
+            } else {
+                auto names = system.function_registry().get_function_names();
+                for (size_t i = 0; i < names.size(); ++i) {
+                    std::cout << names[i] << (i < names.size() - 1 ? "|" : "");
+                }
             }
             return 0;
         }
@@ -196,13 +209,15 @@ int main(int argc, char* argv[]) {
 
         Lexer lexer(source);
         Parser parser(lexer.scan_tokens(), system);
+        auto time_lexer = std::chrono::high_resolution_clock::now();
+
         parser.parse();
+        auto time_parser = std::chrono::high_resolution_clock::now();
 
         NewtonSolver solver(tol_override, max_iter_override, verbose);
         solver.solve(system);
 
         auto end_time = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> duration = end_time - start_time;
 
         // Output
         if (!silent || !output_path.empty()) {
@@ -214,6 +229,12 @@ int main(int argc, char* argv[]) {
             }
 
             if (!silent) {
+
+                // Durations
+                std::chrono::duration<double, std::milli> duration_lexer = time_lexer - start_time;
+                std::chrono::duration<double, std::milli> duration_parser = time_parser - time_lexer;
+                std::chrono::duration<double, std::milli> duration_solver = end_time - time_parser;
+
                 *out << "\n" << std::string(50, '=') << "\n";
                 *out << " " << Version::full() << " Execution Summary\n";
                 *out << std::string(50, '=') << "\n";
@@ -225,14 +246,18 @@ int main(int argc, char* argv[]) {
                     const auto& v = reg.get_variable(i);
                     if (v.is_reserved) continue;
                     
+                    double display_val = (v.value / v.unit.scale) - v.unit.offset;
+
                     *out << std::left << std::setw(20) << v.name 
-                         << std::setw(15) << std::fixed << std::setprecision(6) << v.value 
+                         << std::setw(15) << std::fixed << std::setprecision(6) << display_val 
                          << std::setw(9) << (v.unit_name.empty() ? "-" : "[" + v.unit_name + "]")
                          << (v.is_fixed ? " Fixed" : "Solved") << "\n";
                 }
 
                 *out << std::string(50, '=') << "\n";
-                *out << "Solve Time: " << duration.count() << " ms | DOF: " << system.registry().get_active_indices().size() << "\n";
+                *out << "Lexer Time:  " << duration_lexer.count() << " ms\n";
+                *out << "Parser Time: " << duration_parser.count() << " ms\n";
+                *out << "Solver Time: " << duration_solver.count() << " ms\nDOF: " << system.registry().get_active_indices().size() << "\n";
                 *out << std::string(50, '=') << std::endl;
             }
         }

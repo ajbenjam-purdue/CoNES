@@ -1,0 +1,78 @@
+// This script re-creates a simple heat pump analysis (EES reference script shown below, in a block comment)
+// You will observe all enthalpies are cast to kJ/kg. This is only for nicer display! You can remove any and all casts; the results will be functionally identical.
+
+T_evap := 5  [C]     // Evaporator temperature
+T_cond := 40 [C]     // Condenser temperature
+eta_comp := 0.8      // Compressor isentropic efficiency
+Q_dot_evap := 5 [kW] // Cooling capacity
+
+// State 1: Evaporator outlet (sat vapor)
+P_evap = Pressure(R134a, T_evap, x=1)
+h_1 = Enthalpy(R134a, T_evap, P_evap) [kJ/kg]
+s_1 = Entropy(R134a, T_evap, P_evap)
+
+// State 2s: Ideal (isentropic) compressor outlet
+P_cond = Pressure(R134a, T_cond, x=1)
+s_2s = s_1
+h_2s = Enthalpy(R134a, P_cond, s_2s) [kJ/kg]
+
+// State 2: Real compressor outlet
+h_2 = (h_1 + (h_2s - h_1) / eta_comp) [kJ/kg]
+
+// State 3: Condenser outlet (sat liq)
+h_3 = Enthalpy(R134a, T_cond, x=0) [kJ/kg]
+
+// State 4: Expansion valve (isenthalpic) outlet
+h_4 = h_3 [kJ/kg]
+
+// Mass flow rate
+Q_dot_evap = m_dot * (h_1 - h_4)
+m_dot.unit := [kg/s]
+
+// Compressor work and heat rejection
+Q_dot_cond = m_dot * (h_2 - h_3) [kW]
+W_dot_comp = m_dot * (h_2 - h_1) [kW]
+COP_HP = Q_dot_cond / W_dot_comp
+COP_AC = Q_dot_evap / W_dot_comp // Additional metric, AC mode COP
+
+// Equivalent reference EES script:
+/*
+    Refrigerant$ = 'R134a'
+
+    "Given conditions"
+    T_evap = 5        [C]     "Evaporator temperature"
+    T_cond = 40       [C]     "Condenser temperature"
+    eta_comp = 0.8             "Compressor isentropic efficiency"
+    Q_dot_evap = 5     [kW]    "Cooling capacity"
+
+    "State 1 - Evaporator outlet (saturated vapor)"
+    P_evap = Psat(Refrigerant$, T=T_evap)
+    h1 = Enthalpy(Refrigerant$, T=T_evap, x=1)
+    s1 = Entropy(Refrigerant$, T=T_evap, x=1)
+
+    "State 2s - Ideal compressor outlet (isentropic)"
+    P_cond = Psat(Refrigerant$, T=T_cond)
+    s2s = s1
+    h2s = Enthalpy(Refrigerant$, P=P_cond, s=s2s)
+
+    "State 2 - Actual compressor outlet"
+    h2 = h1 + (h2s - h1)/eta_comp
+
+    "State 3 - Condenser outlet (saturated liquid)"
+    h3 = Enthalpy(Refrigerant$, T=T_cond, x=0)
+
+    "State 4 - Expansion valve outlet (isenthalpic)"
+    h4 = h3
+
+    "Mass flow rate"
+    m_dot = Q_dot_evap / (h1 - h4)
+
+    "Heat rejected in condenser"
+    Q_dot_cond = m_dot * (h2 - h3)
+
+    "Compressor work"
+    W_dot_comp = m_dot * (h2 - h1)
+
+    "Coefficient of Performance (Heating)"
+    COP_HP = Q_dot_cond / W_dot_comp
+*/

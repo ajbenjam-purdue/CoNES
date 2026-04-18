@@ -1,0 +1,2 @@
+// A header example. cnes inclusions work identically to C/C++ header files, and come with the same set of foot-guns. 
+CONST_CUSTOM := 1.0 [m]

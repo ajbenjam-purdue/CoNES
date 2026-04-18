@@ -40,3 +40,4 @@ h_air = Enthalpy(Air, T_amb_K, P_atm) // Enthalpy (and all other functions) infe
 // 6. Utilities
 h_air_kJ = h_air [kJ/kg*K] // Converted to Engineering units for better display
 CONST_TAU := CONST_PI * 2  // Custom constants defined
+include "header_example.cnes" // It would be suggested to group inclusions at the top, but this works too!

@@ -33,10 +33,15 @@ namespace cones
 
         DualNumber evaluate(const std::vector<DualNumber>& v, const VariableRegistry& reg) const override {
             DualNumber val = child_->evaluate(v, reg);
-            double base_val = (val.val + from_unit_.offset) * from_unit_.scale;
-            double target_val = (base_val / to_unit_.scale) - to_unit_.offset;
-            double target_der = (val.der * from_unit_.scale) / to_unit_.scale;
-            return {target_val, target_der};
+            if (from_unit_.is_dimensionless()) {
+                // Assertion: Literal in a unit -> convert to SI
+                double si_val = (val.val + to_unit_.offset) * to_unit_.scale;
+                double si_der = val.der * to_unit_.scale;
+                return {si_val, si_der};
+            }
+            // If it already has a unit, we assume it's already SI.
+            // A cast in this case just changes the unit for inheritance.
+            return val;
         }
 
         std::string to_string() const override { return child_->to_string() + " [" + to_unit_.to_string() + "]"; }
@@ -51,13 +56,7 @@ namespace cones
         std::vector<NodeArg> args_;
     public:
         CustomFunctionNode(std::shared_ptr<IFunction> f, std::vector<NodeArg> a) : func_(f), args_(a) {}
-        DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry& reg) const override {
-            std::vector<FuncArg> eval_args;
-            for (const auto &arg : args_) {
-                eval_args.push_back({arg.name, arg.node->evaluate(v, reg), arg.node->get_unit(reg)});
-            }
-            return func_->evaluate(eval_args);
-        }
+        DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry& reg) const override;
         std::string to_string() const override { return func_->name() + "(...)"; }
         Unit get_unit(const VariableRegistry& reg) const override {
             std::vector<Unit> units;
@@ -79,7 +78,7 @@ namespace cones
         int idx_; std::string n_;
     public:
         VariableNode(int i, std::string n) : idx_(i), n_(n) {}
-        DualNumber evaluate(const std::vector<DualNumber>& v, const VariableRegistry&) const override { return v[idx_]; }
+        DualNumber evaluate(const std::vector<DualNumber>& v, const VariableRegistry& reg) const override;
         std::string to_string() const override { return n_; }
         Unit get_unit(const VariableRegistry& reg) const override;
     };
@@ -123,13 +122,30 @@ namespace cones
 #include "variable_registry.hpp"
 
 namespace cones {
-    inline Unit VariableNode::get_unit(const VariableRegistry& reg) const { return reg.get_variable(idx_).unit; }
+    inline DualNumber VariableNode::evaluate(const std::vector<DualNumber>& v, const VariableRegistry&) const { 
+        return v[idx_];
+    }
+    inline Unit VariableNode::get_unit(const VariableRegistry& reg) const { return reg.get_variable(idx_).unit.to_si(); }
     inline Unit AddNode::get_unit(const VariableRegistry& reg) const { return l_->get_unit(reg); }
     inline Unit SubNode::get_unit(const VariableRegistry& reg) const { return l_->get_unit(reg); }
     inline Unit MulNode::get_unit(const VariableRegistry& reg) const { return l_->get_unit(reg) * r_->get_unit(reg); }
     inline Unit DivNode::get_unit(const VariableRegistry& reg) const { return l_->get_unit(reg) / r_->get_unit(reg); }
     inline Unit PowNode::get_unit(const VariableRegistry& reg) const { return b_->get_unit(reg).pow(e_); }
     inline Unit NegNode::get_unit(const VariableRegistry& reg) const { return c_->get_unit(reg); }
+
+    inline DualNumber CustomFunctionNode::evaluate(const std::vector<DualNumber> &v, const VariableRegistry& reg) const {
+        std::vector<FuncArg> eval_args;
+        for (const auto &arg : args_) {
+            std::string effective_name = arg.name;
+            if (effective_name.empty()) {
+                if (auto vnode = std::dynamic_pointer_cast<VariableNode>(arg.node)) {
+                    effective_name = vnode->to_string();
+                }
+            }
+            eval_args.push_back({effective_name, arg.node->evaluate(v, reg), arg.node->get_unit(reg)});
+        }
+        return func_->evaluate(eval_args);
+    }
 }
 
 #endif

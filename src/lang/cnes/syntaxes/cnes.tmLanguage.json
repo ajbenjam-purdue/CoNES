@@ -6,6 +6,9 @@
             "include": "#comments"
         },
         {
+            "include": "#strings"
+        },
+        {
             "include": "#attribute-block"
         },
         {
@@ -68,7 +71,7 @@
             "patterns": [
                 {
                     "name": "keyword.control.cnes",
-                    "match": "\\b(routine)\\b"
+                    "match": "\\b(routine|include)\\b"
                 }
             ]
         },
@@ -76,7 +79,7 @@
             "patterns": [
                 {
                     "name": "support.function.builtin.cnes",
-                    "match": "\\b(sin|cos|tan|log|exp|sqrt|pow|min|max|Pressure|Temperature|Enthalpy|Entropy)\\b"
+                    "match": "\\b(Conductivity|Density|Enthalpy|Entropy|InternalEnergy|Prandtl|Pressure|Q_cond|Q_conv|Q_rad|Quality|SpecificVolume|Temperature|Viscosity|abs|acos|asin|atan|ceil|cos|cosh|exp|floor|log|log10|round|sin|sinh|sqrt|tan|tanh)\\b"
                 },
                 {
                     "name": "support.function.cnes",
@@ -163,11 +166,26 @@
                 }
             ]
         },
+        "strings": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.cnes",
+                    "begin": "\"",
+                    "end": "\"",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.cnes",
+                            "match": "\\\\."
+                        }
+                    ]
+                }
+            ]
+        },
         "substances": {
             "patterns": [
                 {
                     "name": "substance.language.cnes",
-                    "match": "\\b(Air|Water)\\b"
+                    "match": "\\b(Air|Argon|CO2|Nitrogen|O2|R12|R134a|Water)\\b"
                 }
             ]
         },

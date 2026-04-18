@@ -63,6 +63,25 @@ namespace cones
             variables_.at(index).unit_name = name;
         }
 
+        /**
+         * @brief Suggests a ballpark guess based on units if the value is still at its default (1.0).
+         */
+        void suggest_guess(int index, const Unit& u) {
+            auto& v = variables_.at(index);
+            if (v.value != 1.0 || v.is_fixed) return;
+
+            // Pressure (Pa)
+            if (u.dims == std::vector<int>{1, -1, -2, 0, 0}) v.value = 101325.0;
+            // Temperature (K)
+            else if (u.dims == std::vector<int>{0, 0, 0, 1, 0}) v.value = 293.15;
+            // Enthalpy / Specific Energy (J/kg)
+            else if (u.dims == std::vector<int>{0, 2, -2, 0, 0}) v.value = 250000.0;
+            // Density (kg/m^3)
+            else if (u.dims == std::vector<int>{1, -3, 0, 0, 0}) v.value = 1.2;
+            // Energy (J)
+            else if (u.dims == std::vector<int>{1, 2, -2, 0, 0}) v.value = 1000.0;
+        }
+
         // Getters
         const Variable &get_variable(int index) const { return variables_.at(index); }
         size_t size() const { return variables_.size(); }

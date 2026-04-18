@@ -49,6 +49,11 @@ namespace cones
         // Unary minus (negation)
         DualNumber operator-() const { return {-val, -der}; }
 
+        DualNumber pow(double p) const
+        {
+            return {std::pow(val, p), p * std::pow(val, p - 1) * der};
+        }
+
         friend DualNumber operator+(double s, const DualNumber &d) { return d + s; }
         friend DualNumber operator-(double s, const DualNumber &d) { return {s - d.val, -d.der}; }
         friend DualNumber operator*(double s, const DualNumber &d) { return d * s; }

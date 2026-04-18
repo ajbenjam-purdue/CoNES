@@ -6,6 +6,8 @@
 #include <vector>
 #include <stdexcept>
 #include <string>
+#include <fstream>
+#include <sstream>
 
 namespace cones {
 
@@ -23,6 +25,10 @@ public:
 
 private:
     void statement() {
+        if (match(TokenType::INCLUDE)) {
+            include_statement();
+            return;
+        }
         if (check(TokenType::IDENTIFIER)) {
             TokenType t = peek_next().type;
             if (t == TokenType::COLON_EQUALS || t == TokenType::DOT || t == TokenType::LBRACKET || t == TokenType::LBRACE) {
@@ -31,6 +37,29 @@ private:
             }
         }
         equation_statement();
+    }
+
+    void include_statement() {
+        Token path_token = consume(TokenType::STRING, "Expect file path after include.");
+        std::string path = path_token.lexeme;
+        
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            throw error(path_token, "Could not open included file: " + path);
+        }
+
+        std::stringstream ss;
+        ss << file.rdbuf();
+        Lexer lex(ss.str());
+        std::vector<Token> included_tokens = lex.scan_tokens();
+
+        // Remove END_OF_FILE from included tokens
+        if (!included_tokens.empty() && included_tokens.back().type == TokenType::END_OF_FILE) {
+            included_tokens.pop_back();
+        }
+
+        // Insert included tokens into the current token stream after the current position
+        tokens_.insert(tokens_.begin() + current_, included_tokens.begin(), included_tokens.end());
     }
 
     void definition_statement() {
@@ -47,7 +76,19 @@ private:
                     while (!check(TokenType::RBRACKET) && !is_at_end()) unit_val += advance().lexeme;
                     consume(TokenType::RBRACKET, "Expect ].");
                 } else unit_val = consume(TokenType::IDENTIFIER, "Expect unit.").lexeme;
-                reg.set_unit(idx, unit_val);
+                
+                Unit u = Unit::from_string(unit_val);
+                if (reg.get_variable(idx).unit.is_dimensionless() && !u.is_dimensionless()) {
+                    double v = reg.get_variable(idx).value;
+                    reg.set_value(idx, (v + u.offset) * u.scale);
+                    double l = reg.get_variable(idx).lower_bound;
+                    double up = reg.get_variable(idx).upper_bound;
+                    if (l > -1e30) l = (l + u.offset) * u.scale;
+                    if (up < 1e30) up = (up + u.offset) * u.scale;
+                    reg.set_bounds(idx, l, up);
+                }
+                reg.set_unit(idx, u, unit_val);
+                reg.suggest_guess(idx, u);
             } else {
                 double val = evaluate_to_double(expression());
                 if (attr.lexeme == "guess") reg.set_value(idx, val);
@@ -74,12 +115,6 @@ private:
                 }
             }
         }
-        if (match(TokenType::LBRACKET)) {
-            std::string unit_content = "";
-            while (!check(TokenType::RBRACKET) && !is_at_end()) unit_content += advance().lexeme;
-            reg.set_unit(idx, unit_content);
-            consume(TokenType::RBRACKET, "Expect ].");
-        }
     }
 
     void equation_statement() {
@@ -91,6 +126,7 @@ private:
             if (var_info.unit.is_dimensionless()) {
                 Unit inherited = rhs->get_unit(system_.registry());
                 system_.registry().set_unit(var_info.index, inherited, inherited.to_string());
+                system_.registry().suggest_guess(var_info.index, inherited);
             }
         }
         system_.add_equation(std::make_shared<SubNode>(lhs, rhs));

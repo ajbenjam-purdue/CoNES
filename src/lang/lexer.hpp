@@ -87,6 +87,21 @@ namespace cones
                     while (peek() != '\n' && !is_at_end())
                         advance();
                 }
+                else if (match('*'))
+                { // Multi-line comment
+                    while (!(peek() == '*' && peek_next() == '/') && !is_at_end())
+                    {
+                        if (peek() == '\n')
+                            line_++;
+                        advance();
+                    }
+
+                    if (!is_at_end())
+                    {
+                        advance(); // consume '*'
+                        advance(); // consume '/'
+                    }
+                }
                 else
                 {
                     add_token(tokens, TokenType::SLASH);
@@ -100,6 +115,10 @@ namespace cones
                 break;
             case '_':
                 add_token(tokens, TokenType::UNDERSCORE);
+                break;
+
+            case '"':
+                string(tokens);
                 break;
 
             case ' ':
@@ -132,7 +151,30 @@ namespace cones
         {
             while (std::isalnum(peek()) || peek() == '_')
                 advance();
-            add_token(tokens, TokenType::IDENTIFIER);
+            
+            std::string text = source_.substr(start_, current_ - start_);
+            if (text == "include") add_token(tokens, TokenType::INCLUDE);
+            else add_token(tokens, TokenType::IDENTIFIER);
+        }
+
+        void string(std::vector<Token> &tokens)
+        {
+            while (peek() != '"' && !is_at_end())
+            {
+                if (peek() == '\n') line_++;
+                advance();
+            }
+
+            if (is_at_end()) {
+                add_token(tokens, TokenType::UNKNOWN);
+                return;
+            }
+
+            advance(); // The closing ".
+
+            // Trim the surrounding quotes
+            std::string value = source_.substr(start_ + 1, current_ - start_ - 2);
+            tokens.emplace_back(TokenType::STRING, value, line_);
         }
 
         void number(std::vector<Token> &tokens)

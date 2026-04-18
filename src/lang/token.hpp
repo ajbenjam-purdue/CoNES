@@ -11,6 +11,7 @@ namespace cones
     {
         IDENTIFIER,
         NUMBER,
+        STRING,
 
         // Operators
         PLUS,   // +
@@ -34,6 +35,7 @@ namespace cones
 
         // Special
         UNDERSCORE, // _
+        INCLUDE,    // include
 
         // End of file
         END_OF_FILE, // \0
@@ -61,6 +63,9 @@ namespace cones
             break;
         case TokenType::NUMBER:
             os << "NUMBER";
+            break;
+        case TokenType::STRING:
+            os << "STRING";
             break;
         case TokenType::PLUS:
             os << "PLUS";
@@ -112,6 +117,9 @@ namespace cones
             break;
         case TokenType::UNDERSCORE:
             os << "UNDERSCORE";
+            break;
+        case TokenType::INCLUDE:
+            os << "INCLUDE";
             break;
         case TokenType::END_OF_FILE:
             os << "EOF";

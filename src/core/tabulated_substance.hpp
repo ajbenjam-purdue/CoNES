@@ -2,107 +2,226 @@
 #define CONES_CORE_TABULATED_SUBSTANCE_HPP
 
 #include "substance.hpp"
+#include "property_types.hpp"
 #include <fstream>
 #include <algorithm>
 #include <vector>
+#include <map>
 
-namespace cones {
+namespace cones
+{
 
-/**
- * @brief Handles thermophysical properties using gridded binary tables.
- */
-class TabulatedSubstance : public Substance {
-    std::string name_;
-    std::vector<double> p_grid_;
-    std::vector<double> t_grid_;
-    std::vector<double> h_table_; // Enthalpy table [p][t]
-
-public:
-    TabulatedSubstance(std::string name) : name_(std::move(name)) {}
-
-    std::string name() const override { return name_; }
+    struct PropertyTable
+    {
+        std::vector<double> p_grid;
+        std::vector<double> t_grid;
+        std::vector<double> data;
+    };
 
     /**
-     * @brief Loads a binary property table.
+     * @brief Handles thermophysical properties using gridded binary tables.
      */
-    void load_table(const std::string& path) {
-        std::ifstream file(path, std::ios::binary);
-        if (!file.is_open()) throw std::runtime_error("Could not load table: " + path);
+    class TabulatedSubstance : public Substance
+    {
+        std::string name_;
+        std::map<PropertyType, PropertyTable> tables_;
 
-        char magic[4];
-        file.read(magic, 4); // "CNES"
+    public:
+        TabulatedSubstance(std::string name) : name_(std::move(name)) {}
 
-        int np, nt;
-        file.read(reinterpret_cast<char*>(&np), sizeof(int));
-        file.read(reinterpret_cast<char*>(&nt), sizeof(int));
+        std::string name() const override { return name_; }
 
-        p_grid_.resize(np);
-        t_grid_.resize(nt);
-        h_table_.resize(np * nt);
+        void load_table(PropertyType prop, const std::string &path)
+        {
+            std::ifstream file(path, std::ios::binary);
+            if (!file.is_open())
+                throw std::runtime_error("Could not load table: " + path);
 
-        file.read(reinterpret_cast<char*>(p_grid_.data()), np * sizeof(double));
-        file.read(reinterpret_cast<char*>(t_grid_.data()), nt * sizeof(double));
-        file.read(reinterpret_cast<char*>(h_table_.data()), np * nt * sizeof(double));
-    }
+            char magic[4];
+            file.read(magic, 4);
 
-    DualNumber evaluate(PropertyType target, const std::vector<PropertyArg>& inputs) const override {
-        if (target != PropertyType::ENTHALPY) 
-            throw std::runtime_error("TabulatedSubstance currently only supports Enthalpy lookups.");
+            int np, nt;
+            file.read(reinterpret_cast<char *>(&np), sizeof(int));
+            file.read(reinterpret_cast<char *>(&nt), sizeof(int));
 
-        DualNumber P(0,0), T(0,0);
-        for (const auto& in : inputs) {
-            if (in.type == PropertyType::PRESSURE) P = in.value;
-            if (in.type == PropertyType::TEMPERATURE) T = in.value;
+            auto &table = tables_[prop];
+            table.p_grid.resize(np);
+            file.read(reinterpret_cast<char *>(table.p_grid.data()), np * sizeof(double));
+            table.t_grid.resize(nt);
+            file.read(reinterpret_cast<char *>(table.t_grid.data()), nt * sizeof(double));
+            table.data.resize(np * nt);
+            file.read(reinterpret_cast<char *>(table.data.data()), np * nt * sizeof(double));
         }
 
-        return interpolate_2d(P, T);
-    }
+        DualNumber evaluate(PropertyType target, const std::vector<PropertyArg> &inputs) const override
+        {
+            for (const auto &in : inputs)
+                if (in.type == target)
+                    return in.value;
 
-private:
-    DualNumber interpolate_2d(DualNumber p_dual, DualNumber t_dual) const {
-        double p = p_dual.val;
-        double t = t_dual.val;
+            DualNumber P(0, 0), T(0, 0), H(0, 0), S(0, 0), X(0, 0);
+            bool has_P = false, has_T = false, has_H = false, has_S = false, has_X = false;
 
-        // Find indices in grids
-        auto it_p = std::lower_bound(p_grid_.begin(), p_grid_.end(), p);
-        auto it_t = std::lower_bound(t_grid_.begin(), t_grid_.end(), t);
+            for (const auto &in : inputs)
+            {
+                if (in.type == PropertyType::PRESSURE)
+                {
+                    P = in.value;
+                    has_P = true;
+                }
+                if (in.type == PropertyType::TEMPERATURE)
+                {
+                    T = in.value;
+                    has_T = true;
+                }
+                if (in.type == PropertyType::ENTHALPY)
+                {
+                    H = in.value;
+                    has_H = true;
+                }
+                if (in.type == PropertyType::ENTROPY)
+                {
+                    S = in.value;
+                    has_S = true;
+                }
+                if (in.type == PropertyType::QUALITY)
+                {
+                    X = in.value;
+                    has_X = true;
+                }
+            }
 
-        int ip = std::distance(p_grid_.begin(), it_p) - 1;
-        int it = std::distance(t_grid_.begin(), it_t) - 1;
+            // --- 1. Saturation / Two-Phase Logic ---
+            if (has_X && (has_P || has_T))
+            {
+                if (target == PropertyType::PRESSURE)
+                    return evaluate(PropertyType::SATURATION_PRESSURE, {{PropertyType::TEMPERATURE, T}});
+                if (target == PropertyType::TEMPERATURE)
+                    return evaluate(PropertyType::SATURATION_TEMPERATURE, {{PropertyType::PRESSURE, P}});
 
-        // Bound checking
-        if (ip < 0 || ip >= (int)p_grid_.size() - 1 || it < 0 || it >= (int)t_grid_.size() - 1) {
-            // Return edge value with a large slope to push solver back
-            return { h_table_[0], 0.0 }; 
+                // h = hf + x*(hg - hf)
+                if (target == PropertyType::ENTHALPY)
+                {
+                    DualNumber hf = evaluate(PropertyType::H_F, {{PropertyType::PRESSURE, P}, {PropertyType::TEMPERATURE, T}});
+                    DualNumber hg = evaluate(PropertyType::H_G, {{PropertyType::PRESSURE, P}, {PropertyType::TEMPERATURE, T}});
+                    return hf + X * (hg - hf);
+                }
+                if (target == PropertyType::ENTROPY)
+                {
+                    DualNumber sf = evaluate(PropertyType::S_F, {{PropertyType::PRESSURE, P}, {PropertyType::TEMPERATURE, T}});
+                    DualNumber sg = evaluate(PropertyType::S_G, {{PropertyType::PRESSURE, P}, {PropertyType::TEMPERATURE, T}});
+                    return sf + X * (sg - sf);
+                }
+            }
+
+            // --- 2. Inverted Lookups (finding T from P,h or P,s) ---
+            if (!has_T)
+            {
+                if (has_P && has_H)
+                    T = evaluate_direct(PropertyType::T_PH, P, H);
+                else if (has_P && has_S)
+                    T = evaluate_direct(PropertyType::T_PS, P, S);
+                else if (has_P && target == PropertyType::SATURATION_TEMPERATURE)
+                    T = evaluate_direct(PropertyType::SATURATION_TEMPERATURE, P, {0, 0});
+
+                if (T.val != 0.0)
+                {
+                    has_T = true;
+                    if (target == PropertyType::TEMPERATURE)
+                        return T;
+                }
+            }
+
+            // --- 3. Final Direct Lookup ---
+            auto it = tables_.find(target);
+            if (it != tables_.end())
+            {
+                const auto &table = it->second;
+                if (table.p_grid.size() == 1 && has_T)
+                    return interpolate_1d_t(table, T);
+                if (table.t_grid.size() == 1 && has_P)
+                    return interpolate_1d_p(table, P);
+                if (has_P && has_T)
+                    return interpolate_2d(table, P, T);
+            }
+
+            throw std::runtime_error("TabulatedSubstance (" + name_ + "): Insufficient inputs for " + property_to_string(target));
         }
 
-        // Get the 4 corners of the cell
-        double p0 = p_grid_[ip], p1 = p_grid_[ip+1];
-        double t0 = t_grid_[it], t1 = t_grid_[it+1];
+    private:
+        DualNumber evaluate_direct(PropertyType type, DualNumber p1, DualNumber p2) const
+        {
+            auto it = tables_.find(type);
+            if (it == tables_.end())
+                throw std::runtime_error("Table not found: " + property_to_string(type));
 
-        double q00 = h_table_[ip * t_grid_.size() + it];
-        double q01 = h_table_[ip * t_grid_.size() + (it+1)];
-        double q10 = h_table_[(ip+1) * t_grid_.size() + it];
-        double q11 = h_table_[(ip+1) * t_grid_.size() + (it+1)];
+            const auto &table = it->second;
+            if (table.p_grid.size() == 1)
+                return interpolate_1d_t(table, p2);
+            if (table.t_grid.size() == 1)
+                return interpolate_1d_p(table, p1);
+            return interpolate_2d(table, p1, p2);
+        }
 
-        // Bilinear Interpolation
-        double dp = p1 - p0;
-        double dt = t1 - t0;
-        double u = (p - p0) / dp;
-        double v = (t - t0) / dt;
+        DualNumber interpolate_1d_t(const PropertyTable &table, DualNumber t_dual) const
+        {
+            double t = t_dual.val;
+            auto it_t = std::lower_bound(table.t_grid.begin(), table.t_grid.end(), t);
+            int it = std::distance(table.t_grid.begin(), it_t) - 1;
+            if (it < 0)
+                it = 0;
+            if (it >= (int)table.t_grid.size() - 1)
+                it = (int)table.t_grid.size() - 2;
+            double t0 = table.t_grid[it], t1 = table.t_grid[it + 1];
+            double q0 = table.data[it], q1 = table.data[it + 1];
+            double dt = t1 - t0;
+            double v = (t - t0) / dt;
+            return {(1 - v) * q0 + v * q1, ((q1 - q0) / dt) * t_dual.der};
+        }
 
-        double val = (1-u)*(1-v)*q00 + u*(1-v)*q10 + (1-u)*v*q01 + u*v*q11;
+        DualNumber interpolate_1d_p(const PropertyTable &table, DualNumber p_dual) const
+        {
+            double p = p_dual.val;
+            auto it_p = std::lower_bound(table.p_grid.begin(), table.p_grid.end(), p);
+            int ip = std::distance(table.p_grid.begin(), it_p) - 1;
+            if (ip < 0)
+                ip = 0;
+            if (ip >= (int)table.p_grid.size() - 1)
+                ip = (int)table.p_grid.size() - 2;
+            double p0 = table.p_grid[ip], p1 = table.p_grid[ip + 1];
+            double q0 = table.data[ip], q1 = table.data[ip + 1];
+            double dp = p1 - p0;
+            double u = (p - p0) / dp;
+            return {(1 - u) * q0 + u * q1, ((q1 - q0) / dp) * p_dual.der};
+        }
 
-        // Calculate Slopes for Automatic Differentiation
-        // df/dp
-        double df_dp = (-(1-v)*q00 + (1-v)*q10 - v*q01 + v*q11) / dp;
-        // df/dt
-        double df_dt = (-(1-u)*q00 - u*q10 + (1-u)*q01 + u*q11) / dt;
+        DualNumber interpolate_2d(const PropertyTable &table, DualNumber p_dual, DualNumber t_dual) const
+        {
+            double p = p_dual.val, t = t_dual.val;
+            auto it_p = std::lower_bound(table.p_grid.begin(), table.p_grid.end(), p);
+            auto it_t = std::lower_bound(table.t_grid.begin(), table.t_grid.end(), t);
+            int ip = std::distance(table.p_grid.begin(), it_p) - 1, it = std::distance(table.t_grid.begin(), it_t) - 1;
 
-        // Chain Rule: f' = (df/dp)*p' + (df/dt)*t'
-        return { val, df_dp * p_dual.der + df_dt * t_dual.der };
-    }
-};
+            if (ip < 0 || ip >= (int)table.p_grid.size() - 1 || it < 0 || it >= (int)table.t_grid.size() - 1)
+            {
+                int nip = std::clamp(ip, 0, (int)table.p_grid.size() - 1);
+                int nit = std::clamp(it, 0, (int)table.t_grid.size() - 1);
+                return {table.data[nip * table.t_grid.size() + nit], 0.0};
+            }
+
+            double p0 = table.p_grid[ip], p1 = table.p_grid[ip + 1], t0 = table.t_grid[it], t1 = table.t_grid[it + 1];
+            double q00 = table.data[ip * table.t_grid.size() + it];
+            double q01 = table.data[ip * table.t_grid.size() + (it + 1)];
+            double q10 = table.data[(ip + 1) * table.t_grid.size() + it];
+            double q11 = table.data[(ip + 1) * table.t_grid.size() + (it + 1)];
+
+            double dp = p1 - p0, dt = t1 - t0, u = (p - p0) / dp, v = (t - t0) / dt;
+            double val = (1 - u) * (1 - v) * q00 + u * (1 - v) * q10 + (1 - u) * v * q01 + u * v * q11;
+            double df_dp = (-(1 - v) * q00 + (1 - v) * q10 - v * q01 + v * q11) / dp;
+            double df_dt = (-(1 - u) * q00 - u * q10 + (1 - u) * q01 + u * q11) / dt;
+            return {val, df_dp * p_dual.der + df_dt * t_dual.der};
+        }
+    };
 
 } // namespace cones
 
