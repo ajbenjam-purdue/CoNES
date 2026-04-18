@@ -12,7 +12,6 @@
 
 namespace cones
 {
-
     class System
     {
         std::vector<NodePtr> equations_;
@@ -29,9 +28,6 @@ namespace cones
         SubstanceManager &substance_manager() { return substance_manager_; }
         ConstantRegistry &constant_registry() { return constant_registry_; }
 
-        /**
-         * @brief Evaluates the system residuals and Jacobian for active (non-fixed) variables.
-         */
         void evaluate(Eigen::VectorXd &f, Eigen::MatrixXd &j) const
         {
             const int n = static_cast<int>(equations_.size());
@@ -41,37 +37,27 @@ namespace cones
             f.resize(n);
             j.resize(n, m_active);
 
-            // Pre-fill full value vector for AST (including fixed values)
             std::vector<DualNumber> dual_vals;
             dual_vals.reserve(registry_.size());
             for (size_t i = 0; i < registry_.size(); ++i)
-            {
                 dual_vals.emplace_back(registry_.get_variable(i).value, 0.0);
-            }
 
             for (int i = 0; i < n; ++i)
             {
-                // For each equation Fi, calculate dFi/dxj ONLY for active xj
                 for (int active_j = 0; active_j < m_active; ++active_j)
                 {
                     int global_idx = active_indices[active_j];
-
-                    // Seed derivative for this active variable
                     dual_vals[global_idx].der = 1.0;
 
-                    DualNumber res = equations_[i]->evaluate(dual_vals);
+                    DualNumber res = equations_[i]->evaluate(dual_vals, registry_);
 
-                    if (active_j == 0)
-                        f(i) = res.val;
+                    if (active_j == 0) f(i) = res.val;
                     j(i, active_j) = res.der;
-
-                    // Reset derivative for next variable
                     dual_vals[global_idx].der = 0.0;
                 }
             }
         }
     };
-
 } // namespace cones
 
 #endif

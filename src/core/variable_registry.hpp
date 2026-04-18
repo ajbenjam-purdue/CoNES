@@ -19,6 +19,7 @@ namespace cones
         double lower_bound = -std::numeric_limits<double>::infinity();
         double upper_bound = std::numeric_limits<double>::infinity();
         bool is_fixed = false;
+        bool is_reserved = false; // Materials/Reserved keywords
         Unit unit = Unit::Dimensionless();
         std::string unit_name = "";
     };
@@ -52,6 +53,7 @@ namespace cones
             variables_.at(index).upper_bound = upper;
         }
         void set_fixed(int index, bool fixed) { variables_.at(index).is_fixed = fixed; }
+        void set_reserved(int index, bool reserved) { variables_.at(index).is_reserved = reserved; }
         void set_unit(int index, const Unit &unit, const std::string& name = "") { 
             variables_.at(index).unit = unit; 
             if (!name.empty()) variables_.at(index).unit_name = name;

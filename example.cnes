@@ -1,33 +1,42 @@
 // CoNES Example Script
-// Demonstrating the full feature set: Definitions, Equations, Units, and Constants
+// Demonstrating the full feature set: Definitions, Equations, Units, Functions, and Constants
 
 // 1. Physical Constants and Fixed Values
-// CONST_GRAV is built-in (9.80665 m/s^2)
 m := 10 [kg]           // Fixed mass
 h_start := 100 [m]     // Initial height
 
 // 2. Metadata for Solving
-t.guess := 4.5 [s]     
 t.lower := 0           // Time cannot be negative
+t.unit  := [s]         // Time is expressed in seconds with this eqn
 
 // 3. Equations (Relationships)
 // Calculate potential energy at start
+// Find other constants with cnes --list-constants
 PE = m * CONST_GRAV * h_start
 
-// Energy Balance: In a vacuum, KE = PE at impact
-KE = 0.5 * m * v_impact^2
+// Energy Balance
 KE = PE
+
+v_impact = sqrt(2 * KE / m) // This and the following are equivalent
+// KE = 1 / 2 * m * v ^ 2
 
 // Calculate impact time from height
 0 = h_start - 0.5 * CONST_GRAV * t^2
 
 // 4. Unit Inheritance & Casting
 // v_impact will automatically inherit [m/s] from the KE equation
-// But we can also "cast" a value to a different unit
-T_amb := 25 [C]
-T_amb_K = T_amb [K]    // Automatically converts to 298.15 Kelvin
+// But we can also cast (think C-style casting) a value to a different unit
+// CoNES performs the conversion
+T_amb := 25 [C]     // Define in celcius
+T_amb_K = T_amb [K] // Automatically convert to Kelvin
 
 // 5. Intelligent Property Lookups (Air)
-P_atm := 101325 [Pa]
-rho_air.guess := 1.2
-P_atm = Pressure(Air, T=T_amb_K, rho=rho_air) // Solves for density rho_air
+P_atm := STD_PRESS_PA [kPa]
+P_atm = Pressure(Air, T=T_amb_K, rho=rho_air) // Solves for density rho_air with backwards explicit temp/density callouts
+
+h_air.unit := [J/kg*K] // Set the unit 
+h_air = Enthalpy(Air, T_amb_K, P_atm) // Enthalpy (and all other functions) infer which properties exist based on units, if any are defined
+
+// 6. Utilities
+h_air_kJ = h_air [kJ/kg*K] // Converted to Engineering units for better display
+CONST_TAU := CONST_PI * 2  // Custom constants defined

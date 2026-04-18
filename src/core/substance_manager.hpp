@@ -4,14 +4,14 @@
 #include "substance.hpp"
 #include <map>
 #include <memory>
+#include <vector>
+#include <string>
 
 namespace cones
 {
 
     /**
      * @brief Manages all known substances in the CoNES environment.
-     * To register a substance with the manager, use the `register_substance` method.
-     * To get a shared pointer to a substance of the manager, use the `get` method. 
      */
     class SubstanceManager
     {
@@ -23,10 +23,15 @@ namespace cones
             substances_[sub->name()] = sub;
         }
 
-        std::shared_ptr<Substance> get(const std::string &name) const
-        {
+        std::shared_ptr<Substance> get(const std::string& name) const {
             auto it = substances_.find(name);
             return (it != substances_.end()) ? it->second : nullptr;
+        }
+
+        std::vector<std::string> get_substance_names() const {
+            std::vector<std::string> names;
+            for (const auto& [name, _] : substances_) names.push_back(name);
+            return names;
         }
     };
 
