@@ -36,3 +36,6 @@ Eigen
 
 # Code
 .vscode
+
+# Materials
+*.cnesbin

@@ -30,10 +30,17 @@
         "scopeName": "source.cnes",
         "path": "./syntaxes/cnes.tmLanguage.json"
       }
+    ],
+    "commands": [
+      {
+        "command": "cnes.refreshMetadata",
+        "title": "Refresh CoNES Metadata"
+      }
     ]
   },
   "main": "./extension.js",
   "activationEvents": [
+    "onCommand:cnes.refreshMetadata",
     "onLanguage:cnes"
   ]
 }

@@ -21,22 +21,20 @@ void print_help() {
               << "Usage: cnes [input.cnes] [options]\n\n"
               << "Options:\n\n"
               << "  Output:\n"
-              << "    -o <file>          Write results to a file\n"
-              << "    -v                 Verbose output (solver iterations)\n"
-              << "    -s, --silent       Suppress the execution summary table\n\n"
+              << "    -o <file>             Write results to a file\n"
+              << "    -v                    Verbose output (solver iterations)\n"
+              << "    -s, --silent          Suppress the execution summary table\n\n"
               << "  Solver:\n"
-              << "    --tol <val>        Override convergence tolerance (default: 1e-9)\n"
-              << "    --max-iter <val>   Override max solver iterations (default: 100)\n\n"
+              << "    --tol <val>           Override convergence tolerance (default: 1e-9)\n"
+              << "    --max-iter <val>      Override max solver iterations (default: 100)\n\n"
               << "  Development Tools:\n"
-              << "    --list-substances  List all registered substances\n"
-              << "    --list-functions   List all registered functions\n"
-              << "    --list-constants   List all built-in constants\n"
-              << "    --out-substances   Write current substances available to the output stream, separated by pipes.\n"
-              << "    --out-functions    Write current functions available to the output stream, separated by pipes.\n"
-              << "    --out-constants    Write current constants available to the output stream, separated by pipes. If -v is passed after, includes descriptions (CONST_A:description A|...)\n\n"
+              << "    --list-substances     List all registered substances\n"
+              << "    --list-functions      List all registered functions\n"
+              << "    --list-constants      List all built-in constants\n"
+              << "    --out-vscode-metadata Export all substances, functions, and constants lists as separated by |||, including rich data for each\n\n"
               << "  General:\n"
-              << "    --version          Show the current CoNES version\n"
-              << "    --help, -h         Show this help message\n" << std::endl;
+              << "    --version             Show the current CoNES version\n"
+              << "    --help, -h            Show this help message\n" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -122,37 +120,10 @@ int main(int argc, char* argv[]) {
             }
             return 0;
         }
-        if (flag == "--out-substances") {
-            auto names = system.substance_manager().get_substance_names();
-            for (size_t i = 0; i < names.size(); ++i) {
-                std::cout << names[i] << (i < names.size() - 1 ? "|" : "");
-            }
-            return 0;
-        }
         if (flag == "--list-functions") {
             std::cout << "Registered Functions:\n";
             for (const auto& name : system.function_registry().get_function_names()) {
                 std::cout << " - " << name << "\n";
-            }
-            return 0;
-        }
-        if (flag == "--out-functions") {
-            // Check for -v in remaining args
-            bool verbose_out = false;
-            for (int j = i + 1; j < argc; j++) {
-                if (std::string(argv[j]) == "-v") { verbose_out = true; break; }
-            }
-
-            if (verbose_out) {
-                auto metadata = system.function_registry().get_function_metadata();
-                for (size_t i = 0; i < metadata.size(); ++i) {
-                    std::cout << metadata[i] << (i < metadata.size() - 1 ? "|" : "");
-                }
-            } else {
-                auto names = system.function_registry().get_function_names();
-                for (size_t i = 0; i < names.size(); ++i) {
-                    std::cout << names[i] << (i < names.size() - 1 ? "|" : "");
-                }
             }
             return 0;
         }
@@ -164,27 +135,28 @@ int main(int argc, char* argv[]) {
             }
             return 0;
         }
-        if (flag == "--out-constants") {
-            // Check for -v next
-            std::string next_arg;
-            for (int j = i + 1; j < argc; j++)
-            {
-                next_arg = argv[j];
-                verbose = verbose | (next_arg == "-v");
+        if (flag == "--out-vscode-metadata") {
+            // CONSTANTS_STR ||| FUNCTIONS_STR ||| SUBSTANCES_STR
+            
+            // Constants
+            std::vector<std::string> c_names = system.constant_registry().get_constant_names();
+            std::vector<std::string> c_descs = system.constant_registry().get_constant_descriptions();
+            for (size_t i = 0; i < c_names.size(); ++i) {
+                std::cout << c_names[i] << ":" << "" << ":" << c_descs[i] << (i < c_names.size() - 1 ? "|" : "");
             }
+            std::cout << "|||";
 
-            // Build n print
-            std::vector<std::string> const_names = system.constant_registry().get_constant_names();
-            std::vector<std::string> const_descriptions = system.constant_registry().get_constant_descriptions();
-            if (const_names.size() > 0) 
-            {
-                std::cout << const_names.front() << (verbose ? ":" + const_descriptions.front() : "");
-                const_names.erase(const_names.begin());
-                const_descriptions.erase(const_descriptions.begin());
+            // Functions
+            auto f_meta = system.function_registry().get_function_metadata();
+            for (size_t i = 0; i < f_meta.size(); ++i) {
+                std::cout << f_meta[i] << (i < f_meta.size() - 1 ? "|" : "");
             }
-            for (size_t i = 0; i < const_names.size(); i++)
-            {
-                std::cout << "|" << const_names.at(i) << (verbose ? ":" + const_descriptions.at(i) : "");
+            std::cout << "|||";
+
+            // Substances
+            auto s_names = system.substance_manager().get_substance_names();
+            for (size_t i = 0; i < s_names.size(); ++i) {
+                std::cout << s_names[i] << (i < s_names.size() - 1 ? "|" : "");
             }
             return 0;
         }
