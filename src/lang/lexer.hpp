@@ -153,8 +153,19 @@ namespace cones
                 advance();
             
             std::string text = source_.substr(start_, current_ - start_);
-            if (text == "include") add_token(tokens, TokenType::INCLUDE);
-            else add_token(tokens, TokenType::IDENTIFIER);
+            if (text == "include")
+                add_token(tokens, TokenType::INCLUDE);
+            else if (text == "routine")
+                add_token(tokens, TokenType::ROUTINE);
+            else if (text == "function")
+                add_token(tokens, TokenType::FUNCTION);
+            else if (text == "return")
+                add_token(tokens, TokenType::RETURN);
+            else if (text == "end")
+                add_token(tokens, TokenType::END);
+            else
+                add_token(tokens, TokenType::IDENTIFIER);
+
         }
 
         void string(std::vector<Token> &tokens)

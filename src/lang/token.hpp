@@ -36,6 +36,10 @@ namespace cones
         // Special
         UNDERSCORE, // _
         INCLUDE,    // include
+        ROUTINE,    // routine
+        FUNCTION,   // function
+        RETURN,     // return
+        END,        // end
 
         // End of file
         END_OF_FILE, // \0
@@ -120,6 +124,18 @@ namespace cones
             break;
         case TokenType::INCLUDE:
             os << "INCLUDE";
+            break;
+        case TokenType::ROUTINE:
+            os << "ROUTINE";
+            break;
+        case TokenType::FUNCTION:
+            os << "FUNCTION";
+            break;
+        case TokenType::RETURN:
+            os << "RETURN";
+            break;
+        case TokenType::END:
+            os << "END";
             break;
         case TokenType::END_OF_FILE:
             os << "EOF";

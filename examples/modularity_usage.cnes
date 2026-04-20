@@ -1,0 +1,32 @@
+// Demonstration of Modularity in CoNES
+include "heat_transfer_lib.cnes"
+
+// --- Inputs ---
+m_dot_hot := 1.5 [kg/s]
+T_hot_in  := 80 [C]
+T_hot_out := 45 [C]
+
+m_dot_cold := 2.0 [kg/s]
+T_cold_in  := 15 [C]
+
+// --- Material Properties ---
+h_hot_in  = Enthalpy(Water, T=T_hot_in, P=200000[Pa])
+h_hot_out = Enthalpy(Water, T=T_hot_out, P=200000[Pa])
+
+h_cold_in  = Enthalpy(Water, T=T_cold_in, P=200000[Pa])
+h_cold_out = Enthalpy(Water, T=T_cold_out, P=200000[Pa])
+
+// --- Use Routine for Energy Balance ---
+HE_energy_balance(m_dot_hot, h_hot_in, h_hot_out, m_dot_cold, h_cold_in, h_cold_out, Q_transfer)
+
+// --- Use Function for Local Sizing ---
+D_tube := 0.02 [m]
+V_flow := 0.5 [m/s]
+rho_w = Density(Water, T=20[C], P=101325[Pa])
+mu_w  = Viscosity(Water, T=20[C], P=101325[Pa])
+
+Current_Re = Re(rho_w, V_flow, D_tube, mu_w)
+/* Autocomplete should show User Function 'Re' */
+
+// Solver will find T_cold_out based on the Energy Balance routine
+T_cold_out.guess := 30 [C]

@@ -180,7 +180,8 @@ int main(int argc, char* argv[]) {
         auto start_time = std::chrono::high_resolution_clock::now();
 
         Lexer lexer(source);
-        Parser parser(lexer.scan_tokens(), system);
+        Parser parser(lexer.scan_tokens(), system, input_path);
+        parser.set_exe_path(exe_path);
         auto time_lexer = std::chrono::high_resolution_clock::now();
 
         parser.parse();

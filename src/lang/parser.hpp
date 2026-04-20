@@ -8,6 +8,8 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <filesystem>
+#include <map>
 
 namespace cones {
 
@@ -15,23 +17,165 @@ class Parser {
     std::vector<Token> tokens_;
     int current_ = 0;
     System& system_;
+    bool is_local_parsing_ = false;
+    std::vector<std::string> local_param_names_;
+    std::vector<std::filesystem::path> search_paths_;
+    std::filesystem::path exe_path_;
 
-public:
-    Parser(std::vector<Token> tokens, System& sys) : tokens_(std::move(tokens)), system_(sys) {}
+    public:
+    Parser(std::vector<Token> tokens, System& sys, std::filesystem::path initial_path = ".") 
+        : tokens_(std::move(tokens)), system_(sys) {
+        std::filesystem::path abs_path = std::filesystem::absolute(initial_path);
+        if (std::filesystem::is_directory(abs_path)) {
+            search_paths_.push_back(abs_path);
+        } else {
+            search_paths_.push_back(abs_path.parent_path());
+        }
+    }
+
+    void set_exe_path(std::filesystem::path p) { exe_path_ = std::move(p); }
 
     void parse() {
+        scrap_definitions();
         while (!is_at_end()) statement();
     }
 
 private:
+    void scrap_definitions() {
+        current_ = 0;
+        std::vector<Token> filtered;
+
+        while (!is_at_end()) {
+            if (match(TokenType::ROUTINE)) {
+                RoutineDef def;
+                def.name = consume(TokenType::IDENTIFIER, "Expect routine name.").lexeme;
+                consume(TokenType::LPAREN, "Expect ( after routine name.");
+                if (!check(TokenType::RPAREN)) {
+                    do {
+                        def.params.push_back(consume(TokenType::IDENTIFIER, "Expect parameter name.").lexeme);
+                    } while (match(TokenType::COMMA));
+                }
+                consume(TokenType::RPAREN, "Expect ) after parameters.");
+
+                while (!(check(TokenType::END) && peek_next().type == TokenType::ROUTINE)) {
+                    if (is_at_end()) throw error(previous(), "Unterminated routine.");
+                    def.body_tokens.push_back(advance());
+                }
+                consume(TokenType::END, "Expect end.");
+                consume(TokenType::ROUTINE, "Expect routine.");
+                system_.definition_registry().register_routine(std::move(def));
+            } else if (match(TokenType::FUNCTION)) {
+                FunctionDef def;
+                def.name = consume(TokenType::IDENTIFIER, "Expect function name.").lexeme;
+                consume(TokenType::LPAREN, "Expect ( after function name.");
+                if (!check(TokenType::RPAREN)) {
+                    do {
+                        def.params.push_back(consume(TokenType::IDENTIFIER, "Expect parameter name.").lexeme);
+                    } while (match(TokenType::COMMA));
+                }
+                consume(TokenType::RPAREN, "Expect ) after parameters.");
+
+                is_local_parsing_ = true;
+                while (!check(TokenType::END) && !is_at_end()) {
+                    if (match(TokenType::RETURN)) {
+                        def.return_node = expression();
+                        if (match(TokenType::LBRACKET)) {
+                            std::string uname = "";
+                            while(!check(TokenType::RBRACKET) && !is_at_end()) uname += advance().lexeme;
+                            consume(TokenType::RBRACKET, "Expect ].");
+                            def.return_unit = Unit::from_string(uname);
+                        } else def.return_unit = Unit::Dimensionless();
+                    } else {
+                        std::string lhs = consume(TokenType::IDENTIFIER, "Expect variable name in function.").lexeme;
+                        consume(TokenType::EQUALS, "Expect =.");
+                        def.body_assignments.push_back({lhs, expression()});
+                    }
+                }
+                is_local_parsing_ = false;
+                consume(TokenType::END, "Expect end function.");
+                consume(TokenType::FUNCTION, "Expect 'function'.");
+                system_.definition_registry().register_function(std::move(def));
+            } else {
+                filtered.push_back(advance());
+            }
+        }
+
+        tokens_ = std::move(filtered);
+        current_ = 0;
+    }
+
+    std::filesystem::path resolve_path(const std::string& original_path) {
+        std::filesystem::path p(original_path);
+        std::vector<std::string> trials;
+        
+        trials.push_back(original_path);
+        if (p.extension().empty()) {
+            trials.push_back(original_path + ".cnes");
+        }
+
+        for (const auto& trial_str : trials) {
+            std::filesystem::path trial(trial_str);
+
+            if (!search_paths_.empty()) {
+                std::filesystem::path rel = search_paths_.back() / trial;
+                if (std::filesystem::exists(rel)) return rel;
+            }
+
+            if (std::filesystem::exists(trial)) return trial;
+
+            if (!exe_path_.empty()) {
+                std::filesystem::path lib_path = exe_path_ / "libs" / trial;
+                if (std::filesystem::exists(lib_path)) return lib_path;
+            }
+        }
+
+        return "";
+    }
+
+    void include_statement() {
+        Token path_token = consume(TokenType::STRING, "Expect file path after include.");
+        std::string raw_path = path_token.lexeme;
+
+        std::filesystem::path resolved = resolve_path(raw_path);
+        if (resolved.empty()) {
+            throw error(path_token, "Could not resolve include path: " + raw_path);
+        }
+
+        std::ifstream file(resolved);
+        if (!file.is_open()) {
+            throw error(path_token, "Could not open included file: " + resolved.string());
+        }
+
+        std::stringstream ss;
+        ss << file.rdbuf();
+
+        Lexer lex(ss.str());
+        std::vector<Token> included_tokens = lex.scan_tokens();
+
+        // Create a new parser for the included file
+        Parser sub_parser(included_tokens, system_, resolved);
+        sub_parser.set_exe_path(exe_path_);
+
+        // The definitions are registered to the shared system_
+        sub_parser.parse();
+    }
+
+
     void statement() {
         if (match(TokenType::INCLUDE)) {
             include_statement();
             return;
         }
         if (check(TokenType::IDENTIFIER)) {
-            TokenType t = peek_next().type;
-            if (t == TokenType::COLON_EQUALS || t == TokenType::DOT || t == TokenType::LBRACKET || t == TokenType::LBRACE) {
+            Token name = peek();
+            TokenType next_t = peek_next().type;
+            
+            if (next_t == TokenType::LPAREN && system_.definition_registry().get_routine(name.lexeme)) {
+                expand_routine();
+                return;
+            }
+
+            if (next_t == TokenType::COLON_EQUALS || next_t == TokenType::DOT || next_t == TokenType::LBRACKET || next_t == TokenType::LBRACE) {
                 definition_statement();
                 return;
             }
@@ -39,27 +183,39 @@ private:
         equation_statement();
     }
 
-    void include_statement() {
-        Token path_token = consume(TokenType::STRING, "Expect file path after include.");
-        std::string path = path_token.lexeme;
+    void expand_routine() {
+        Token name = advance();
+        const RoutineDef* def = system_.definition_registry().get_routine(name.lexeme);
         
-        std::ifstream file(path);
-        if (!file.is_open()) {
-            throw error(path_token, "Could not open included file: " + path);
+        consume(TokenType::LPAREN, "Expect (.");
+        std::vector<Token> args;
+        if (!check(TokenType::RPAREN)) {
+            do {
+                args.push_back(advance());
+            } while (match(TokenType::COMMA));
+        }
+        consume(TokenType::RPAREN, "Expect ).");
+
+        if (args.size() != def->params.size()) {
+            throw error(name, "Routine " + name.lexeme + " requires " + std::to_string(def->params.size()) + " arguments.");
         }
 
-        std::stringstream ss;
-        ss << file.rdbuf();
-        Lexer lex(ss.str());
-        std::vector<Token> included_tokens = lex.scan_tokens();
-
-        // Remove END_OF_FILE from included tokens
-        if (!included_tokens.empty() && included_tokens.back().type == TokenType::END_OF_FILE) {
-            included_tokens.pop_back();
+        std::map<std::string, Token> mapping;
+        for (size_t i = 0; i < args.size(); ++i) {
+            mapping.emplace(def->params[i], args[i]);
         }
 
-        // Insert included tokens into the current token stream after the current position
-        tokens_.insert(tokens_.begin() + current_, included_tokens.begin(), included_tokens.end());
+        std::vector<Token> expanded;
+        for (const auto& body_token : def->body_tokens) {
+            auto it = mapping.find(body_token.lexeme);
+            if (it != mapping.end() && body_token.type == TokenType::IDENTIFIER) {
+                expanded.push_back(it->second);
+            } else {
+                expanded.push_back(body_token);
+            }
+        }
+
+        tokens_.insert(tokens_.begin() + current_, expanded.begin(), expanded.end());
     }
 
     void definition_statement() {
@@ -192,8 +348,21 @@ private:
                 consume(TokenType::RPAREN, "Expect ).");
                 auto custom_func = system_.function_registry().get(name.lexeme);
                 if (custom_func) return std::make_shared<CustomFunctionNode>(custom_func, args);
+
+                auto user_func = system_.definition_registry().get_function(name.lexeme);
+                if (user_func) {
+                    std::vector<NodePtr> arg_nodes;
+                    for (const auto& arg : args) arg_nodes.push_back(arg.node);
+                    return std::make_shared<UserFunctionNode>(user_func, arg_nodes);
+                }
+
                 throw error(name, "Unknown function.");
             }
+            
+            if (is_local_parsing_) {
+                return std::make_shared<LocalVariableNode>(name.lexeme);
+            }
+
             auto constant = system_.constant_registry().get(name.lexeme);
             auto substance = system_.substance_manager().get(name.lexeme);
             int idx = system_.registry().register_variable(name.lexeme);
@@ -226,10 +395,16 @@ private:
     template<typename... Args> bool match(Args... types) { if ((check(types) || ...)) { advance(); return true; } return false; }
     bool check(TokenType type) const { return !is_at_end() && peek().type == type; }
     Token advance() { if (!is_at_end()) current_++; return previous(); }
-    bool is_at_end() const { return peek().type == TokenType::END_OF_FILE; }
+    bool is_at_end() const { return current_ >= (int)tokens_.size() || tokens_[current_].type == TokenType::END_OF_FILE; }
     Token peek() const { return tokens_[current_]; }
-    Token peek_next() const { return is_at_end() ? tokens_[current_] : tokens_[current_ + 1]; }
-    Token previous() const { return tokens_[current_ - 1]; }
+    Token peek_next() const { 
+        if (current_ + 1 >= (int)tokens_.size()) return tokens_.back();
+        return tokens_[current_ + 1]; 
+    }
+    Token previous() const { 
+        if (current_ == 0) return tokens_[0];
+        return tokens_[current_ - 1]; 
+    }
     Token consume(TokenType type, const std::string& message) { if (check(type)) return advance(); throw error(peek(), message); }
     std::runtime_error error(Token token, const std::string& message) { return std::runtime_error("[Line " + std::to_string(token.line) + "] Error at " + token.lexeme + ": " + message); }
 };

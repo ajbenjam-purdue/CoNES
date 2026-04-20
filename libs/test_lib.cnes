@@ -1,0 +1,3 @@
+routine from_lib(x)
+    InLib = x
+end routine

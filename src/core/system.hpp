@@ -6,6 +6,7 @@
 #include "function_registry.hpp"
 #include "substance_manager.hpp"
 #include "constant_registry.hpp"
+#include "../lang/definition_registry.hpp"
 #include <Eigen/Dense>
 #include <vector>
 #include <memory>
@@ -19,6 +20,7 @@ namespace cones
         FunctionRegistry function_registry_;
         SubstanceManager substance_manager_;
         ConstantRegistry constant_registry_;
+        DefinitionRegistry definition_registry_;
 
     public:
         void add_equation(NodePtr eq) { equations_.push_back(std::move(eq)); }
@@ -27,6 +29,8 @@ namespace cones
         FunctionRegistry &function_registry() { return function_registry_; }
         SubstanceManager &substance_manager() { return substance_manager_; }
         ConstantRegistry &constant_registry() { return constant_registry_; }
+        DefinitionRegistry &definition_registry() { return definition_registry_; }
+        const DefinitionRegistry &definition_registry() const { return definition_registry_; }
 
         void evaluate(Eigen::VectorXd &f, Eigen::MatrixXd &j) const
         {

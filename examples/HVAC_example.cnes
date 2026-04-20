@@ -1,5 +1,6 @@
 // This script re-creates a simple heat pump analysis (EES reference script shown below, in a block comment)
 // You will observe all enthalpies are cast to kJ/kg. This is only for nicer display! You can remove any and all casts; the results will be functionally identical.
+// To see all available substances, cnes --list-substances
 
 T_evap := 5  [C]     // Evaporator temperature
 T_cond := 40 [C]     // Condenser temperature
@@ -33,7 +34,6 @@ m_dot.unit := [kg/s]
 Q_dot_cond = m_dot * (h_2 - h_3) [kW]
 W_dot_comp = m_dot * (h_2 - h_1) [kW]
 COP_HP = Q_dot_cond / W_dot_comp
-COP_AC = Q_dot_evap / W_dot_comp // Additional metric, AC mode COP
 
 // Equivalent reference EES script:
 /*

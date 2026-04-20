@@ -56,6 +56,12 @@ A domain-specific language (DSL) designed for clear equation entry and property 
 
  - **Implicit Equations**: Supports `f(x) = g(x)` syntax.
  - **Unit System**: Full support for SI and common engineering units (C, bar, kJ/kg, kW). Automatic conversion to internal SI representation.
+ - **Inclusion System**: Robust modularity with `include`.
+   - **Search Path**: Searches (1) relative to the script, (2) Current Working Directory, and (3) `[exe]/libs/`.
+   - **Auto-Extension**: Automatically infers `.cnes` if omitted (e.g., `include "fluid_lib"`).
+ - **Modularity**:
+   - **Routines**: Macro-style equation templates that expand in the global solver scope.
+   - **Functions**: Isolated procedural blocks with local variable scoping for sequential calculations.
  - **VS Code Extension**: Native support with syntax highlighting and comment-aware autocomplete.
 
 ## 4. Development Roadmap
@@ -63,9 +69,11 @@ A domain-specific language (DSL) designed for clear equation entry and property 
  - **[DONE]** Modular Property Function Registry.
  - **[DONE]** Inverted $T(P,h)$ and $T(P,s)$ lookups.
  - **[DONE]** Heuristic initial guessing based on units.
+ - **[DONE]** Macro-style `routine` blocks for reusable physics.
+ - **[DONE]** Procedural `function` blocks with local scoping.
+ - **[DONE]** Recursive inclusion with robust path resolution.
  - **[TODO]** BLT Decomposition (Tarjan's SCC) for block-solving.
  - **[TODO]** Bipartite Matching for DOF validation.
- - **[TODO]** User-defined `routine` blocks for reusable physics.
 
 ## 5. VS Code Extension
 
