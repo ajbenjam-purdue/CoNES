@@ -145,7 +145,7 @@ namespace cones
                     return interpolate_2d(table, P, T);
             }
 
-            throw std::runtime_error("TabulatedSubstance (" + name_ + "): Insufficient inputs for " + property_to_string(target));
+            throw std::runtime_error("TabulatedSubstance (" + name_ + "): Insufficient inputs for " + property_to_string(target) + "()"); // <- Add more detailed info here
         }
 
     private:

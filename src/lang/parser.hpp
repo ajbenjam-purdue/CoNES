@@ -21,10 +21,15 @@ class Parser {
     std::vector<std::string> local_param_names_;
     std::vector<std::filesystem::path> search_paths_;
     std::filesystem::path exe_path_;
+    int include_depth_ = 0;
+    static constexpr int MAX_INCLUDE_DEPTH = 10;
 
     public:
-    Parser(std::vector<Token> tokens, System& sys, std::filesystem::path initial_path = ".") 
-        : tokens_(std::move(tokens)), system_(sys) {
+    Parser(std::vector<Token> tokens, System& sys, std::filesystem::path initial_path = ".", int depth = 0) 
+        : tokens_(std::move(tokens)), system_(sys), include_depth_(depth) {
+        if (include_depth_ > MAX_INCLUDE_DEPTH) {
+            throw std::runtime_error("Maximum include depth exceeded (circular dependency?)");
+        }
         std::filesystem::path abs_path = std::filesystem::absolute(initial_path);
         if (std::filesystem::is_directory(abs_path)) {
             search_paths_.push_back(abs_path);
@@ -36,8 +41,14 @@ class Parser {
     void set_exe_path(std::filesystem::path p) { exe_path_ = std::move(p); }
 
     void parse() {
-        scrap_definitions();
-        while (!is_at_end()) statement();
+        try {
+            scrap_definitions();
+            while (!is_at_end()) statement();
+        } catch (const std::bad_alloc&) {
+            throw std::runtime_error("Parser: Out of memory. Possible infinite expansion in routines or includes.");
+        } catch (const std::exception& e) {
+            throw std::runtime_error("Parser: " + std::string(e.what()));
+        }
     }
 
 private:
@@ -58,7 +69,7 @@ private:
                 consume(TokenType::RPAREN, "Expect ) after parameters.");
 
                 while (!(check(TokenType::END) && peek_next().type == TokenType::ROUTINE)) {
-                    if (is_at_end()) throw error(previous(), "Unterminated routine.");
+                    if (is_at_end()) throw error(peek(), "Unterminated routine.");
                     def.body_tokens.push_back(advance());
                 }
                 consume(TokenType::END, "Expect end.");
@@ -98,6 +109,13 @@ private:
             } else {
                 filtered.push_back(advance());
             }
+        }
+
+        // CRITICAL: Preserve EOF token
+        if (current_ < (int)tokens_.size() && tokens_[current_].type == TokenType::END_OF_FILE) {
+            filtered.push_back(tokens_[current_]);
+        } else {
+            filtered.emplace_back(TokenType::END_OF_FILE, "", 0);
         }
 
         tokens_ = std::move(filtered);
@@ -152,11 +170,9 @@ private:
         Lexer lex(ss.str());
         std::vector<Token> included_tokens = lex.scan_tokens();
 
-        // Create a new parser for the included file
-        Parser sub_parser(included_tokens, system_, resolved);
+        // Create a sub-parser with incremented depth
+        Parser sub_parser(included_tokens, system_, resolved, include_depth_ + 1);
         sub_parser.set_exe_path(exe_path_);
-
-        // The definitions are registered to the shared system_
         sub_parser.parse();
     }
 
@@ -213,6 +229,10 @@ private:
             } else {
                 expanded.push_back(body_token);
             }
+        }
+
+        if (tokens_.size() + expanded.size() > 1000000) {
+            throw std::runtime_error("Parser: Script too large after routine expansion (possible infinite recursion).");
         }
 
         tokens_.insert(tokens_.begin() + current_, expanded.begin(), expanded.end());

@@ -138,3 +138,26 @@ If a variable is assigned a unit but lacks a `.guess`, CoNES provides ballpark s
 - **Temperature**: 293.15 K
 - **Specific Enthalpy**: 250,000 J/kg
 - **Density**: 1.2 kg/m³
+
+---
+
+## 8. Tool Integration (JSON & Linting)
+
+To support GUIs and external tools, CoNES provides structured output formats.
+
+### 8.1 JSON Output (`--json`)
+When the `--json` flag is used, CoNES outputs a JSON object containing:
+- `version`: The current solver version.
+- `success`: Boolean indicating if the solver converged or if the parser succeeded.
+- `error`: (Optional) String message if `success` is false.
+- `variables`: A list of variable objects:
+    - `name`: Variable identifier.
+    - `value`: Current numerical value (in user units).
+    - `unit`: The unit assigned to the variable.
+    - `is_fixed`: Boolean indicating if the variable was a boundary condition (`:=`).
+- `performance`: Timing data for Lexer, Parser, and Solver in milliseconds.
+
+### 8.2 Linting (`--lint`)
+The `--lint` flag performs a dry-run of the script. It parses all `include` directives, registers all variables, and validates all function calls and routine expansions. This mode is used by editors to provide real-time feedback without the overhead of numerical solving.
+- Returns `success: true` if the script is mathematically well-formed.
+- Returns `success: false` with an `error` message pointing to the specific line of failure for syntax or definition errors.

@@ -39,3 +39,8 @@ Eigen
 
 # Materials
 *.cnesbin
+
+# Python UI
+.venv
+.temp
+__pycache__

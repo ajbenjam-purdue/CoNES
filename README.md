@@ -13,8 +13,22 @@ g++ -O3 -std=c++20 -I . src/main.cpp -o cnes.exe
 `cnes.exe` acts as a lightweight virtual machine with the following signature:
 
 ```
-./cnes.exe [input_file.cnes] [-o output_file.txt] [-v] [--version] [--help]
+./cnes.exe [input_file.cnes] [options]
 ```
+
+#### CLI Options
+ - `-o <file>`: Write results to a specific text file.
+ - `-v`: Verbose output (shows Newton-Raphson residuals per iteration).
+ - `-s`, `--silent`: Suppress the execution summary table (useful for batch processing).
+ - `--json`: Output results as a JSON object (ideal for GUI/tool integration).
+ - `--lint`: Performs lexical and syntactic analysis and variable registration, but stops before solving. 
+ - `--tol <val>`: Override the convergence tolerance (default: 1e-9).
+ - `--max-iter <val>`: Override the maximum number of solver iterations (default: 100).
+ - `--list-substances`: Display all registered materials (Ideal Gas and Tabulated).
+ - `--list-functions`: Display all available math and property functions.
+ - `--out-vscode-metadata`: Exports project metadata for the VS Code extension.
+
+---
 
 ## 1. System of Equations Solver (Core Engine)
 

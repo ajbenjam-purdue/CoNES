@@ -23,11 +23,13 @@ void print_help() {
               << "  Output:\n"
               << "    -o <file>             Write results to a file\n"
               << "    -v                    Verbose output (solver iterations)\n"
-              << "    -s, --silent          Suppress the execution summary table\n\n"
+              << "    -s, --silent          Suppress the execution summary table\n"
+              << "    --json                Output results in JSON format\n\n"
               << "  Solver:\n"
               << "    --tol <val>           Override convergence tolerance (default: 1e-9)\n"
               << "    --max-iter <val>      Override max solver iterations (default: 100)\n\n"
               << "  Development Tools:\n"
+              << "    --lint                Check syntax and definitions without solving\n"
               << "    --list-substances     List all registered substances\n"
               << "    --list-functions      List all registered functions\n"
               << "    --list-constants      List all built-in constants\n"
@@ -35,6 +37,42 @@ void print_help() {
               << "  General:\n"
               << "    --version             Show the current CoNES version\n"
               << "    --help, -h            Show this help message\n" << std::endl;
+}
+
+void print_json_output(const System& system, double t_lexer, double t_parser, double t_solver, bool success, const std::string& error_msg = "") {
+    std::cout << "{\n";
+    std::cout << "  \"version\": \"" << Version::full() << "\",\n";
+    std::cout << "  \"success\": " << (success ? "true" : "false") << ",\n";
+    if (!error_msg.empty()) {
+        std::cout << "  \"error\": \"" << error_msg << "\",\n";
+    }
+    std::cout << "  \"variables\": [\n";
+    
+    auto& reg = system.registry();
+    bool first = true;
+    for (size_t i = 0; i < reg.size(); ++i) {
+        const auto& v = reg.get_variable(i);
+        if (v.is_reserved) continue;
+        
+        if (!first) std::cout << ",\n";
+        first = false;
+
+        double display_val = (v.value / v.unit.scale) - v.unit.offset;
+        
+        std::cout << "    {\n";
+        std::cout << "      \"name\": \"" << v.name << "\",\n";
+        std::cout << "      \"value\": " << std::fixed << std::setprecision(10) << display_val << ",\n";
+        std::cout << "      \"unit\": \"" << (v.unit_name.empty() ? "" : v.unit_name) << "\",\n";
+        std::cout << "      \"is_fixed\": " << (v.is_fixed ? "true" : "false") << "\n";
+        std::cout << "    }";
+    }
+    std::cout << "\n  ],\n";
+    std::cout << "  \"performance\": {\n";
+    std::cout << "    \"lexer_ms\": " << t_lexer << ",\n";
+    std::cout << "    \"parser_ms\": " << t_parser << ",\n";
+    std::cout << "    \"solver_ms\": " << t_solver << "\n";
+    std::cout << "  }\n";
+    std::cout << "}\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -100,6 +138,8 @@ int main(int argc, char* argv[]) {
     std::string output_path = "";
     bool verbose = false;
     bool silent = false;
+    bool json_out = false;
+    bool lint_mode = false;
     double tol_override = 1e-9;
     int max_iter_override = 100;
 
@@ -109,6 +149,8 @@ int main(int argc, char* argv[]) {
         if (flag == "--version") { std::cout << Version::full() << std::endl; return 0; }
         if (flag == "-v") { verbose = true; continue; }
         if (flag == "-s" || flag == "--silent") { silent = true; continue; }
+        if (flag == "--json") { json_out = true; continue; }
+        if (flag == "--lint") { lint_mode = true; continue; }
         if (flag == "-o" && i + 1 < argc) { output_path = argv[++i]; continue; }
         if (flag == "--tol" && i + 1 < argc) { tol_override = std::stod(argv[++i]); continue; }
         if (flag == "--max-iter" && i + 1 < argc) { max_iter_override = std::stoi(argv[++i]); continue; }
@@ -187,10 +229,31 @@ int main(int argc, char* argv[]) {
         parser.parse();
         auto time_parser = std::chrono::high_resolution_clock::now();
 
+        if (lint_mode) {
+            if (json_out) {
+                print_json_output(system, 
+                    std::chrono::duration<double, std::milli>(time_lexer - start_time).count(),
+                    std::chrono::duration<double, std::milli>(time_parser - time_lexer).count(),
+                    0, true);
+            } else {
+                std::cout << "Linting successful: " << input_path << std::endl;
+            }
+            return 0;
+        }
+
         NewtonSolver solver(tol_override, max_iter_override, verbose);
         solver.solve(system);
 
         auto end_time = std::chrono::high_resolution_clock::now();
+
+        double d_lexer = std::chrono::duration<double, std::milli>(time_lexer - start_time).count();
+        double d_parser = std::chrono::duration<double, std::milli>(time_parser - time_lexer).count();
+        double d_solver = std::chrono::duration<double, std::milli>(end_time - time_parser).count();
+
+        if (json_out) {
+            print_json_output(system, d_lexer, d_parser, d_solver, true);
+            return 0;
+        }
 
         // Output
         if (!silent || !output_path.empty()) {
@@ -202,11 +265,6 @@ int main(int argc, char* argv[]) {
             }
 
             if (!silent) {
-
-                // Durations
-                std::chrono::duration<double, std::milli> duration_lexer = time_lexer - start_time;
-                std::chrono::duration<double, std::milli> duration_parser = time_parser - time_lexer;
-                std::chrono::duration<double, std::milli> duration_solver = end_time - time_parser;
 
                 *out << "\n" << std::string(50, '=') << "\n";
                 *out << " " << Version::full() << " Execution Summary\n";
@@ -228,15 +286,26 @@ int main(int argc, char* argv[]) {
                 }
 
                 *out << std::string(50, '=') << "\n";
-                *out << "Lexer Time:  " << duration_lexer.count() << " ms\n";
-                *out << "Parser Time: " << duration_parser.count() << " ms\n";
-                *out << "Solver Time: " << duration_solver.count() << " ms\nDOF: " << system.registry().get_active_indices().size() << "\n";
+                *out << "Lexer Time:  " << d_lexer << " ms\n";
+                *out << "Parser Time: " << d_parser << " ms\n";
+                *out << "Solver Time: " << d_solver << " ms\nDOF: " << system.registry().get_active_indices().size() << "\n";
                 *out << std::string(50, '=') << std::endl;
             }
         }
 
+    } catch (const std::bad_alloc&) {
+        if (json_out) {
+            print_json_output(system, 0, 0, 0, false, "System error: Out of memory. The script may be too large or contains circular dependencies.");
+        } else {
+            std::cerr << "\nFATAL ERROR: System out of memory." << std::endl;
+        }
+        return 1;
     } catch (const std::exception& e) {
-        std::cerr << "\nFATAL ERROR: " << e.what() << std::endl;
+        if (json_out) {
+            print_json_output(system, 0, 0, 0, false, e.what());
+        } else {
+            std::cerr << "\nFATAL ERROR: " << e.what() << std::endl;
+        }
         return 1;
     }
 
