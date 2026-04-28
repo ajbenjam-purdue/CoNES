@@ -30,6 +30,9 @@ namespace cones
         TabulatedSubstance(std::string name) : name_(std::move(name)) {}
 
         std::string name() const override { return name_; }
+        std::string summary() const override { 
+            return "Tabulated Substance [" + std::to_string(tables_.size()) + " properties registered]"; 
+        }
 
         void load_table(PropertyType prop, const std::string &path)
         {

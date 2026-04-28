@@ -23,6 +23,7 @@ namespace cones
     public:
         virtual ~Substance() = default;
         virtual std::string name() const = 0;
+        virtual std::string summary() const = 0;
 
         /**
          * @brief The core State Resolver.

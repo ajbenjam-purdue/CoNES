@@ -2,11 +2,21 @@ import tkinter as tk
 from tkinter import ttk
 import customtkinter as ctk
 import re
+import sys
+
+MONOSPACED_TYPEFACE = "Consolas" if sys.platform.startswith('win32') else "Andale Mono"
+MONOSPACED_FONT = (MONOSPACED_TYPEFACE, 11)
+MONOSPACED_FONT_BOLD = (MONOSPACED_TYPEFACE, 11, "bold")
+MONOSPACED_FONT_SMALL = (MONOSPACED_TYPEFACE, 9)
+
+UI_TYPEFACE = "Segoe UI" if sys.platform.startswith('win32') else "SF Pro Light"
+UI_FONT = (UI_TYPEFACE, 11)
+UI_FONT_SMALL = (UI_TYPEFACE, 9)
 
 class CodeEditor(ctk.CTkFrame):
     def __init__(self, master, metadata=None, **kwargs):
         super().__init__(master, **kwargs)
-        self.metadata = metadata or {"constants": [], "functions": {}, "substances": []}
+        self.metadata = metadata or {"constants": {}, "functions": {}, "substances": {}}
         
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
@@ -17,19 +27,18 @@ class CodeEditor(ctk.CTkFrame):
         
         # Text Area (With Word Wrap)
         self.text_area = tk.Text(self, 
-                                 undo=True, 
+                                 undo=True,
+                                 maxundo=100, 
                                  wrap="word", 
                                  bg="#1e1e1e", 
                                  fg="#d4d4d4", 
                                  insertbackground="#007acc",
-                                 font=("Consolas", 11),
+                                 font=MONOSPACED_FONT,
                                  highlightthickness=0,
-                                 padx=5,
-                                 pady=2,
+                                 padx=5, pady=2,
                                  borderwidth=0,
                                  spacing1=1, # Extra line spacing for readability
-                                 autoseparators=True,
-                                 maxundo=100)
+                                 autoseparators=True)
         self.text_area.grid(row=0, column=1, sticky="nsew")
         
         # Scrollbars
@@ -58,7 +67,7 @@ class CodeEditor(ctk.CTkFrame):
         # Professional Engineering Theme
         self.text_area.tag_configure("keyword", foreground="#569cd6") 
         self.text_area.tag_configure("function", foreground="#dcdcaa") 
-        self.text_area.tag_configure("substance", foreground="#4ec9b0", font=("Consolas", 11, "bold")) 
+        self.text_area.tag_configure("substance", foreground="#4ec9b0", font=MONOSPACED_FONT_BOLD) 
         self.text_area.tag_configure("string", foreground="#ce9178") 
         self.text_area.tag_configure("number", foreground="#b5cea8") 
         self.text_area.tag_configure("unit", foreground="#b5cea8") 
@@ -103,6 +112,16 @@ class CodeEditor(ctk.CTkFrame):
             meta = self.metadata["functions"][word]
             rich_text = f"{meta['sig']}\n{'-'*20}\n{meta['desc']}"
             self._show_tooltip(rich_text, event.x_root, event.y_root)
+        elif word in self.metadata["constants"]:
+            meta = self.metadata["constants"][word]
+            val_str = f" = {meta['value']}" if meta['value'] else ""
+            unit_str = f" [{meta['unit']}]" if meta['unit'] else ""
+            rich_text = f"Constant: {word}{val_str}{unit_str}\n{'-'*20}\n{meta['desc']}"
+            self._show_tooltip(rich_text, event.x_root, event.y_root)
+        elif word in self.metadata["substances"]:
+            meta = self.metadata["substances"][word]
+            rich_text = f"Substance: {word}\n{'-'*20}\n{meta['summary']}"
+            self._show_tooltip(rich_text, event.x_root, event.y_root)
         else:
             self._hide_tooltip()
 
@@ -124,7 +143,7 @@ class CodeEditor(ctk.CTkFrame):
         self.tooltip.wm_geometry(f"+{x+15}+{y+10}")
         label = tk.Label(self.tooltip, text=text, justify='left',
                          background="#252526", foreground="#cccccc",
-                         relief='solid', borderwidth=1, font=("Segoe UI", 9),
+                         relief='solid', borderwidth=1, font=UI_FONT_SMALL,
                          padx=8, pady=5)
         label.pack()
 
@@ -165,7 +184,7 @@ class CodeEditor(ctk.CTkFrame):
         if match:
             prefix = match.group(1)
             local_vars = self._get_local_variables()
-            candidates = set(list(self.metadata["constants"]) + list(self.metadata["functions"].keys()) + list(self.metadata["substances"]) + list(local_vars))
+            candidates = set(list(self.metadata["constants"].keys()) + list(self.metadata["functions"].keys()) + list(self.metadata["substances"].keys()) + list(local_vars))
             
             for c in sorted(list(candidates)):
                 if c.startswith(prefix) and c != prefix:
@@ -182,6 +201,24 @@ class CodeEditor(ctk.CTkFrame):
                             root_y = self.text_area.winfo_rooty() + bbox[1]
                             meta = self.metadata["functions"][c]
                             rich_text = f"{meta['sig']}\n{'-'*20}\n{meta['desc']}"
+                            self._show_tooltip(rich_text, root_x, root_y - 40)
+                    elif c in self.metadata["constants"]:
+                        bbox = self.text_area.bbox(cursor_pos)
+                        if bbox:
+                            root_x = self.text_area.winfo_rootx() + bbox[0]
+                            root_y = self.text_area.winfo_rooty() + bbox[1]
+                            meta = self.metadata["constants"][c]
+                            val_str = f" = {meta['value']}" if meta['value'] else ""
+                            unit_str = f" [{meta['unit']}]" if meta['unit'] else ""
+                            rich_text = f"Constant: {c}{val_str}{unit_str}\n{'-'*20}\n{meta['desc']}"
+                            self._show_tooltip(rich_text, root_x, root_y - 40)
+                    elif c in self.metadata["substances"]:
+                        bbox = self.text_area.bbox(cursor_pos)
+                        if bbox:
+                            root_x = self.text_area.winfo_rootx() + bbox[0]
+                            root_y = self.text_area.winfo_rooty() + bbox[1]
+                            meta = self.metadata["substances"][c]
+                            rich_text = f"Substance: {c}\n{'-'*20}\n{meta['summary']}"
                             self._show_tooltip(rich_text, root_x, root_y - 40)
                     break
 
@@ -242,7 +279,7 @@ class CodeEditor(ctk.CTkFrame):
             # Only draw the number if this is the START of a logical line
             # If it's a wrapped visual line, the 'linestart' index will differ from current 'i'
             if self.text_area.index(f"{i} linestart") == i:
-                self.line_numbers.create_text(30, y + 2, anchor="ne", text=linenum, fill="#505050", font=("Consolas", 9))
+                self.line_numbers.create_text(30, y + 2, anchor="ne", text=linenum, fill="#505050", font=MONOSPACED_FONT_SMALL)
             
             i = self.text_area.index("%s + 1 line" % i)
             if self.text_area.compare(i, "==", "end"): break
@@ -253,7 +290,7 @@ class CodeEditor(ctk.CTkFrame):
             self.text_area.tag_remove(tag, "1.0", "end")
         
         # Dynamic rules based on C++ Registry
-        substance_pattern = r"\b(" + "|".join(re.escape(s) for s in self.metadata["substances"]) + r")\b" if self.metadata["substances"] else r"(?!x)x"
+        substance_pattern = r"\b(" + "|".join(re.escape(s) for s in self.metadata["substances"].keys()) + r")\b" if self.metadata["substances"] else r"(?!x)x"
         function_pattern = r"\b(" + "|".join(re.escape(f) for f in self.metadata["functions"].keys()) + r")\b" if self.metadata["functions"] else r"(?!x)x"
         
         rules = [

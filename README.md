@@ -4,16 +4,22 @@ A high-performance C++ environment for solving large-scale systems of coupled no
 
 To compile the interpreter, ensure Eigen is in the project root and run:
 
+**MacOS / Linux (g++):**
 ```bash
-g++ -O3 -std=c++20 -I . src/main.cpp -o cnes.exe
+g++ -O3 -std=c++20 -I . src/main.cpp -o cnes
+```
+
+**Windows (MSVC via Developer Command Prompt):**
+```cmd
+cl /O2 /std:c++20 /I . src/main.cpp /Fe:cnes.exe
 ```
 
 ### Interpreter Usage
 
-`cnes.exe` acts as a lightweight virtual machine with the following signature:
+The binary acts as a lightweight virtual machine. Use `./cnes` on Unix or `cnes.exe` on Windows:
 
-```
-./cnes.exe [input_file.cnes] [options]
+```bash
+./cnes [input_file.cnes] [options]
 ```
 
 #### CLI Options

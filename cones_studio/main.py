@@ -2,7 +2,8 @@ import customtkinter as ctk
 from tkinter import ttk, filedialog, messagebox
 import os, re
 import threading
-from editor import CodeEditor
+import tempfile
+from editor import CodeEditor, UI_FONT, UI_FONT_SMALL, MONOSPACED_FONT
 from backend import CoNESBackend, parse_time
 
 ctk.set_appearance_mode("Dark")
@@ -20,8 +21,8 @@ class CoNESStudio(ctk.CTk):
         self.configure(fg_color="#1e1e1e")
         
         # Backend & File State
-        self.backend = CoNESBackend("./cnes.exe")
-        self.temp_dir = os.path.join(os.environ.get("TEMP", os.getcwd()), "cones_studio")
+        self.backend = CoNESBackend()
+        self.temp_dir = os.path.join(tempfile.gettempdir(), "cones_studio")
         os.makedirs(self.temp_dir, exist_ok=True)
         self.shadow_path = os.path.join(self.temp_dir, "shadow_solve.cnes")
         
@@ -41,18 +42,18 @@ class CoNESStudio(ctk.CTk):
             "width": 50, 
             "height": 25, 
             "corner_radius": 0, 
-            "font": ("Segoe UI", 11),
+            "font": UI_FONT,
             "fg_color": "transparent",
             "hover_color": "#3e3e3e",
             "text_color": "#cccccc"
         }
-        
+
         self.btn_open = ctk.CTkButton(self.toolbar, text="Open", command=self.open_file, **btn_opts)
         self.btn_open.pack(side="left")
-        
+
         self.btn_save = ctk.CTkButton(self.toolbar, text="Save", command=self.save_file, **btn_opts)
         self.btn_save.pack(side="left")
-        
+
         # Solve button with accent color but still blocky
         self.btn_solve = ctk.CTkButton(self.toolbar, text="Solve", 
                                        fg_color=color_UI, 
@@ -61,7 +62,7 @@ class CoNESStudio(ctk.CTk):
                                        corner_radius=0,
                                        width=50,
                                        height=25,
-                                       font=("Segoe UI Semibold", 11),
+                                       font=UI_FONT,
                                        command=self.run_solve)
         self.btn_solve.pack(side="left", padx=(10, 0))
         
@@ -94,7 +95,7 @@ class CoNESStudio(ctk.CTk):
         
         # Status Bar
         self.status_bar = ctk.CTkLabel(self, text="  Ready", anchor="w", 
-                                       font=("Segoe UI", 9), height=25, 
+                                       font=UI_FONT_SMALL, height=25, 
                                        fg_color="#007acc", text_color="white",
                                        corner_radius=0)
         self.status_bar.grid(row=2, column=0, sticky="ew")
@@ -118,7 +119,7 @@ class CoNESStudio(ctk.CTk):
                         background="#1e1e1e", 
                         foreground="#cccccc", 
                         fieldbackground="#1e1e1e",
-                        font=("Segoe UI", 10),
+                        font=MONOSPACED_FONT,
                         borderwidth=0,
                         relief="solid",
                         rowheight=25)
@@ -142,7 +143,7 @@ class CoNESStudio(ctk.CTk):
                         background="#2d2d2d", 
                         foreground="#888888", 
                         relief="flat",
-                        font=("Segoe UI Semibold", 9),
+                        font=UI_FONT_SMALL,
                         borderwidth=1)
         style.map("Treeview.Heading", 
                   background=[('active', '#3e3e3e')],

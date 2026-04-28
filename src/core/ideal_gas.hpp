@@ -17,6 +17,9 @@ public:
         : name_(std::move(name)), R_gas_(R), Cp_(Cp) {}
 
     std::string name() const override { return name_; }
+    std::string summary() const override { 
+        return "Ideal Gas Model [R=" + std::to_string((int)R_gas_) + " J/kg*K, Cp=" + std::to_string((int)Cp_) + " J/kg*K]"; 
+    }
 
     DualNumber evaluate(PropertyType target, const std::vector<PropertyArg>& inputs) const override {
         DualNumber T(0,0), P(0,0), rho(0,0), h(0,0), u(0,0), v(0,0), s(0,0);

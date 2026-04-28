@@ -2,6 +2,10 @@ import subprocess
 import json
 import os
 import re
+import sys
+import tempfile
+
+DEFAULT_EXECUTABLE = "./cnes.exe" if sys.platform.startswith('win32') else "./cnes"
 
 def parse_time(solver_ms):
     if solver_ms >= 60000:
@@ -11,7 +15,7 @@ def parse_time(solver_ms):
     return f"{solver_ms:.2f} ms"
 
 class CoNESBackend:
-    def __init__(self, executable_path="./cnes.exe"):
+    def __init__(self, executable_path=DEFAULT_EXECUTABLE):
         self.exe = executable_path
 
     def solve(self, file_path):
@@ -34,13 +38,21 @@ class CoNESBackend:
                                      capture_output=True, 
                                      text=True, 
                                      check=False)
-            if not result.stdout: return {"substances": [], "functions": {}, "constants": []}
+            if not result.stdout: return {"substances": {}, "functions": {}, "constants": {}}
             
             parts = result.stdout.split("|||")
-            if len(parts) < 3: return {"substances": [], "functions": {}, "constants": []}
+            if len(parts) < 3: return {"substances": {}, "functions": {}, "constants": {}}
             
-            # Constants: Name:Value:Desc
-            constants = [p.split(":")[0].strip() for p in parts[0].split("|") if p]
+            # Constants: Name:Value:Unit:Desc
+            constants = {}
+            for p in parts[0].split("|"):
+                if not p: continue
+                fields = p.split(":")
+                name = fields[0].strip()
+                val = fields[1].strip() if len(fields) > 1 else ""
+                unit = fields[2].strip() if len(fields) > 2 else ""
+                desc = fields[3].strip() if len(fields) > 3 else ""
+                constants[name] = {"value": val, "unit": unit, "desc": desc}
             
             # Functions: Name(args):Description
             functions = {}
@@ -55,21 +67,27 @@ class CoNESBackend:
                 name = sig.split("(")[0].strip()
                 functions[name] = {"sig": sig.strip(), "desc": desc.strip()}
                 
-            # Substances: Name
-            substances = [p.strip() for p in parts[2].split("|") if p]
+            # Substances: Name:Summary
+            substances = {}
+            for p in parts[2].split("|"):
+                if not p: continue
+                if ":" in p:
+                    name, summary = p.split(":", 1)
+                else:
+                    name, summary = p, ""
+                substances[name.strip()] = {"summary": summary.strip()}
             
             return {
-                "constants": sorted(list(set(constants))),
+                "constants": constants,
                 "functions": functions,
-                "substances": sorted(list(set(substances)))
+                "substances": substances
             }
         except Exception:
-            return {"substances": [], "functions": {}, "constants": []}
+            return {"substances": {}, "functions": {}, "constants": {}}
 
     def lint(self, script_content):
         """Writes content to a temp file and runs the linter."""
-        # Use a platform-appropriate temp path
-        temp_dir = os.environ.get("TEMP", os.environ.get("TMP", "/tmp"))
+        temp_dir = tempfile.gettempdir()
         temp_file = os.path.join(temp_dir, "cones_lint_target.cnes")
         
         try:

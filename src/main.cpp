@@ -180,25 +180,26 @@ int main(int argc, char* argv[]) {
         if (flag == "--out-vscode-metadata") {
             // CONSTANTS_STR ||| FUNCTIONS_STR ||| SUBSTANCES_STR
             
-            // Constants
+            // Constants: Name:Value:Unit:Description
             std::vector<std::string> c_names = system.constant_registry().get_constant_names();
-            std::vector<std::string> c_descs = system.constant_registry().get_constant_descriptions();
             for (size_t i = 0; i < c_names.size(); ++i) {
-                std::cout << c_names[i] << ":" << "" << ":" << c_descs[i] << (i < c_names.size() - 1 ? "|" : "");
+                const auto* c = system.constant_registry().get(c_names[i]);
+                std::cout << c->name << ":" << c->value << ":" << c->unit << ":" << c->desc << (i < c_names.size() - 1 ? "|" : "");
             }
             std::cout << "|||";
 
-            // Functions
+            // Functions: Sig:Desc
             auto f_meta = system.function_registry().get_function_metadata();
             for (size_t i = 0; i < f_meta.size(); ++i) {
                 std::cout << f_meta[i] << (i < f_meta.size() - 1 ? "|" : "");
             }
             std::cout << "|||";
 
-            // Substances
+            // Substances: Name:Summary
             auto s_names = system.substance_manager().get_substance_names();
             for (size_t i = 0; i < s_names.size(); ++i) {
-                std::cout << s_names[i] << (i < s_names.size() - 1 ? "|" : "");
+                auto sub = system.substance_manager().get(s_names[i]);
+                std::cout << sub->name() << ":" << sub->summary() << (i < s_names.size() - 1 ? "|" : "");
             }
             return 0;
         }
