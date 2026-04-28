@@ -3,6 +3,7 @@ from tkinter import ttk, filedialog, messagebox
 import os, re
 import threading
 import tempfile
+from typing import Optional, Any
 from editor import CodeEditor, UI_FONT, UI_FONT_SMALL, MONOSPACED_FONT
 from backend import CoNESBackend, parse_time
 
@@ -26,8 +27,10 @@ class CoNESStudio(ctk.CTk):
         os.makedirs(self.temp_dir, exist_ok=True)
         self.shadow_path = os.path.join(self.temp_dir, "shadow_solve.cnes")
         
-        self.current_file = None
+        self.current_file: Optional[str] = None
         self.metadata = self.backend.get_metadata()
+        self._linting_in_progress = False
+        self._lint_pending: Optional[str] = None
         
         # Grid Configuration
         self.grid_rowconfigure(1, weight=1)
@@ -166,14 +169,31 @@ class CoNESStudio(ctk.CTk):
         self.tree.pack(fill="both", expand=True)
 
     def run_lint(self):
+        """Debounced linting trigger."""
+        if self._lint_pending:
+            self.after_cancel(self._lint_pending)
+        self._lint_pending = self.after(300, self._start_lint_thread)
+
+    def _start_lint_thread(self):
+        """Starts the linting thread if not already running."""
+        if self._linting_in_progress:
+            # Re-schedule if already running
+            self._lint_pending = self.after(300, self._start_lint_thread)
+            return
+            
+        self._linting_in_progress = True
         threading.Thread(target=self._lint_thread, daemon=True).start()
 
     def _lint_thread(self):
-        content = self.editor.get_text()
-        result = self.backend.lint(content)
-        self.after(0, lambda: self._handle_lint_result(result))
+        try:
+            content = self.editor.get_text()
+            result = self.backend.lint(content)
+            self.after(0, lambda: self._handle_lint_result(result))
+        except Exception:
+            self._linting_in_progress = False
 
     def _handle_lint_result(self, result):
+        self._linting_in_progress = False
         if not result.get("success"):
             line = result.get("error_line", 0)
             self.editor.highlight_error(line)

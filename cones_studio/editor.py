@@ -3,6 +3,7 @@ from tkinter import ttk
 import customtkinter as ctk
 import re
 import sys
+from typing import Callable, Optional, Dict, Any
 
 MONOSPACED_TYPEFACE = "Consolas" if sys.platform.startswith('win32') else "Andale Mono"
 MONOSPACED_FONT = (MONOSPACED_TYPEFACE, 11)
@@ -47,9 +48,9 @@ class CodeEditor(ctk.CTkFrame):
         self.text_area.configure(yscrollcommand=self.v_scroll.set)
         
         # State
-        self.tooltip = None
-        self._lint_timer = None
-        self.on_content_changed_callback = None
+        self.tooltip: Optional[tk.Toplevel] = None
+        self._lint_timer: Optional[str] = None
+        self.on_content_changed_callback: Optional[Callable[[], None]] = None
         self.current_ghost = ""
         
         # Robust Sync Bindings
