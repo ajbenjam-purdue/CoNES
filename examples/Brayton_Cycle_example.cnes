@@ -1,0 +1,45 @@
+// Brayton Cycle Example
+// As converted from the EES code: https://fchartsoftware.com/assets/downloads/eesysolns/eesysol43.pdf
+
+// Input conditions (Fixed)
+T_amb := 20 [C]
+P_atm := 101.325 [kPa]
+PR := 5
+T_t_in := 1400 [K]
+m_dot := 1.0 [kg/s]
+
+// State 1
+T_1 = T_amb
+P_1 = P_atm
+s_1 = Entropy(Air, T=T_1, P=P_1)
+h_1 = Enthalpy(Air, T=T_1)
+
+// State 2
+P_2 = P_1 * PR
+s_2 = s_1
+h_2 = Enthalpy(Air, s=s_2, P=P_2)
+W_dot_c = (h_2 - h_1) * m_dot
+T_2 = Temperature(Air, h=h_2)
+
+// State 3
+T_3 = T_t_in
+P_3 = P_2
+h_3 = Enthalpy(Air, T=T_3)
+s_3 = Entropy(Air, T=T_3, P=P_3)
+Q_dot_c = (h_3 - h_2) * m_dot
+
+// State 4
+s_4 = s_3
+h_4 = Enthalpy(Air, s=s_4, P=P_4)
+W_dot_gt = (h_3 - h_4) * m_dot
+W_dot_gt = W_dot_c // Gas turbine drives compressor
+T_4 = Temperature(Air, h=h_4)
+
+// State 5
+P_5 = P_atm
+s_5 = s_4
+h_5 = Enthalpy(Air, s=s_5, P=P_5)
+W_dot_pt = (h_4 - h_5) * m_dot
+T_5 = Temperature(Air, h=h_5)
+
+eta = W_dot_pt / Q_dot_c

@@ -3,7 +3,7 @@ from tkinter import ttk, filedialog, messagebox
 import os, re
 import threading
 from editor import CodeEditor
-from backend import CoNESBackend
+from backend import CoNESBackend, parse_time
 
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
@@ -175,10 +175,10 @@ class CoNESStudio(ctk.CTk):
     def _handle_lint_result(self, result):
         if not result.get("success"):
             line = result.get("error_line", 0)
-            self.editor.highlight_error(line) // TODO
+            self.editor.highlight_error(line)
             self.status_bar.configure(text=f"  Linter: {result.get('error')}", fg_color="#a1260d")
         else:
-            self.editor.highlight_error(0) // TODO
+            self.editor.highlight_error(0)
             self.status_bar.configure(text="  Ready", fg_color="#16825d")
 
     def open_file(self):
@@ -218,10 +218,10 @@ class CoNESStudio(ctk.CTk):
         for item in self.tree.get_children(): self.tree.delete(item)
         for var in result.get("variables", []):
             state = "FIX" if var["is_fixed"] else "SOL"
-            self.tree.insert("", "end", values=(var["name"], f"{var['value']:.6f}", var["unit"], state))
+            self.tree.insert("", "end", values=(var["name"], f"{var['value']:.6}", var["unit"], state))
             
         perf = result.get("performance", {})
-        self.status_bar.configure(text=f"  Solved ({perf.get('solver_ms', 0):.1f}ms)", fg_color="#16825d")
+        self.status_bar.configure(text=f"  Solved ({parse_time(perf.get('solver_ms', 0))})", fg_color="#16825d")
 
 if __name__ == "__main__":
     app = CoNESStudio()

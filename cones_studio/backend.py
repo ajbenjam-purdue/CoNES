@@ -3,6 +3,13 @@ import json
 import os
 import re
 
+def parse_time(solver_ms):
+    if solver_ms >= 60000:
+        return f"{solver_ms/60000:.0f} min {(solver_ms/1000%60):.0f} sec"
+    if solver_ms >= 1000:
+        return f"{solver_ms/1000:.3f} sec"
+    return f"{solver_ms:.2f} ms"
+
 class CoNESBackend:
     def __init__(self, executable_path="./cnes.exe"):
         self.exe = executable_path

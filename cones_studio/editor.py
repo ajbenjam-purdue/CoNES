@@ -60,12 +60,12 @@ class CodeEditor(ctk.CTkFrame):
         self.text_area.tag_configure("function", foreground="#dcdcaa") 
         self.text_area.tag_configure("substance", foreground="#4ec9b0", font=("Consolas", 11, "bold")) 
         self.text_area.tag_configure("string", foreground="#ce9178") 
-        self.text_area.tag_configure("comment", foreground="#6a9955") 
-        self.text_area.tag_configure("unit", foreground="#b5cea8") 
         self.text_area.tag_configure("number", foreground="#b5cea8") 
+        self.text_area.tag_configure("unit", foreground="#b5cea8") 
         self.text_area.tag_configure("error", underline=True, underlinefg="#f44747")
         self.text_area.tag_configure("ghost", foreground="#505050")
         self.text_area.tag_configure("symbol_highlight", background="#37373d")
+        self.text_area.tag_configure("comment", foreground="#6a9955") 
 
     def _setup_shortcuts(self):
         self.text_area.bind("<Control-Left>", lambda e: self._jump_left(shift=False))
@@ -76,6 +76,14 @@ class CodeEditor(ctk.CTkFrame):
         self.text_area.bind("<Control-Delete>", self._delete_right)
         self.text_area.bind("<Tab>", self._accept_ghost)
         self.text_area.bind("<Control-a>", lambda e: (self.text_area.tag_add("sel", "1.0", "end"), "break"))
+
+    def highlight_error(self, line):
+        self.text_area.tag_remove("error", "1.0", "end")
+        if line > 0:
+            start = f"{line}.0"
+            end = f"{line}.end"
+            self.text_area.tag_add("error", start, end)
+            self.text_area.see(start)
 
     def highlight_symbol(self, name):
         self.text_area.tag_remove("symbol_highlight", "1.0", "end")
@@ -149,6 +157,9 @@ class CodeEditor(ctk.CTkFrame):
         self._clear_ghost()
         cursor_pos = self.text_area.index("insert")
         line_prefix = self.text_area.get("insert linestart", cursor_pos)
+        
+        if "//" in line_prefix: return
+
         match = re.search(r"(\w+)$", line_prefix)
         
         if match:

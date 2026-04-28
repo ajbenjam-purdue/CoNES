@@ -145,7 +145,8 @@ namespace cones
                     return interpolate_2d(table, P, T);
             }
 
-            throw std::runtime_error("TabulatedSubstance (" + name_ + "): Insufficient inputs for " + property_to_string(target) + "()"); // <- Add more detailed info here
+            // throw std::runtime_error("TabulatedSubstance (" + name_ + "): Insufficient inputs for " + property_to_string(target) + "()"); 
+            return {1e9, 0.0};
         }
 
     private:
@@ -166,59 +167,78 @@ namespace cones
         DualNumber interpolate_1d_t(const PropertyTable &table, DualNumber t_dual) const
         {
             double t = t_dual.val;
+            int nt = (int)table.t_grid.size();
+            int it = 0;
+            
             auto it_t = std::lower_bound(table.t_grid.begin(), table.t_grid.end(), t);
-            int it = std::distance(table.t_grid.begin(), it_t) - 1;
-            if (it < 0)
-                it = 0;
-            if (it >= (int)table.t_grid.size() - 1)
-                it = (int)table.t_grid.size() - 2;
+            it = std::distance(table.t_grid.begin(), it_t) - 1;
+            
+            if (it < 0) it = 0;
+            if (it >= nt - 1) it = nt - 2;
+
             double t0 = table.t_grid[it], t1 = table.t_grid[it + 1];
             double q0 = table.data[it], q1 = table.data[it + 1];
             double dt = t1 - t0;
-            double v = (t - t0) / dt;
-            return {(1 - v) * q0 + v * q1, ((q1 - q0) / dt) * t_dual.der};
+            
+            // Linear extrapolation/interpolation
+            double val = q0 + (t - t0) * (q1 - q0) / dt;
+            double dq_dt = (q1 - q0) / dt;
+            
+            return {val, dq_dt * t_dual.der};
         }
 
         DualNumber interpolate_1d_p(const PropertyTable &table, DualNumber p_dual) const
         {
             double p = p_dual.val;
+            int np = (int)table.p_grid.size();
+            int ip = 0;
+
             auto it_p = std::lower_bound(table.p_grid.begin(), table.p_grid.end(), p);
-            int ip = std::distance(table.p_grid.begin(), it_p) - 1;
-            if (ip < 0)
-                ip = 0;
-            if (ip >= (int)table.p_grid.size() - 1)
-                ip = (int)table.p_grid.size() - 2;
+            ip = std::distance(table.p_grid.begin(), it_p) - 1;
+
+            if (ip < 0) ip = 0;
+            if (ip >= np - 1) ip = np - 2;
+
             double p0 = table.p_grid[ip], p1 = table.p_grid[ip + 1];
             double q0 = table.data[ip], q1 = table.data[ip + 1];
             double dp = p1 - p0;
-            double u = (p - p0) / dp;
-            return {(1 - u) * q0 + u * q1, ((q1 - q0) / dp) * p_dual.der};
+            
+            double val = q0 + (p - p0) * (q1 - q0) / dp;
+            double dq_dp = (q1 - q0) / dp;
+
+            return {val, dq_dp * p_dual.der};
         }
 
         DualNumber interpolate_2d(const PropertyTable &table, DualNumber p_dual, DualNumber t_dual) const
         {
             double p = p_dual.val, t = t_dual.val;
+            int np = (int)table.p_grid.size();
+            int nt = (int)table.t_grid.size();
+
             auto it_p = std::lower_bound(table.p_grid.begin(), table.p_grid.end(), p);
             auto it_t = std::lower_bound(table.t_grid.begin(), table.t_grid.end(), t);
-            int ip = std::distance(table.p_grid.begin(), it_p) - 1, it = std::distance(table.t_grid.begin(), it_t) - 1;
+            
+            int ip = std::distance(table.p_grid.begin(), it_p) - 1;
+            int it = std::distance(table.t_grid.begin(), it_t) - 1;
 
-            if (ip < 0 || ip >= (int)table.p_grid.size() - 1 || it < 0 || it >= (int)table.t_grid.size() - 1)
-            {
-                int nip = std::clamp(ip, 0, (int)table.p_grid.size() - 1);
-                int nit = std::clamp(it, 0, (int)table.t_grid.size() - 1);
-                return {table.data[nip * table.t_grid.size() + nit], 0.0};
-            }
+            if (ip < 0) ip = 0;
+            if (ip >= np - 1) ip = np - 2;
+            if (it < 0) it = 0;
+            if (it >= nt - 1) it = nt - 2;
 
             double p0 = table.p_grid[ip], p1 = table.p_grid[ip + 1], t0 = table.t_grid[it], t1 = table.t_grid[it + 1];
-            double q00 = table.data[ip * table.t_grid.size() + it];
-            double q01 = table.data[ip * table.t_grid.size() + (it + 1)];
-            double q10 = table.data[(ip + 1) * table.t_grid.size() + it];
-            double q11 = table.data[(ip + 1) * table.t_grid.size() + (it + 1)];
+            double q00 = table.data[ip * nt + it];
+            double q01 = table.data[ip * nt + (it + 1)];
+            double q10 = table.data[(ip + 1) * nt + it];
+            double q11 = table.data[(ip + 1) * nt + (it + 1)];
 
             double dp = p1 - p0, dt = t1 - t0, u = (p - p0) / dp, v = (t - t0) / dt;
+            
+            // Bilinear interpolation/extrapolation
             double val = (1 - u) * (1 - v) * q00 + u * (1 - v) * q10 + (1 - u) * v * q01 + u * v * q11;
             double df_dp = (-(1 - v) * q00 + (1 - v) * q10 - v * q01 + v * q11) / dp;
             double df_dt = (-(1 - u) * q00 - u * q10 + (1 - u) * q01 + u * q11) / dt;
+            
             return {val, df_dp * p_dual.der + df_dt * t_dual.der};
         }
     };

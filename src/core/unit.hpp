@@ -118,6 +118,10 @@ namespace cones
                     return "us";
             }
 
+            if (dims == std::vector<int>{1, 0, -1, 0, 0})
+            {
+                return (std::abs(scale - 1.0/3600.0) < 1e-8) ? "kg/hr" : "kg/s";
+            }
             if (dims == std::vector<int>{0, 1, 0, 0, 0})
             {
                 if (std::abs(scale - 1000.0) < 1e-5)
@@ -212,6 +216,10 @@ namespace cones
                 return {1.0, {0, 2, -2, 0, 0}};
             if (s == "kJ/kg")
                 return {1000.0, {0, 2, -2, 0, 0}};
+            if (s == "kg/s")
+                return Kilogram() / Second();
+            if (s == "kg/hr")
+                return Kilogram() / Unit(3600.0, {0, 0, 1, 0, 0});
             if (s == "m/s")
                 return Meter() / Second();
             if (s == "cm/s")

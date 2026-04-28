@@ -48,15 +48,27 @@ namespace cones
 
             for (int i = 0; i < n; ++i)
             {
+                // Pre-evaluate the residual (f) first to check for domain errors
+                try {
+                    DualNumber res = equations_[i]->evaluate(dual_vals, registry_);
+                    f(i) = res.val;
+                } catch (...) {
+                    // Domain error or property lookup failure - penalize heavily
+                    f(i) = 1e9; 
+                }
+
                 for (int active_j = 0; active_j < m_active; ++active_j)
                 {
                     int global_idx = active_indices[active_j];
                     dual_vals[global_idx].der = 1.0;
 
-                    DualNumber res = equations_[i]->evaluate(dual_vals, registry_);
-
-                    if (active_j == 0) f(i) = res.val;
-                    j(i, active_j) = res.der;
+                    try {
+                        DualNumber res = equations_[i]->evaluate(dual_vals, registry_);
+                        j(i, active_j) = res.der;
+                    } catch (...) {
+                        j(i, active_j) = 0.0; // Flat gradient in error regions
+                    }
+                    
                     dual_vals[global_idx].der = 0.0;
                 }
             }
