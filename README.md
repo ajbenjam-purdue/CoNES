@@ -9,14 +9,19 @@ To compile the interpreter, ensure Eigen is in the project root and run:
 g++ -O3 -std=c++20 -I . src/main.cpp -o cnes
 ```
 
-**Windows (MSVC via Developer Command Prompt):**
+**Windows (MSVC via Developer Command Prompt, untested):**
 ```cmd
 cl /O2 /std:c++20 /I . src/main.cpp /Fe:cnes.exe
 ```
 
+**Windows (g++ via MinGW-w64):**
+```cmd
+g++ -O3 -std=c++20 -I . src/main.cpp -o cnes.exe
+```
+
 ### Interpreter Usage
 
-The binary acts as a lightweight virtual machine. Use `./cnes` on Unix or `cnes.exe` on Windows:
+The binary acts as a lightweight virtual machine. It can be used to solve a cnes script and display the results, lint a cnes script file without solving, or simply provide access to view installed substances, functions, and constants. **Note!** The interpreter only has access to the correctly packaged binary substance tables available in `materaials/`. To build these tables, view section 6. Use `./cnes` on Unix or `cnes.exe` on Windows:
 
 ```bash
 ./cnes [input_file.cnes] [options]
@@ -32,6 +37,7 @@ The binary acts as a lightweight virtual machine. Use `./cnes` on Unix or `cnes.
  - `--max-iter <val>`: Override the maximum number of solver iterations (default: 100).
  - `--list-substances`: Display all registered materials (Ideal Gas and Tabulated).
  - `--list-functions`: Display all available math and property functions.
+ - `--list-constants`: Display all built-in constants
  - `--out-vscode-metadata`: Exports project metadata for the VS Code extension.
 
 ---
@@ -94,6 +100,7 @@ A domain-specific language (DSL) designed for clear equation entry and property 
  - **[DONE]** Recursive inclusion with robust path resolution.
  - **[TODO]** BLT Decomposition (Tarjan's SCC) for block-solving.
  - **[TODO]** Bipartite Matching for DOF validation.
+ - **[TODO]** Psychrometrics!
 
 ## 5. VS Code Extension
 
@@ -102,3 +109,13 @@ Install the packaged extension at `src/lang/cnes/cnes-0.1.1.vsix`:
 ```bash
 code --install-extension src/lang/cnes/cnes-0.1.1.vsix
 ```
+
+## 6. Binary Table Creation
+
+CoNES uses properties sourced from [CoolProp](https://coolprop.org), an open source database. To build the required binary tables to use fluids like `Water` or refrigerants like `R134a`, you must have CoolProp installed with `pip`. Run the `export_props` python script from `CoNES/`:
+
+```bash
+python3 tools/export_props.py
+```
+
+The `materials/` directory should begin to populate with a selection of `.cnesbin` binary substance tables, and the python script's output should confirm the successful creation of each one. Without creating these tables, CoNES will only have access to idea gases.
