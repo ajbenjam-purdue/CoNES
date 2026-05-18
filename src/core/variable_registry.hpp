@@ -54,11 +54,14 @@ namespace cones
         }
         void set_fixed(int index, bool fixed) { variables_.at(index).is_fixed = fixed; }
         void set_reserved(int index, bool reserved) { variables_.at(index).is_reserved = reserved; }
-        void set_unit(int index, const Unit &unit, const std::string& name = "") { 
-            variables_.at(index).unit = unit; 
-            if (!name.empty()) variables_.at(index).unit_name = name;
+        void set_unit(int index, const Unit &unit, const std::string &name = "")
+        {
+            variables_.at(index).unit = unit;
+            if (!name.empty())
+                variables_.at(index).unit_name = name;
         }
-        void set_unit(int index, const std::string& name) {
+        void set_unit(int index, const std::string &name)
+        {
             variables_.at(index).unit = Unit::from_string(name);
             variables_.at(index).unit_name = name;
         }
@@ -66,30 +69,48 @@ namespace cones
         /**
          * @brief Suggests a ballpark guess based on units if the value is still at its default (1.0).
          */
-        void suggest_guess(int index, const Unit& u) {
-            auto& v = variables_.at(index);
-            if (v.value != 1.0 || v.is_fixed) return;
+        void suggest_guess(int index, const Unit &u)
+        {
+            auto &v = variables_.at(index);
+            if (v.value != 1.0 || v.is_fixed)
+                return;
 
             // Pressure (Pa)
-            if (u.dims == std::vector<int>{1, -1, -2, 0, 0}) v.value = 101325.0;
+            if (u.dims == std::vector<int>{1, -1, -2, 0, 0})
+                v.value = 101325.0;
             // Temperature (K)
-            else if (u.dims == std::vector<int>{0, 0, 0, 1, 0}) v.value = 293.15;
+            else if (u.dims == std::vector<int>{0, 0, 0, 1, 0})
+                v.value = 293.15;
             // Enthalpy / Specific Energy (J/kg)
-            else if (u.dims == std::vector<int>{0, 2, -2, 0, 0}) v.value = 250000.0;
+            else if (u.dims == std::vector<int>{0, 2, -2, 0, 0})
+                v.value = 250000.0;
             // Density (kg/m^3)
-            else if (u.dims == std::vector<int>{1, -3, 0, 0, 0}) v.value = 1.2;
+            else if (u.dims == std::vector<int>{1, -3, 0, 0, 0})
+                v.value = 1.2;
             // Energy (J)
-            else if (u.dims == std::vector<int>{1, 2, -2, 0, 0}) v.value = 1000.0;
+            else if (u.dims == std::vector<int>{1, 2, -2, 0, 0})
+                v.value = 1000.0;
         }
 
         // Getters
-        const Variable &get_variable(int index) const { return variables_.at(index); }
         size_t size() const { return variables_.size(); }
 
-        int get_index(const std::string& name) const {
+        int get_index(const std::string &name) const
+        {
             auto it = name_to_index_.find(name);
-            if (it == name_to_index_.end()) return -1;
+            if (it == name_to_index_.end())
+                return -1;
             return it->second;
+        }
+
+        // TODO: Correct undefined behavior for -1/EOB/missing name
+        const Variable &get_variable(int index) const // Get the variable value at the provided index
+        {
+            return variables_.at(index);
+        }
+        const Variable &get_variable(const std::string &name) const // Get the variable value with the provided name
+        {
+            return variables_.at(get_index(name));
         }
 
         /**

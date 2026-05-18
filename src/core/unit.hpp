@@ -15,37 +15,41 @@ namespace cones
      */
     struct Unit
     {
-        double scale = 1.0;
-        double offset = 0.0;
-        std::vector<int> dims = {0, 0, 0, 0, 0};
+        double scale = 1.0;                      // Scale relative to the SI reference
+        double offset = 0.0;                     // Offset relative to the SI reference (temp)
+        std::vector<int> dims = {0, 0, 0, 0, 0}; // Tracks the relative power of each dimension [Mass, Length, Time, Temp, Moles]
 
-        Unit() = default;
-        Unit(double s, std::vector<int> d, double o = 0.0) : scale(s), offset(o), dims(std::move(d)) {}
+        Unit() = default;                                                                               // Empty constructor
+        Unit(double s, std::vector<int> d, double o = 0.0) : scale(s), offset(o), dims(std::move(d)) {} // Pre-pop constructor
 
-        bool is_dimensionless() const
+        bool is_dimensionless() const // Returns true if the unit represents a dimensionless number
         {
             for (int d : dims)
                 if (d != 0)
                     return false;
             return true;
         }
-        bool compatible(const Unit &other) const { return dims == other.dims; }
+        bool compatible(const Unit &other) const { return dims == other.dims; } // Are this unit and the other compatible (e.g. for addition/similar)?
 
+        // Returns the BASE unit in SI representation (1 scale, 0 offset, same dims)
+        // TODO: Review. Current naming is misleading
         Unit to_si() const { return {1.0, dims, 0.0}; }
+
+        // Overloading
 
         Unit operator*(const Unit &other) const
         {
             std::vector<int> new_dims = dims;
             for (size_t i = 0; i < dims.size(); ++i)
                 new_dims[i] += other.dims[i];
-            return {scale * other.scale, new_dims, 0.0};
+            return {scale * other.scale, new_dims, 0.0}; // TODO: Review impact of offsets
         }
         Unit operator/(const Unit &other) const
         {
             std::vector<int> new_dims = dims;
             for (size_t i = 0; i < dims.size(); ++i)
                 new_dims[i] -= other.dims[i];
-            return {scale / other.scale, new_dims, 0.0};
+            return {scale / other.scale, new_dims, 0.0}; // Same issues as *
         }
         Unit pow(double p) const
         {
@@ -55,6 +59,7 @@ namespace cones
             return {std::pow(scale, p), new_dims, offset};
         }
 
+        // Member method
         std::string to_string() const
         {
             if (is_dimensionless())
@@ -120,7 +125,7 @@ namespace cones
 
             if (dims == std::vector<int>{1, 0, -1, 0, 0})
             {
-                return (std::abs(scale - 1.0/3600.0) < 1e-8) ? "kg/hr" : "kg/s";
+                return (std::abs(scale - 1.0 / 3600.0) < 1e-8) ? "kg/hr" : "kg/s";
             }
             if (dims == std::vector<int>{0, 1, 0, 0, 0})
             {
@@ -237,5 +242,14 @@ namespace cones
     };
 
 } // namespace cones
+
+namespace std
+{
+    // Equivalent to u.to_string()
+    std::string to_string(const cones::Unit &u)
+    {
+        return u.to_string();
+    }
+} // namespace std
 
 #endif

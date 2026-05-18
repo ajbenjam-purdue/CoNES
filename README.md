@@ -4,10 +4,13 @@ A high-performance C++ environment for solving large-scale systems of coupled no
 
 To compile the interpreter, ensure Eigen is in the project root and run:
 
-**MacOS / Linux (g++):**
+**MacOS / Linux (g++/clang++):**
 ```bash
-g++ -O3 -std=c++20 -I . src/main.cpp -o cnes
+g++ -O3 -march=native -std=c++20 -I . src/main.cpp -o cnes
 ```
+_`-march=native` allows g++/clang++ to make use of hardware features native to the building platform. If you're targeting an alternative build platform, disregard this or use `g++ -mcpu=help` to find all current targets._
+
+_`-ffast-math` is an extremely effective optimization for math-heavy programs like CoNES, but it disallows the usage of infinity; CoNES may undergo some rework to allow this optimization, but does not currently support warn-free compilation with the flag._
 
 **Windows (MSVC via Developer Command Prompt, untested):**
 ```cmd
@@ -31,8 +34,8 @@ The binary acts as a lightweight virtual machine. It can be used to solve a cnes
  - `-o <file>`: Write results to a specific text file.
  - `-v`: Verbose output (shows Newton-Raphson residuals per iteration).
  - `-s`, `--silent`: Suppress the execution summary table (useful for batch processing).
- - `--json`: Output results as a JSON object (ideal for GUI/tool integration).
- - `--lint`: Performs lexical and syntactic analysis and variable registration, but stops before solving. 
+ - `-j`, `--json`: Output results as a JSON object (ideal for GUI/tool integration).
+ - `-L`, `--lint`: Performs lexical and syntactic analysis and variable registration, but stops before solving. 
  - `--tol <val>`: Override the convergence tolerance (default: 1e-9).
  - `--max-iter <val>`: Override the maximum number of solver iterations (default: 100).
  - `--list-substances`: Display all registered materials (Ideal Gas and Tabulated).
@@ -99,6 +102,7 @@ A domain-specific language (DSL) designed for clear equation entry and property 
  - **[DONE]** Procedural `function` blocks with local scoping.
  - **[DONE]** Recursive inclusion with robust path resolution.
  - **[TODO]** BLT Decomposition (Tarjan's SCC) for block-solving.
+ - **[TODO]** Improved parsing comprehension to limit divide-by-zero situations.
  - **[TODO]** Bipartite Matching for DOF validation.
  - **[TODO]** Psychrometrics!
 
@@ -119,3 +123,7 @@ python3 tools/export_props.py
 ```
 
 The `materials/` directory should begin to populate with a selection of `.cnesbin` binary substance tables, and the python script's output should confirm the successful creation of each one. Without creating these tables, CoNES will only have access to idea gases.
+
+## 7. IDE
+
+There is a lightweight and extremely simple Integrated Development Environment built using Python and tkinter/customtkinter. This can be found in `/cones_studio/main.py`.

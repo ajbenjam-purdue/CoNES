@@ -7,36 +7,43 @@
 #include <stdexcept>
 #include <random>
 #include <cmath>
+#include <cstdio>
 
 namespace cones {
 
 class NewtonSolver {
     double tolerance_;
     int max_iterations_;
+    int max_attempts_ = 5;
     bool verbose_;
 
 public:
     explicit NewtonSolver(double tol = 1e-8, int max_iter = 200, bool verbose = false)
         : tolerance_(tol), max_iterations_(max_iter), verbose_(verbose) {}
 
-    void solve(System& system) {
-        try {
-            solve_internal(system);
-            return;
-        } catch (const std::exception& e) {
-            if (verbose_) std::cout << "Initial solve failed: " << e.what() << ". Starting Multistart..." << std::endl;
-        }
+    int solve(System& system) { // Yields the count of iterations needed to converge to the system's tolerance OR -1 if tolerance is not reached
+
+        // TODO: Fix this architecture. It currently shifts guesses randomly both within solve_internal and outside. 
+        // Should be just one method with optional parameters
+        
+        int iters = solve_internal(system);
+        if (iters != -1)
+            return iters;
+        else if (verbose_) 
+            std::cout << "Initial solve failed. Starting Multistart..." << std::endl;
+        
 
         std::mt19937 gen(1337);
         auto& reg = system.registry();
         Eigen::VectorXd original_x = reg.get_active_values();
 
-        for (int attempt = 0; attempt < 3; ++attempt) {
-            if (verbose_) std::cout << "Attempt " << attempt + 1 << "/3..." << std::endl;
+        for (int attempt = 0; attempt < max_attempts_; ++attempt) {
+            if (verbose_) std::cout << "Attempt " << attempt + 1 << "/" << std::to_string(max_attempts_) << "..." << std::endl;
             
-            double jitter_range = 0.1 * (attempt + 1);
+            double jitter_range = 0.1 * (attempt + 1); // Step up the jitter as more failures occur
             std::uniform_real_distribution<> dis(1.0 - jitter_range, 1.0 + jitter_range);
-            
+
+            // Scramble
             Eigen::VectorXd jittered_x = original_x;
             for (int i = 0; i < jittered_x.size(); ++i) {
                 jittered_x(i) *= dis(gen);
@@ -46,19 +53,23 @@ public:
             reg.update_active_values(jittered_x);
             reg.apply_bounds();
 
-            try {
-                solve_internal(system);
-                return;
-            } catch (...) {
+            int iters_additional = solve_internal(system);
+            if (iters_additional != -1) // Good solution! Exit
+            {
+                return iters + iters_additional;
+            }
+            else
+            {
+                iters += iters_additional;
                 continue;
             }
         }
 
-        throw std::runtime_error("NewtonSolver: Failed to converge after multiple attempts.");
+        throw std::runtime_error("NewtonSolver: Failed to converge after " + std::to_string(max_attempts_) + " attempts.");
     }
 
 private:
-    void solve_internal(System& system) {
+    int solve_internal(System& system) { // Yields the count of iterations needed to converge to the system's tolerance OR -1 if tolerance is not reached
         Eigen::VectorXd f;
         Eigen::MatrixXd j;
         auto& reg = system.registry();
@@ -74,12 +85,12 @@ private:
             double current_inf_norm = f.lpNorm<Eigen::Infinity>();
             double current_l2_norm = f.norm();
 
-            if (current_inf_norm < tolerance_) return;
+            if (current_inf_norm < tolerance_) return -1; // No soln is possible
 
-            // Robust LM step: Solve (J^T J + lambda * I) dx = -J^T f
-            // But we'll use a more stable QR approach on augmented system:
-            // [ J             ] [ dx ] = [ -f ]
-            // [ sqrt(lambda)*I ] [    ]   [  0 ]
+            // Solve (J^T J + lambda * I) dx = -J^T f
+            // Instead of directly trying to deal with transposition and inversions, we attempt a more conservative approach:
+            // [ J              ]  dx  = [ -f ]
+            // [ sqrt(lambda)*I ]        [  0 ]
             
             int n = static_cast<int>(f.size());
             int m = static_cast<int>(j.cols());
@@ -110,42 +121,51 @@ private:
             // Backtracking
             double alpha = 1.0;
             bool success = false;
-            for (int ls = 0; ls < 10; ++ls) {
+            for (int ls = 0; ls < 5; ++ls) {
+                // We have stored the original values, so let's try with some shifted values
                 reg.update_active_values(x_orig + alpha * delta_x);
-                reg.apply_bounds();
+                reg.apply_bounds(); // Reinforce the bounds
                 
                 Eigen::VectorXd f_new;
-                Eigen::MatrixXd j_unused;
+                Eigen::MatrixXd j_unused; // Unused
                 system.evaluate(f_new, j_unused);
                 double new_l2_norm = f_new.norm();
                 
-                if (new_l2_norm < current_l2_norm) {
+                // If the result is improved, we keep it
+                // Since we start with the most aggessive alpha, it seems like this is a robust approach
+                if (new_l2_norm < current_l2_norm) { 
                     success = true;
                     lambda = std::max(lambda_min, lambda * 0.1);
-                    break;
+                    return iter + 1;
                 }
-                alpha *= 0.5;
+                alpha *= 0.25; // Quarter the step size for every failure
             }
 
+            if (verbose_ && iter % 10 == 0) { // Print every tenth run (verb only)
+                std::cout << "  Iter " << iter << " Resid: " << current_inf_norm << " (L=" << lambda << ")" << std::endl;
+            }
+
+            // No sub-iters resulted in an improvement (instability)
+            // Pseudo scramble all our values
             if (!success) {
                 lambda = std::min(lambda_max, lambda * 10.0);
                 Eigen::VectorXd jittered = x_orig;
                 for(int i=0; i<jittered.size(); ++i) {
-                    jittered(i) += dis(gen) * (std::abs(jittered(i)) * 0.01 + 0.01);
+                    jittered(i) += dis(gen) * (std::abs(jittered(i)) * 0.01 + 0.01); // TODO: Abstract and refine this
                 }
                 reg.update_active_values(jittered);
                 reg.apply_bounds();
             }
-
-            if (verbose_ && iter % 10 == 0) {
-                std::cout << "  Iter " << iter << " Resid: " << current_inf_norm << " (L=" << lambda << ")" << std::endl;
-            }
         }
-        throw std::runtime_error("Max iterations reached");
+        return -1;
     }
 
 public:
-    void set_verbose(bool v) { verbose_ = v; }
+    void set_verbose(bool v) { verbose_ = v; } // Set verbose to the provided boolean value
+    void set_verbose() { verbose_ = true; }    // Override verbosity to true
+    void set_max_scramble_attempts(int i) { // Set the maximum solver-scramble attempts (1 - 100, incl.)
+        max_attempts_ = (i > 100 ? 100 : (i < 1 ? 1 : i));
+    }
 };
 
 } // namespace cones

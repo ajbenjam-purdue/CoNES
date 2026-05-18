@@ -8,37 +8,42 @@
 
 using namespace cones;
 
-int main() {
-    try {
+int main()
+{
+    try
+    {
         System system;
-        
-        // 1. Setup Substances
+
+        // Setup substances with the registry
         auto air = std::make_shared<IdealGasSubstance>("Air", 287.05, 1005.0);
         system.substance_manager().register_substance(air);
 
-        // 2. Setup Functions
+        // Test function
         auto temp_func = std::make_shared<GeneralPropertyFunction>("Temperature", PropertyType::TEMPERATURE, system.substance_manager());
         system.function_registry().register_function(temp_func);
 
-        // 3. The Script
-        std::string script = 
-            "P := 101325\n"
-            "rho := 1.225\n"
-            "T.guess := 300\n"
-            "T = Temperature(Air, P=P, rho=rho)\n";
+        // Test script
+        std::string script = R"(
+            P := 101325
+            rho := 1.225
+            T.guess := 300
+            T = Temperature(Air, P=P, rho=rho)\n)";
 
-        std::cout << "--- CoNES Air Test ---\n" << script << "--------------------\n" << std::endl;
+        std::cout << "--- CoNES Air Test ---\n"
+                  << script << "--------------------\n"
+                  << std::endl;
 
+        // Lex and parse
         Lexer lexer(script);
         Parser parser(lexer.scan_tokens(), system);
         parser.parse();
 
-        // 4. Solve
+        // Solve
         NewtonSolver solver(1e-9, 50, true);
         solver.solve(system);
 
-        // 5. Results
-        auto& reg = system.registry();
+        // Output Results
+        auto &reg = system.registry();
         int t_idx = reg.register_variable("T");
         double t_final = reg.get_variable(t_idx).value;
 
@@ -47,14 +52,18 @@ int main() {
         std::cout << "Solved Temperature T = " << t_final << " [K]" << std::endl;
         std::cout << "Expectation (ISA): 101325 / (1.225 * 287.05) = 288.15 K" << std::endl;
 
-        if (std::abs(t_final - 288.15) < 0.1) {
+        if (std::abs(t_final - 288.15) < 0.1)
+        {
             std::cout << "\nResult: SUCCESS" << std::endl;
-        } else {
+        }
+        else
+        {
             std::cout << "\nResult: FAILURE" << std::endl;
             return 1;
         }
-
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception &e)
+    {
         std::cerr << "ERROR: " << e.what() << std::endl;
         return 1;
     }

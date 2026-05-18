@@ -8,21 +8,20 @@ using namespace cones;
 
 int main() {
     try {
-        // 1. The Script
-        std::string script = 
-            "// Geometry Test\n"
-            "r := 5 [m]\n"
-            "pi := 3.14159265\n"
-            "A.guess := 50\n"
-            "A = pi * r^2\n";
+        // The Script (geometry test)
+        std::string script = R"(
+            r := 5 [m]
+            pi := 3.14159265
+            A.guess := 50
+            A = pi * r^2\n)";
 
         std::cout << "--- CoNES Script ---\n" << script << "--------------------\n" << std::endl;
 
-        // 2. Lexing
+        // Lexing
         Lexer lexer(script);
         auto tokens = lexer.scan_tokens();
 
-        // 3. Parsing
+        // Parsing
         System system;
         Parser parser(tokens, system);
         parser.parse();
@@ -36,21 +35,22 @@ int main() {
                       << ", Value: " << v.value << " [" << v.unit_name << "])" << std::endl;
         }
 
-        // 4. Solving
+        // Solve
         std::cout << "\nStarting Solver..." << std::endl;
         NewtonSolver solver(1e-9, 50, true);
         solver.solve(system);
 
-        // 5. Results
+        // Results
         int a_idx = reg.register_variable("A");
         double a_final = reg.get_variable(a_idx).value;
+        double expected = 3.14159265 * 5.0 * 5.0;
 
         std::cout << std::fixed << std::setprecision(6);
         std::cout << "\nFinal Results:" << std::endl;
         std::cout << "Area A = " << a_final << " [m^2]" << std::endl;
-        std::cout << "Expected = " << (3.14159265 * 5.0 * 5.0) << std::endl;
+        std::cout << "Expected = " << expected << std::endl;
 
-        if (std::abs(a_final - 78.539816) < 1e-4) {
+        if (std::abs(a_final - expected) < 1e-4) {
             std::cout << "\nResult: SUCCESS" << std::endl;
         } else {
             std::cout << "\nResult: FAILURE" << std::endl;

@@ -12,6 +12,7 @@ namespace cones
 
     /**
      * @brief Manages all known substances in the CoNES environment.
+     * This includes all substance derivatives like ideal gases and tabulated_substances.
      */
     class SubstanceManager
     {

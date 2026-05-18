@@ -24,7 +24,7 @@ namespace cones
 
     public:
         void add_equation(NodePtr eq) { equations_.push_back(std::move(eq)); }
-        VariableRegistry &registry() { return registry_; }
+        VariableRegistry &registry() { return registry_; } // Yield the address for the System's VariableRegistry
         const VariableRegistry &registry() const { return registry_; }
         FunctionRegistry &function_registry() { return function_registry_; }
         SubstanceManager &substance_manager() { return substance_manager_; }

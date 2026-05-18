@@ -34,21 +34,24 @@ namespace cones
             return "Tabulated Substance [" + std::to_string(tables_.size()) + " properties registered]"; 
         }
 
+        // Load a .cnesbin binary property table into the Substance's contents
         void load_table(PropertyType prop, const std::string &path)
         {
             std::ifstream file(path, std::ios::binary);
             if (!file.is_open())
                 throw std::runtime_error("Could not load table: " + path);
 
+            // cnesbin format: [CNES (4b)][np (4b)][nt (4b)][p_grid (np*8b)][t_grid (nt*8b)][data (np*nt*8b)]
             char magic[4];
-            file.read(magic, 4);
+            file.read(magic, 4); // First four chars should always be CNES and are consumed
 
-            int np, nt;
+            int np, nt; // Integers for number of pressures and temperatures in the grid
             file.read(reinterpret_cast<char *>(&np), sizeof(int));
             file.read(reinterpret_cast<char *>(&nt), sizeof(int));
 
+            // Write the data into the appropriate table
             auto &table = tables_[prop];
-            table.p_grid.resize(np);
+            table.p_grid.resize(np); // Set to a np x nt grid
             file.read(reinterpret_cast<char *>(table.p_grid.data()), np * sizeof(double));
             table.t_grid.resize(nt);
             file.read(reinterpret_cast<char *>(table.t_grid.data()), nt * sizeof(double));
@@ -56,9 +59,10 @@ namespace cones
             file.read(reinterpret_cast<char *>(table.data.data()), np * nt * sizeof(double));
         }
 
+        // Clunky approach. Linear interpolation for the inputs on the target PropertyType.
         DualNumber evaluate(PropertyType target, const std::vector<PropertyArg> &inputs) const override
         {
-            for (const auto &in : inputs)
+            for (const auto &in : inputs) // Safely catch inputs as the desired output
                 if (in.type == target)
                     return in.value;
 
@@ -67,42 +71,51 @@ namespace cones
 
             for (const auto &in : inputs)
             {
-                if (in.type == PropertyType::PRESSURE)
+                switch (in.type)
                 {
+                case PropertyType::PRESSURE:
                     P = in.value;
                     has_P = true;
-                }
-                if (in.type == PropertyType::TEMPERATURE)
-                {
+                    break;
+
+                case PropertyType::TEMPERATURE:
                     T = in.value;
                     has_T = true;
-                }
-                if (in.type == PropertyType::ENTHALPY)
-                {
+                    break;
+
+                case PropertyType::ENTHALPY:
                     H = in.value;
                     has_H = true;
-                }
-                if (in.type == PropertyType::ENTROPY)
-                {
+                    break;
+
+                case PropertyType::ENTROPY:
                     S = in.value;
                     has_S = true;
-                }
-                if (in.type == PropertyType::QUALITY)
-                {
+                    break;
+
+                case PropertyType::QUALITY:
                     X = in.value;
                     has_X = true;
+                    break;
+                
+                default:
+                    break;
                 }
             }
 
-            // --- 1. Saturation / Two-Phase Logic ---
-            if (has_X && (has_P || has_T))
+            // Saturation / Two-Phase State
+            if (has_X && (has_P || has_T)) // We have the quality and either pressure OR temperature
             {
+                // TODO: Improve this system; currently, properties like temperature glide cannot be computed.
+                // For a target of pressure, we re-evaluate to simply find the saturation pressure
                 if (target == PropertyType::PRESSURE)
                     return evaluate(PropertyType::SATURATION_PRESSURE, {{PropertyType::TEMPERATURE, T}});
+
+                // For a target of temperature, we re-evaluate to simply find the saturation temperature
                 if (target == PropertyType::TEMPERATURE)
                     return evaluate(PropertyType::SATURATION_TEMPERATURE, {{PropertyType::PRESSURE, P}});
 
-                // h = hf + x*(hg - hf)
+                // Linear interpolation between gaseous and liquid states since we have X
                 if (target == PropertyType::ENTHALPY)
                 {
                     DualNumber hf = evaluate(PropertyType::H_F, {{PropertyType::PRESSURE, P}, {PropertyType::TEMPERATURE, T}});
@@ -117,49 +130,53 @@ namespace cones
                 }
             }
 
-            // --- 2. Inverted Lookups (finding T from P,h or P,s) ---
+            // Inverted Lookups
             if (!has_T)
             {
                 if (has_P && has_H)
                     T = evaluate_direct(PropertyType::T_PH, P, H);
                 else if (has_P && has_S)
                     T = evaluate_direct(PropertyType::T_PS, P, S);
+                
+                // Special case: We have pressure and want the saturation temperature; no second doubleNumber is needed.
                 else if (has_P && target == PropertyType::SATURATION_TEMPERATURE)
                     T = evaluate_direct(PropertyType::SATURATION_TEMPERATURE, P, {0, 0});
 
+                // Sketchy catch to see if we hit any of the cases
+                // TODO: Fix to avoid edge cases with a real exact evaluation of 0.0
                 if (T.val != 0.0)
                 {
                     has_T = true;
-                    if (target == PropertyType::TEMPERATURE)
+                    if (target == PropertyType::TEMPERATURE) // Return if target
                         return T;
                 }
             }
 
-            // --- 3. Final Direct Lookup ---
+            // Direct Lookup
             auto it = tables_.find(target);
             if (it != tables_.end())
             {
                 const auto &table = it->second;
-                if (table.p_grid.size() == 1 && has_T)
+                if (table.p_grid.size() == 1 && has_T) // We have T and the p_grid is 1D
                     return interpolate_1d_t(table, T);
-                if (table.t_grid.size() == 1 && has_P)
+                if (table.t_grid.size() == 1 && has_P) // We have P and the T_grid is 1D
                     return interpolate_1d_p(table, P);
-                if (has_P && has_T)
+                if (has_P && has_T) // We have both
                     return interpolate_2d(table, P, T);
             }
 
             // throw std::runtime_error("TabulatedSubstance (" + name_ + "): Insufficient inputs for " + property_to_string(target) + "()"); 
-            return {1e9, 0.0};
+            return {1e9, 0.0}; // Instead of creating an error, we just return a huge penalty gradient
         }
 
     private:
         DualNumber evaluate_direct(PropertyType type, DualNumber p1, DualNumber p2) const
         {
             auto it = tables_.find(type);
-            if (it == tables_.end())
+            if (it == tables_.end()) // No matching table found
                 throw std::runtime_error("Table not found: " + property_to_string(type));
 
-            const auto &table = it->second;
+            const auto &table = it->second; // Get the mapped value; We assume here that P will be first
             if (table.p_grid.size() == 1)
                 return interpolate_1d_t(table, p2);
             if (table.t_grid.size() == 1)
@@ -167,6 +184,7 @@ namespace cones
             return interpolate_2d(table, p1, p2);
         }
 
+        // Interpolation helper (Temperature known)
         DualNumber interpolate_1d_t(const PropertyTable &table, DualNumber t_dual) const
         {
             double t = t_dual.val;
@@ -190,6 +208,7 @@ namespace cones
             return {val, dq_dt * t_dual.der};
         }
 
+        // Interpolation helper (Pressure known)
         DualNumber interpolate_1d_p(const PropertyTable &table, DualNumber p_dual) const
         {
             double p = p_dual.val;
@@ -212,6 +231,7 @@ namespace cones
             return {val, dq_dp * p_dual.der};
         }
 
+        // Interpolation helper (Both known)
         DualNumber interpolate_2d(const PropertyTable &table, DualNumber p_dual, DualNumber t_dual) const
         {
             double p = p_dual.val, t = t_dual.val;
@@ -238,6 +258,7 @@ namespace cones
             double dp = p1 - p0, dt = t1 - t0, u = (p - p0) / dp, v = (t - t0) / dt;
             
             // Bilinear interpolation/extrapolation
+            // TODO: Change from unreadable garbage
             double val = (1 - u) * (1 - v) * q00 + u * (1 - v) * q10 + (1 - u) * v * q01 + u * v * q11;
             double df_dp = (-(1 - v) * q00 + (1 - v) * q10 - v * q01 + v * q11) / dp;
             double df_dt = (-(1 - u) * q00 - u * q10 + (1 - u) * q01 + u * q11) / dt;
