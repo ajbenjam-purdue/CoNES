@@ -1,11 +1,11 @@
 #include "lang/lexer.hpp"
 #include "lang/parser.hpp"
 #include "solver/newton_solver.hpp"
-#include "core/ideal_gas.hpp"
 #include "core/property_functions.hpp"
 #include "core/tabulated_substance.hpp"
 #include "core/version.hpp"
 #include <iostream>
+#include <cstdlib>
 #include <fstream>
 #include <vector>
 #include <string>
@@ -13,6 +13,14 @@
 #include <chrono>
 #include <filesystem>
 
+// Platform agnostics
+#ifdef _WIN32
+bool win = true;
+#else
+bool win = false;
+#endif
+
+// Helper structure for table printing
 struct dataColumn
 {
     std::string name;
@@ -70,6 +78,7 @@ void print_help()
               << "  General:\n"
               << "    --version             Show the current CoNES version\n"
               << "    --help, -h            Show this help message\n"
+              << "    --build-substances    Attempt to build the binary substance tables using Python\n"
               << std::endl;
 }
 
@@ -163,6 +172,27 @@ void print_table(std::ostream *out, std::string title, std::vector<dataColumn> d
     *out << std::string(total_width, '=') << "\n";
 }
 
+int build_substances()
+{
+    // Should be platform agnostic
+    int result = (win ? 
+        std::system("python3 --version > NUL 2>&1") : 
+        std::system("python3 --version > /dev/null 2>&1")
+    );
+    
+    // Not installed
+    if (result != 0) {
+        std::cout << "Python is not installed or not in PATH." << std::endl;
+        return 1;
+    }
+
+    // Attempt
+    std::cout << "Python is installed, attempting to build substance binary tables..." << std::endl;
+    std::system("python3 tools/export_props.py"); // I think this is a pretty poor way to do this...
+    // TODO: Error checking for CoolProp not installed
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -172,21 +202,8 @@ int main(int argc, char *argv[])
 
     // Init System & Default Environment
     System system;
-    system.constant_registry().load_standard_constants();
-
-    // Pull in ideal gases (src: engineeringtoolbox.com)
-    auto air = std::make_shared<IdealGasSubstance>("Air", 287.05, 1005.0);
-    auto argon = std::make_shared<IdealGasSubstance>("Argon", 208.1, 520.0);
-    auto carbon_dioxide = std::make_shared<IdealGasSubstance>("CO2", 188.9, 845.9);
-    auto nitrogen = std::make_shared<IdealGasSubstance>("Nitrogen", 296.8, 1041.0);
-    auto oxygen = std::make_shared<IdealGasSubstance>("O2", 259.8, 918.9);
-
-    // Register them with the substance manager
-    system.substance_manager().register_substance(air);
-    system.substance_manager().register_substance(argon);
-    system.substance_manager().register_substance(carbon_dioxide);
-    system.substance_manager().register_substance(nitrogen);
-    system.substance_manager().register_substance(oxygen);
+    system.constant_registry().load_standard_constants(); // TODO: Make API more uniform with location of constants/functions/substances
+    system.substance_manager().register_ideal_gasses(); // Ideal gas definitions are in the substance manager
 
     // Automatically load Tabulated Substances from /materials relative to exe
     if (std::filesystem::exists(materials_path))
@@ -231,6 +248,11 @@ int main(int argc, char *argv[])
             }
         }
     }
+    else
+    {
+        build_substances();
+    }
+
 
     // Register Built-in Functions (Math & Property)
     register_builtin_functions(system.function_registry(), system.substance_manager());
@@ -252,6 +274,11 @@ int main(int argc, char *argv[])
         if (flag == "--version")
         {
             std::cout << Version::full() << std::endl;
+            return 0;
+        }
+        if (flag == "--build-substances")
+        {
+            build_substances();
             return 0;
         }
         if (flag == "-v")
@@ -360,10 +387,10 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // Execution Pipeline
+    // Attempt to open file, catch a likely memalloc error
     try
     {
-        // Execution Pipeline
-        // Attempt to open file
         std::ifstream file(input_path);
         if (!file.is_open())
             throw std::runtime_error("Could not open file: " + input_path);

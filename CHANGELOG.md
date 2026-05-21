@@ -1,5 +1,12 @@
 ## CoNES Changelog
-CoNES versioning follows the Major.Minor.Patch pattern. The current version is 0.1.2.
+CoNES versioning follows the Major.Minor.Patch pattern. The current version is 0.1.3.
+
+### Version 0.1.3
+  - Minor improvements to API for ideal gases
+  - Added automatic and manual substances library creation in the `cnes` tool
+  - Changed default parameters and behavior of the `cnesbin` python build tool to improve responsiveness
+    - Included new CoolProp substances: Ethylene, Isobutane, Methanol
+  - General documentation improvements
 
 ### Version 0.1.2
   - Lots of housekeeping in preparation for public release: 

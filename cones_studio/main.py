@@ -13,6 +13,10 @@ ctk.set_default_color_theme("blue")
 color_UI = "#0e639c"
 color_UI_hover = "#105380"
 
+color_status_OK = "#007acc"
+color_status_Success = "#16825d"
+color_status_Bad = "#a1260d"
+
 class CoNESStudio(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -50,6 +54,9 @@ class CoNESStudio(ctk.CTk):
             "hover_color": "#3e3e3e",
             "text_color": "#cccccc"
         }
+
+        self.btn_new = ctk.CTkButton(self.toolbar, text="New", command=self.new_file, **btn_opts)
+        self.btn_new.pack(side="left")
 
         self.btn_open = ctk.CTkButton(self.toolbar, text="Open", command=self.open_file, **btn_opts)
         self.btn_open.pack(side="left")
@@ -99,9 +106,13 @@ class CoNESStudio(ctk.CTk):
         # Status Bar
         self.status_bar = ctk.CTkLabel(self, text="  Ready", anchor="w", 
                                        font=UI_FONT_SMALL, height=25, 
-                                       fg_color="#007acc", text_color="white",
+                                       fg_color=color_status_OK, text_color="white",
                                        corner_radius=0)
         self.status_bar.grid(row=2, column=0, sticky="ew")
+        
+        # Shortcuts TODO: FIX
+        self.editor.text_area.bind("<Control-O>", self.open_file)
+        self.editor.text_area.bind("<Control-N>", self.new_file)
 
     def _on_table_select(self, event):
         """Highlights the selected variable in the code editor."""
@@ -197,12 +208,17 @@ class CoNESStudio(ctk.CTk):
         if not result.get("success"):
             line = result.get("error_line", 0)
             self.editor.highlight_error(line)
-            self.status_bar.configure(text=f"  Linter: {result.get('error')}", fg_color="#a1260d")
+            self.status_bar.configure(text=f"  Linter: {result.get('error')}", fg_color=color_status_Bad)
         else:
             self.editor.highlight_error(0)
-            self.status_bar.configure(text="  Ready", fg_color="#16825d")
+            self.status_bar.configure(text="  Ready", fg_color=color_status_Success)
 
-    def open_file(self):
+    def new_file(self, event=None):        
+        self.editor.set_text("")
+        self.current_file = None
+        self.status_bar.configure(text="  Good luck!", fg_color=color_status_OK)
+
+    def open_file(self, event=None):
         path = filedialog.askopenfilename(filetypes=[("CoNES Scripts", "*.cnes"), ("All Files", "*.*")])
         if path:
             with open(path, "r") as f:
@@ -224,7 +240,7 @@ class CoNESStudio(ctk.CTk):
         with open(self.shadow_path, "w") as f:
             f.write(content)
         
-        self.status_bar.configure(text="  Solving...", fg_color="#007acc")
+        self.status_bar.configure(text="  Solving...", fg_color=color_status_OK)
         threading.Thread(target=self._solve_thread, daemon=True).start()
 
     def _solve_thread(self):
@@ -233,7 +249,7 @@ class CoNESStudio(ctk.CTk):
 
     def _handle_solve_result(self, result):
         if not result.get("success"):
-            self.status_bar.configure(text=f"  Error: {result.get('error')[:100]}", fg_color="#a1260d")
+            self.status_bar.configure(text=f"  Error: {result.get('error')[:100]}", fg_color=color_status_Bad)
             return
 
         for item in self.tree.get_children(): self.tree.delete(item)
@@ -242,7 +258,7 @@ class CoNESStudio(ctk.CTk):
             self.tree.insert("", "end", values=(var["name"], f"{var['value']:.6}", var["unit"], state))
             
         perf = result.get("performance", {})
-        self.status_bar.configure(text=f"  Solved ({parse_time(perf.get('solver_ms', 0))})", fg_color="#16825d")
+        self.status_bar.configure(text=f"  Solved ({parse_time(perf.get('solver_ms', 0))})", fg_color=color_status_Success)
 
 if __name__ == "__main__":
     app = CoNESStudio()

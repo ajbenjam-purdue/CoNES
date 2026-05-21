@@ -52,7 +52,8 @@ def PropsSISafe(out_prop, in1_prop, in1_val, in2_prop, in2_val, fluid):
         # If lookup fails, try to return a sensible physical boundary or 0.0
         return 0.0
 
-def export_substance(name, p_range=(1e4, 2e7), t_range=(250, 800), count=50):
+# Def. ranges: 1kPa - 200 MPa; 100K - 1000K
+def export_substance(name, p_range=(1e3, 2e8), t_range=(100, 1000), count=50):
     # Fetch fluid-specific boundaries
     try:
         t_min = CP.PropsSI('TMIN', '', 0, '', 0, name)
@@ -69,13 +70,17 @@ def export_substance(name, p_range=(1e4, 2e7), t_range=(250, 800), count=50):
     p_end = min(p_range[1], 100e6) # Cap at 100 MPa
 
     # Standard (P, T) Grids
-    p_grid = np.geomspace(p_start, p_end, count)
-    t_grid = np.linspace(t_start, t_end, count)
+    p_grid = np.geomspace(p_start, p_end, count) # Log dist
+    t_grid = np.linspace(t_start, t_end, count)  # Lin dist
     
+    # Map to CoolProp's prop labels
     props = {'h': 'H', 's': 'S', 'u': 'U', 'rho': 'D', 'mu': 'V', 'k': 'L', 'Pr': 'PRANDTL'}
 
     for code, cp_name in props.items():
+        # Get a list of property values in p-major array form
         data = [PropsSISafe(cp_name, 'P', p, 'T', t, name) for p in p_grid for t in t_grid]
+        
+        # Write the data to a binary table for small size
         write_cnesbin(os.path.join(OUT, f"{name}_{code}.cnesbin"), p_grid, t_grid, data)
     
     # Specific volume v (P, T)
@@ -126,17 +131,19 @@ def update_vscode_syntax(substances):
         with open(syntax_path, 'w') as f: json.dump(syntax, f, indent=4)
 
 if __name__ == "__main__":
-    count = 50
-    if len(sys.argv) == 2:
-        try: count = min(max(int(sys.argv[1]), 20), 1000)
+    count = 40 # Default value
+    if len(sys.argv) == 2: # Clamp
+        try: count = min(max(int(sys.argv[1]), 12), 100)
         except: pass
     
-    print(f"Creating {count}-item arrays")
-    subs = ["Water", "R12", "R13", "R14", "R21", "R22", "R32", "R1234yf", "R125", "R134a", "R143a", "R410A"]
+    # Build the tables
+    print(f"Creating {count}-item binary substance tables...")
+    subs = ["Water", "R12", "R13", "R14", "R21", "R22", "R32", "R1234yf", "R125", "R134a", "R143a", "R410A", "Ethylene", "Isobutane", "Methanol"]
     for i, s in enumerate(subs):
         print(f"[{i+1}/{len(subs)}] {s}: ", end='', flush=True)
         export_substance(s, count=count)
         print('Done')
     
+    # TODO: Make listing more resilient... Do I even need to keep the vsc plugin up-to-date?
     update_vscode_syntax(subs + ["Air", "Argon", "CO2", "Nitrogen", "O2"])
     print("Export Complete.")

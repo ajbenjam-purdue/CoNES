@@ -1,7 +1,0 @@
-routine from_lib(x)
-    InLib = x
-end routine
-
-function eta_brayton(W_dot_pt, Q_dot_c)
-    return W_dot_pt / Q_dot_c []
-end function

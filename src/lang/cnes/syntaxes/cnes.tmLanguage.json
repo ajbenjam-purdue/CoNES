@@ -185,7 +185,7 @@
             "patterns": [
                 {
                     "name": "substance.language.cnes",
-                    "match": "\\b(Water|R12|R13|R14|R21|R22|R32|R1234yf|R125|R134a|R143a|R410A|Air|Argon|CO2|Nitrogen|O2)\\b"
+                    "match": "\\b(Water|R12|R13|R14|R21|R22|R32|R1234yf|R125|R134a|R143a|R410A|Ethylene|Isobutane|Methanol|Air|Argon|CO2|Nitrogen|O2)\\b"
                 }
             ]
         },
