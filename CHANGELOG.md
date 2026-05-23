@@ -1,5 +1,19 @@
 ## CoNES Changelog
-CoNES versioning follows the Major.Minor.Patch pattern. The current version is 0.1.3.
+CoNES versioning follows the Major.Minor.Patch pattern. The current version is 0.1.4.
+
+### Version 0.1.4
+  - Changed parameters to improve performance
+    - Adjusted default solution attempts to 500 (up from 200) to improve unstable system solution likelihood
+    - Adjusted the default guess for Enthalpy up to 1500 (from the default) to encourage faster convergance
+  - Updated Python scripts
+    - Introduced native `--IDE` flag for an easier way to open the Python IDE
+    - Reworked all python scripts to automatically import dependencies
+  - Bug fixes
+    - Corrected the solver wrongfully returning -1 when convergence was reached
+    - Corrected the solver returning a success after one stable iteration instead of solving to tolerance, which was causing garbage results for more complex systems
+    - Corrected conservative step limitations for instability by increasing the step adjustment gain
+    - Fixed a set of backwards logic where `current_inf_norm` meeting tolerance was incorrectly registering a failure, not a success
+  - Documentation improvements
 
 ### Version 0.1.3
   - Minor improvements to API for ideal gases

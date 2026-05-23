@@ -84,6 +84,9 @@ namespace cones
             // Enthalpy / Specific Energy (J/kg)
             else if (u.dims == std::vector<int>{0, 2, -2, 0, 0})
                 v.value = 250000.0;
+            // Entropy (J/kg*K)
+            else if (u.dims == std::vector<int>{0, 2, -2, -1, 0})
+                v.value = 1500.0;
             // Density (kg/m^3)
             else if (u.dims == std::vector<int>{1, -3, 0, 0, 0})
                 v.value = 1.2;

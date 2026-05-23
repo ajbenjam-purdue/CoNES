@@ -27,7 +27,8 @@ int main()
             P := 101325
             rho := 1.225
             T.guess := 300
-            T = Temperature(Air, P=P, rho=rho)\n)";
+            T = Temperature(Air, P=P, rho=rho)
+        )"; // Fixed stupid string formatting
 
         std::cout << "--- CoNES Air Test ---\n"
                   << script << "--------------------\n"

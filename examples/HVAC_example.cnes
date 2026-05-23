@@ -9,8 +9,8 @@ Q_dot_evap := 5 [kW] // Cooling capacity
 
 // State 1: Evaporator outlet (sat vapor)
 P_evap = Pressure(R134a, T_evap, x=1)
-h_1 = Enthalpy(R134a, T_evap, P_evap) [kJ/kg]
-s_1 = Entropy(R134a, T_evap, P_evap)
+h_1 = Enthalpy(R134a, T_evap, x=1) [kJ/kg]
+s_1 = Entropy(R134a, T_evap, x=1)
 
 // State 2s: Ideal (isentropic) compressor outlet
 P_cond = Pressure(R134a, T_cond, x=1)
@@ -31,9 +31,9 @@ Q_dot_evap = m_dot * (h_1 - h_4)
 m_dot.unit := [kg/s]
 
 // Compressor work and heat rejection
-Q_dot_cond = m_dot * (h_2 - h_3) [kW]
-W_dot_comp = m_dot * (h_2 - h_1) [kW]
-COP_HP = Q_dot_cond / W_dot_comp
+Q_dot_cond = (m_dot * (h_2 - h_3)) [kW]
+W_dot_comp = (m_dot * (h_2 - h_1)) [kW]
+COP_HP * W_dot_comp = Q_dot_cond
 
 // Equivalent reference EES script:
 /*

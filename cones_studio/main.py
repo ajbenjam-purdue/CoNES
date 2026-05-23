@@ -1,3 +1,15 @@
+# courtesy of https://stackoverflow.com/questions/46419607/how-to-automatically-install-required-packages-from-a-python-script-as-necessary
+import importlib.metadata, subprocess, sys
+
+# Get required package
+required  = {'customtkinter','coolprop'}
+installed = {pkg.metadata['Name'] for pkg in importlib.metadata.distributions()}
+missing   = required - installed
+
+# Install if needed
+if missing:
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', *missing])
+
 import customtkinter as ctk
 from tkinter import ttk, filedialog, messagebox
 import os, re

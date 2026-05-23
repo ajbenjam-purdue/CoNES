@@ -53,7 +53,7 @@ namespace cones
                     DualNumber res = equations_[i]->evaluate(dual_vals, registry_);
                     f(i) = res.val;
                 } catch (...) {
-                    // Domain error or property lookup failure - penalize heavily
+                    // Penalty for any issues
                     f(i) = 1e9; 
                 }
 

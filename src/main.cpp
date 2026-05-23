@@ -20,6 +20,8 @@ bool win = true;
 bool win = false;
 #endif
 
+using namespace cones;
+
 // Helper structure for table printing
 struct dataColumn
 {
@@ -53,8 +55,7 @@ struct dataColumn
     }
 };
 
-using namespace cones;
-
+// Print the help output message. Is there a better way to do this?
 void print_help()
 {
 
@@ -70,15 +71,16 @@ void print_help()
               << "    --tol <val>           Override convergence tolerance (default: 1e-9)\n"
               << "    --max-iter <val>      Override max solver iterations (default: 100)\n\n"
               << "  Development Tools:\n"
-              << "    -L, --lint            Check syntax and definitions without solving\n"
-              << "    --list-substances     List all registered substances\n"
-              << "    --list-functions      List all registered functions\n"
-              << "    --list-constants      List all built-in constants\n"
-              << "    --out-vscode-metadata Export all substances, functions, and constants lists as separated by |||, including rich data for each\n\n"
-              << "  General:\n"
+              << "    -L, --lint            Check syntax and definitions of the input file without solving\n"
+              << "    --list-substances     (Standalone) List all registered substances\n"
+              << "    --list-functions      (Standalone) List all registered functions\n"
+              << "    --list-constants      (Standalone) List all built-in constants\n"
+              << "    --out-vscode-metadata (Standalone) Export all substances, functions, and constants lists as separated by |||, including rich data for each\n\n"
+              << "  General/Other:\n"
               << "    --version             Show the current CoNES version\n"
               << "    --help, -h            Show this help message\n"
-              << "    --build-substances    Attempt to build the binary substance tables using Python\n"
+              << "    --build-substances    (Standalone) Attempt to build the binary substance tables using Python\n"
+              << "    --IDE                 (Standalone) Open the Python-based IDE (Need python on PATH)\n"
               << std::endl;
 }
 
@@ -133,6 +135,7 @@ void print_json_output(const System &system, double t_lexer, double t_parser, do
     std::cout << "}\n";
 }
 
+// Print a table using the abode dataColumn struct
 void print_table(std::ostream *out, std::string title, std::vector<dataColumn> data)
 {
     // Set column widths
@@ -172,6 +175,7 @@ void print_table(std::ostream *out, std::string title, std::vector<dataColumn> d
     *out << std::string(total_width, '=') << "\n";
 }
 
+// Build the substances library using the Python interpreter on PATH
 int build_substances()
 {
     // Should be platform agnostic
@@ -193,6 +197,27 @@ int build_substances()
     return 0;
 }
 
+// Open CoNES studio via the Python interpreter on PATH
+int open_ide()
+{
+    // Should be platform agnostic
+    int result = (win ? 
+        std::system("python3 --version > NUL 2>&1") : 
+        std::system("python3 --version > /dev/null 2>&1")
+    );
+    
+    // Not installed
+    if (result != 0) {
+        std::cout << "Python is not installed or not in PATH." << std::endl;
+        return 1;
+    }
+
+    // Attempt to open
+    std::system("python3 cones_studio/main.py");
+    // TODO: Error checking for CoolProp not installed (same as build_substances)
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -205,7 +230,7 @@ int main(int argc, char *argv[])
     system.constant_registry().load_standard_constants(); // TODO: Make API more uniform with location of constants/functions/substances
     system.substance_manager().register_ideal_gasses(); // Ideal gas definitions are in the substance manager
 
-    // Automatically load Tabulated Substances from /materials relative to exe
+    // Automatically load Tabulated Substances from /materials relative to exe OR load automatically on launch
     if (std::filesystem::exists(materials_path))
     {
         for (const auto &entry : std::filesystem::directory_iterator(materials_path))
@@ -253,7 +278,6 @@ int main(int argc, char *argv[])
         build_substances();
     }
 
-
     // Register Built-in Functions (Math & Property)
     register_builtin_functions(system.function_registry(), system.substance_manager());
 
@@ -279,6 +303,11 @@ int main(int argc, char *argv[])
         if (flag == "--build-substances")
         {
             build_substances();
+            return 0;
+        }
+        if (flag == "--IDE")
+        {
+            open_ide();
             return 0;
         }
         if (flag == "-v")

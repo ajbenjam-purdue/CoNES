@@ -18,7 +18,7 @@ class NewtonSolver {
     bool verbose_;
 
 public:
-    explicit NewtonSolver(double tol = 1e-8, int max_iter = 200, bool verbose = false)
+    explicit NewtonSolver(double tol = 1e-8, int max_iter = 500, bool verbose = false)
         : tolerance_(tol), max_iterations_(max_iter), verbose_(verbose) {}
 
     int solve(System& system) { // Yields the count of iterations needed to converge to the system's tolerance OR -1 if tolerance is not reached
@@ -65,6 +65,13 @@ public:
             }
         }
 
+        if (verbose_) {
+            std::cout << "Final state before failure:" << std::endl;
+            for (int i = 0; i < reg.size(); ++i) {
+                const auto& v = reg.get_variable(i);
+                std::cout << "  " << v.name << " = " << v.value << " [" << v.unit_name << "]" << std::endl;
+            }
+        }
         throw std::runtime_error("NewtonSolver: Failed to converge after " + std::to_string(max_attempts_) + " attempts.");
     }
 
@@ -85,7 +92,7 @@ private:
             double current_inf_norm = f.lpNorm<Eigen::Infinity>();
             double current_l2_norm = f.norm();
 
-            if (current_inf_norm < tolerance_) return -1; // No soln is possible
+            if (current_inf_norm < tolerance_) return iter;
 
             // Solve (J^T J + lambda * I) dx = -J^T f
             // Instead of directly trying to deal with transposition and inversions, we attempt a more conservative approach:
@@ -114,9 +121,10 @@ private:
             double max_change = 0.0;
             Eigen::VectorXd x_orig = reg.get_active_values();
             for(int i=0; i < delta_x.size(); ++i) {
-                max_change = std::max(max_change, std::abs(delta_x(i)) / (std::abs(x_orig(i)) + 1.0));
+                // Use a larger floor for the relative change calculation to avoid tiny steps for small variables
+                max_change = std::max(max_change, std::abs(delta_x(i)) / (std::abs(x_orig(i)) + 1e3));
             }
-            if (max_change > 0.5) delta_x *= (0.5 / max_change);
+            if (max_change > 10.0) delta_x *= (10.0 / max_change);
 
             // Backtracking
             double alpha = 1.0;
@@ -132,11 +140,10 @@ private:
                 double new_l2_norm = f_new.norm();
                 
                 // If the result is improved, we keep it
-                // Since we start with the most aggessive alpha, it seems like this is a robust approach
                 if (new_l2_norm < current_l2_norm) { 
                     success = true;
                     lambda = std::max(lambda_min, lambda * 0.1);
-                    return iter + 1;
+                    break;
                 }
                 alpha *= 0.25; // Quarter the step size for every failure
             }

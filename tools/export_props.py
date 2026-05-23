@@ -1,3 +1,20 @@
+# What substances to tabulate
+subs = ["Water", "R12", "R13", "R14", "R21", "R22", "R32", "R1234yf", "R125", "R134a", "R143a", "R410A", "Ethylene", "Isobutane", "Methanol"]
+# How many points in each table
+count = 40
+
+# courtesy of https://stackoverflow.com/questions/46419607/how-to-automatically-install-required-packages-from-a-python-script-as-necessary
+import importlib.metadata, subprocess, sys
+
+# Get required package
+required  = {'CoolProp'}
+installed = {pkg.metadata['Name'] for pkg in importlib.metadata.distributions()}
+missing   = required - installed
+
+# Install if needed
+if missing:
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', *missing])
+
 import CoolProp.CoolProp as CP
 import numpy as np
 import struct
@@ -131,14 +148,12 @@ def update_vscode_syntax(substances):
         with open(syntax_path, 'w') as f: json.dump(syntax, f, indent=4)
 
 if __name__ == "__main__":
-    count = 40 # Default value
     if len(sys.argv) == 2: # Clamp
         try: count = min(max(int(sys.argv[1]), 12), 100)
         except: pass
     
     # Build the tables
     print(f"Creating {count}-item binary substance tables...")
-    subs = ["Water", "R12", "R13", "R14", "R21", "R22", "R32", "R1234yf", "R125", "R134a", "R143a", "R410A", "Ethylene", "Isobutane", "Methanol"]
     for i, s in enumerate(subs):
         print(f"[{i+1}/{len(subs)}] {s}: ", end='', flush=True)
         export_substance(s, count=count)

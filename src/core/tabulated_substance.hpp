@@ -106,14 +106,19 @@ namespace cones
             // Saturation / Two-Phase State
             if (has_X && (has_P || has_T)) // We have the quality and either pressure OR temperature
             {
-                // TODO: Improve this system; currently, properties like temperature glide cannot be computed.
-                // For a target of pressure, we re-evaluate to simply find the saturation pressure
-                if (target == PropertyType::PRESSURE)
-                    return evaluate(PropertyType::SATURATION_PRESSURE, {{PropertyType::TEMPERATURE, T}});
+                // If we only have T, find P_sat first
+                if (!has_P && has_T) {
+                    P = evaluate(PropertyType::SATURATION_PRESSURE, {{PropertyType::TEMPERATURE, T}});
+                    has_P = true;
+                }
+                // If we only have P, find T_sat first
+                if (!has_T && has_P) {
+                    T = evaluate(PropertyType::SATURATION_TEMPERATURE, {{PropertyType::PRESSURE, P}});
+                    has_T = true;
+                }
 
-                // For a target of temperature, we re-evaluate to simply find the saturation temperature
-                if (target == PropertyType::TEMPERATURE)
-                    return evaluate(PropertyType::SATURATION_TEMPERATURE, {{PropertyType::PRESSURE, P}});
+                if (target == PropertyType::PRESSURE) return P;
+                if (target == PropertyType::TEMPERATURE) return T;
 
                 // Linear interpolation between gaseous and liquid states since we have X
                 if (target == PropertyType::ENTHALPY)
@@ -165,8 +170,9 @@ namespace cones
                     return interpolate_2d(table, P, T);
             }
 
-            // throw std::runtime_error("TabulatedSubstance (" + name_ + "): Insufficient inputs for " + property_to_string(target) + "()"); 
+            // throw std::runtime_error("TabulatedSubstance (" + name_ + "): Insufficient properties for " + property_to_string(target) + "()"); 
             return {1e9, 0.0}; // Instead of creating an error, we just return a huge penalty gradient
+
         }
 
     private:

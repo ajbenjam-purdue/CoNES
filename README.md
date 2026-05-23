@@ -60,34 +60,35 @@ The core engine transforms high-level mathematical relations into a solvable num
  - **Incidence Checking**: Automatic detection of under-determined or over-determined systems via bipartite matching.
 
 ### Numerical Execution
- - **Solver Loop**: Newton-Raphson iteration with backtracking line search.
+ - **Solver Loop**: [Newton-Raphson](https://en.wikipedia.org/wiki/Newton%27s_method) iteration with backtracking line search.
+   - This solver approach is (I believe) used in EES to find a solution; I find EES's implementation to need too much babysitting to avoid numerical instability, so my application of the same method features many strategies to counter this:
  - **Robustness Features**:
-   - **Variable Bounding**: Hard-coded physical limits (e.g., $T > 0$) prevent mathematical domain errors.
-   - **Heuristic Guessing**: Automatically suggests ballpark initial guesses based on assigned units (e.g., 101 kPa for Pressure) to avoid singularities like division by zero.
+   - **Variable Bounding**: Hard-coded physical limits prevent mathematical domain errors; this associates many variables' limits automatically (i.e. $[T], [P] \ge 0$) while unbounded or unassociated units remain unconstrained.
+   - **Heuristic Guessing**: Automatically suggests ballpark initial guesses based on assigned units (e.g., 101 kPa for Pressure) to avoid singularities like division by zero. I'm not entirely happy with this as-is, and perhaps the software (likely in the studio script, not the actual VM) should iteratively learn.
+   - **Re-trial Attempts**: Unlike EES, this software will repeatedly re-attempt the computation in the event of a failure after scattering initial values. This will not affect the final solved state of the system, but can potentially avoid numerical instability or singularities.
 
 ## 2. Thermophysical Property System
 
-CoNES features a modular, high-performance property engine designed for "EES-like" ease of use.
+CoNES features a modular, high-performance property engine designed for [EES](https://fchartsoftware.com/ees/)-like power and more modern, often pythonic, principles.
 
 ### Multi-Axis Tabulated Data
- - **Independent Axis Selection**: Properties are gridded on the most stable axes (typically $P$ and $T$).
+ - **Independent Axis Selection**: Properties are gridded on the most stable axes ($P$ and $T$ for all current substances).
  - **Inverted Lookups**: Supports direct lookups for $T(P, h)$ and $T(P, s)$ using pre-computed inverted grids, bypassing the need for nested iterations.
- - **Saturation Support**: Automated redirection for saturation lookups. Using `Pressure(Water, T=T1, x=0.5)` automatically utilizes $P_{sat}(T)$ 1D tables.
- - **Two-Phase Properties**: High-speed calculation of two-phase enthalpy, entropy, etc., via $hf + x(hg - hf)$ using saturated liquid/vapor boundary tables.
+ - **Saturation Support**: Automated redirection for saturation lookups. Using `Pressure(Water, T=T1, x=0.5)` automatically utilizes $P_{sat}(T)$ 1D tables. This critically does not account for Temperature glide in some instances and consequently needs future development.
+ - **Two-Phase Properties**: High-speed calculation of two-phase enthalpy, entropy, etc., via $h_f + x(h_g - h_f)$ using saturated liquid/vapor boundary tables.
 
 ### Material Support
- - **Ideal Gases**: Analytical models for Air and other simple gases.
- - **Tabulated Substances**: Gridded binary data (`.cnesbin`) for Water, R134a, R12, and more.
+ - **Ideal Gases**: Analytical models for Air and other ideal gases.
+ - **Tabulated Substances**: Gridded binary data (`.cnesbin`) for Water, R134a, R12, and more. See **CLI Options** for more information.
 
 ## 3. CNES Script (Interpreter)
 
 A domain-specific language (DSL) designed for clear equation entry and property calls.
 
  - **Implicit Equations**: Supports `f(x) = g(x)` syntax.
- - **Unit System**: Full support for SI and common engineering units (C, bar, kJ/kg, kW). Automatic conversion to internal SI representation.
+ - **Unit System**: Full support for SI and common engineering units (C, bar, kJ/kg, kW). Automatic conversion to internal SI representation (A temperature defined in $\degree{F}$ will be internally converted to and used as $\degree{C}$ but still display in $\degree{F}$).
  - **Inclusion System**: Robust modularity with `include`.
-   - **Search Path**: Searches (1) relative to the script, (2) Current Working Directory, and (3) `[exe]/libs/`.
-   - **Auto-Extension**: Automatically infers `.cnes` if omitted (e.g., `include "fluid_lib"`).
+   - **Search Path**: Searches (1) relative to the script, (2) Current Working Directory, and (3) `[exe]/libs/`. Automatically infers `.cnes` if omitted (e.g., `include "fluid_lib"`).
  - **Modularity**:
    - **Routines**: Macro-style equation templates that expand in the global solver scope.
    - **Functions**: Isolated procedural blocks with local variable scoping for sequential calculations.
@@ -113,17 +114,16 @@ Install the packaged extension at `src/lang/cnes/cnes-0.1.1.vsix`:
 ```bash
 code --install-extension src/lang/cnes/cnes-0.1.1.vsix
 ```
-
-## 6. Binary Table Creation
-
-CoNES uses properties sourced from [CoolProp](https://coolprop.org), an open source database. To build the required binary tables to use fluids like `Water` or refrigerants like `R134a`, you must have CoolProp installed with `pip`. Run the `export_props` python script from `CoNES/`:
-
 ```bash
 python3 tools/export_props.py
 ```
 
 The `materials/` directory should begin to populate with a selection of `.cnesbin` binary substance tables, and the python script's output should confirm the successful creation of each one. Without creating these tables, CoNES will only have access to idea gases.
 
-## 7. IDE
+## 6. IDE
 
-There is a lightweight and extremely simple Integrated Development Environment built using Python and tkinter/customtkinter. This can be found in `/cones_studio/main.py`.
+There is a lightweight and extremely simple Integrated Development Environment built using Python and tkinter/customtkinter. This can be found in `/cones_studio/main.py`, and is the easiest way to start writing with CoNES. The IDE can also be launched with the Binary, using `--IDE`.
+
+## 7. Binary Table Creation
+
+CoNES uses properties sourced from [CoolProp](https://coolprop.org), an open source database. To build the required binary tables to use fluids like `Water` or refrigerants like `R134a`, you must have CoolProp installed with `pip`. Run the `export_props` python script from `CoNES/`:
