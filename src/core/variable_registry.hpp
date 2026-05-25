@@ -16,7 +16,7 @@ namespace cones
         std::string name;
         int index;
         double value = 1.0; // Current value (or initial guess)
-        double lower_bound = -std::numeric_limits<double>::infinity();
+        double lower_bound = 1e-7;
         double upper_bound = std::numeric_limits<double>::infinity();
         bool is_fixed = false;
         bool is_reserved = false; // Materials/Reserved keywords
@@ -50,19 +50,56 @@ namespace cones
         }
 
         // Setters
-        void set_value(int index, double val) { variables_.at(index).value = val; }
-        void set_bounds(int index, double lower, double upper)
+        void set_value(int index, double val, bool is_si = false)
         {
-            variables_.at(index).lower_bound = lower;
-            variables_.at(index).upper_bound = upper;
+            auto &v = variables_.at(index);
+            if (!is_si && !v.unit.is_dimensionless())
+                v.value = (val + v.unit.offset) * v.unit.scale;
+            else
+                v.value = val;
         }
+
+        void set_lower_bound(int index, double val, bool is_si = false)
+        {
+            auto &v = variables_.at(index);
+            if (!is_si && !v.unit.is_dimensionless())
+                v.lower_bound = (val + v.unit.offset) * v.unit.scale;
+            else
+                v.lower_bound = val;
+        }
+
+        void set_upper_bound(int index, double val, bool is_si = false)
+        {
+            auto &v = variables_.at(index);
+            if (!is_si && !v.unit.is_dimensionless())
+                v.upper_bound = (val + v.unit.offset) * v.unit.scale;
+            else
+                v.upper_bound = val;
+        }
+
+        void set_bounds(int index, double lower, double upper, bool is_si = false)
+        {
+            set_lower_bound(index, lower, is_si);
+            set_upper_bound(index, upper, is_si);
+        }
+
         void set_fixed(int index, bool fixed) { variables_.at(index).is_fixed = fixed; }
         void set_reserved(int index, bool reserved) { variables_.at(index).is_reserved = reserved; }
         void set_unit(int index, const Unit &unit, const std::string &name = "")
         {
-            variables_.at(index).unit = unit;
+            auto &v = variables_.at(index);
+            // scale the value to SI prior to setting guess
+            if (v.unit.is_dimensionless() && !unit.is_dimensionless())
+            {
+                v.value = (v.value + unit.offset) * unit.scale;
+                if (v.lower_bound > -1e30)
+                    v.lower_bound = (v.lower_bound + unit.offset) * unit.scale;
+                if (v.upper_bound < 1e30)
+                    v.upper_bound = (v.upper_bound + unit.offset) * unit.scale;
+            }
+            v.unit = unit;
             if (!name.empty())
-                variables_.at(index).unit_name = name;
+                v.unit_name = name;
         }
         void set_unit(int index, const std::string &name)
         {
@@ -71,12 +108,13 @@ namespace cones
         }
 
         /**
-         * @brief Suggests a ballpark guess based on units if the value is still at its default (1.0).
+         * @brief Suggests a ballpark guess based on units if the value is still at its default (1.0, or scaled 1.0).
          */
         void suggest_guess(int index, const Unit &u)
         {
             auto &v = variables_.at(index);
-            if (v.value != 1.0 || v.is_fixed)
+            double default_val = (1.0 + u.offset) * u.scale;
+            if (v.is_fixed || (std::abs(v.value - 1.0) > 1e-9 && std::abs(v.value - default_val) > 1e-9))
                 return;
 
             // Pressure (Pa)

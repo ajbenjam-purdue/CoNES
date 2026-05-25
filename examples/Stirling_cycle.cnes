@@ -1,0 +1,48 @@
+include "thermo_lib"
+
+/*
+Models the stirling cycle with an ideal gas (air).
+isothermal compression > isochoric heat addition > isothermal expansion > isochoric heat rejection
+*/
+
+// Parameters
+T_C := 300 [K]     // Cold temperature
+T_H := 1000 [K]    // Hot temperature
+P_1 := 101.325 [kPa]
+r_comp := 8        // Compression ratio (v_1/v_2)
+m := 1.0 [kg]
+
+// State 1
+T_1 = T_C
+v_1 = SpecificVolume(Air, T=T_1, P=P_1)
+v_2 = v_1 / r_comp
+
+// Process 1->2: Isothermal Compression at T_C
+Closed_Isothermal_Compression(Air, T_C, P_1, v_1, P_2, v_2, s_1, s_2, u_1, u_2, W_c, Q_out_iso, m)
+
+// Process 2->3: Isochoric Heat Addition
+// Volume is constant, v_3 = v_2. Heats up to T_H.
+T_3 = T_H
+v_3 = v_2
+T_2_check = T_C
+Closed_Isochoric_Heat_Addition(Air, T_2_check, P_2, v_2, P_3, T_3, u_2_check, u_3, Q_in_isocho, m)
+
+// Process 3->4: Isothermal Expansion at T_H
+// Expands to v_4 = v_1
+v_4 = v_1
+Closed_Isothermal_Expansion(Air, T_H, P_3, v_3, P_4, v_4, s_3, s_4, u_3_check, u_4, W_t, Q_in_iso, m)
+
+// Process 4->1: Isochoric Heat Rejection
+// Cools down to T_C.
+T_4_check = T_H
+Closed_Isochoric_Heat_Rejection(Air, T_4_check, P_4, v_4, P_1_check, T_1_check, u_4_check, u_1_check, Q_out_isocho, m)
+
+// Ideal Stirling cycle regenerates the isochoric heat perfectly.
+// Total heat added from source is just the isothermal expansion heat.
+Q_in_total = Q_in_iso
+
+// Net Work
+W_net = W_t - W_c
+
+// Efficiency
+eta_th = W_net / Q_in_total

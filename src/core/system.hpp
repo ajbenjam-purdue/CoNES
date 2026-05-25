@@ -11,12 +11,15 @@
 #include <vector>
 #include <memory>
 
+#include <unordered_set>
+
 namespace cones
 {
     class System
     {
         std::vector<NodePtr> equations_;
         std::vector<int> equation_lines_;
+        std::unordered_set<std::string> equation_strings_;
         VariableRegistry registry_;
         FunctionRegistry function_registry_;
         SubstanceManager substance_manager_;
@@ -25,6 +28,9 @@ namespace cones
 
     public:
         void add_equation(NodePtr eq, int line = -1) { 
+            std::string s = eq->to_string();
+            if (equation_strings_.count(s)) return;
+            equation_strings_.insert(s);
             equations_.push_back(std::move(eq)); 
             equation_lines_.push_back(line);
         }

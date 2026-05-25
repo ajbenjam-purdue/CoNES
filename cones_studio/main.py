@@ -29,7 +29,7 @@ import threading
 import tempfile
 from typing import Optional
 from editor import CodeEditor, UI_FONT, UI_FONT_SMALL, MONOSPACED_FONT
-from backend import CoNESBackend, parse_time
+from backend import CoNESBackend, parse_time, is_cnes
 
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
@@ -88,6 +88,9 @@ class CoNESStudio(ctk.CTk):
         self.btn_save = ctk.CTkButton(self.toolbar, text="Save", command=self.save_file, **btn_opts)
         self.btn_save.pack(side="left")
 
+        self.btn_save_lib = ctk.CTkButton(self.toolbar, text="Save as Library", command=self.save_lib, **btn_opts)
+        self.btn_save_lib.pack(side="left")
+
         # Solve button with accent color but still blocky
         self.btn_solve = ctk.CTkButton(self.toolbar, text="Solve", 
                                        fg_color=color_UI, 
@@ -135,9 +138,15 @@ class CoNESStudio(ctk.CTk):
                                        corner_radius=0)
         self.status_bar.grid(row=2, column=0, sticky="ew")
         
-        # Shortcuts TODO: FIX
-        self.editor.text_area.bind("<Control-O>", self.open_file)
-        self.editor.text_area.bind("<Control-N>", self.new_file)
+        # Shortcuts
+        self.bind_all("<Control-n>", self.new_file)
+        self.bind_all("<Command-n>", self.new_file)
+        self.bind_all("<Control-o>", self.open_file)
+        self.bind_all("<Command-o>", self.open_file)
+        self.bind_all("<Control-s>", lambda e: self.save_file())
+        self.bind_all("<Command-s>", lambda e: self.save_file())
+        self.bind_all("<Control-r>", lambda e: self.run_solve())
+        self.bind_all("<Command-r>", lambda e: self.run_solve())
 
     def _on_table_select(self, event):
         """Highlights the selected variable in the code editor."""
@@ -248,7 +257,8 @@ class CoNESStudio(ctk.CTk):
     def _lint_thread(self):
         try:
             content = self.editor.get_text()
-            result = self.backend.lint(content)
+            cwd = os.path.dirname(self.current_file) if self.current_file else os.getcwd()
+            result = self.backend.lint(content, cwd=cwd)
             self.after(0, lambda: self._handle_lint_result(result))
         except Exception:
             self._linting_in_progress = False
@@ -271,19 +281,45 @@ class CoNESStudio(ctk.CTk):
     def open_file(self, event=None):
         path = filedialog.askopenfilename(filetypes=[("CoNES Scripts", "*.cnes"), ("All Files", "*.*")])
         if path:
-            with open(path, "r") as f:
-                self.editor.set_text(f.read())
-            self.current_file = path
-            self.status_bar.configure(text=f"  Opened {os.path.basename(path)}", fg_color="#007acc")
+            self.load_file(path)
+
+    def load_file(self, path:str):
+        with open(path, "r") as f:
+            self.editor.set_text(f.read())
+        self.current_file = path
+        self.status_bar.configure(text=f"  Opened {os.path.basename(path)}", fg_color="#007acc")
+        self._clear_trees()
 
     def save_file(self):
         if not self.current_file:
-            self.current_file = filedialog.asksaveasfilename(defaultextension=".cnes")
+            self.current_file = filedialog.asksaveasfilename(defaultextension=".cnes", filetypes=[("CoNES Scripts", "*.cnes")])
         
         if self.current_file:
             with open(self.current_file, "w") as f:
                 f.write(self.editor.get_text())
-            self.status_bar.configure(text=f"  Saved {os.path.basename(self.current_file)}", fg_color="#16825d")
+            self.status_bar.configure(text=f"  Saved {os.path.basename(self.current_file)}", fg_color=color_status_Success)
+    
+    def save_lib(self):
+        # Determine the libs directory relative to project root
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        libs_dir = os.path.join(base_dir, "libs")
+        if not os.path.exists(libs_dir):
+            os.makedirs(libs_dir, exist_ok=True)
+
+        dialog = ctk.CTkInputDialog(text="Enter library name (e.g. 'my_lib'):", title="Save as Library")
+        lib_name = dialog.get_input()
+        
+        if lib_name:
+            if not lib_name.endswith(".cnes"):
+                lib_name += ".cnes"
+            
+            save_path = os.path.join(libs_dir, lib_name)
+            try:
+                with open(save_path, "w") as f:
+                    f.write(self.editor.get_text())
+                self.status_bar.configure(text=f"  Library saved to: libs/{lib_name}", fg_color=color_status_Success)
+            except Exception as e:
+                self.status_bar.configure(text=f"  Failed to save library: {str(e)}", fg_color=color_status_Bad)
 
     def run_solve(self):
         content = self.editor.get_text()
@@ -291,29 +327,41 @@ class CoNESStudio(ctk.CTk):
             f.write(content)
         
         self.status_bar.configure(text="  Solving...", fg_color=color_status_OK)
-        threading.Thread(target=self._solve_thread, daemon=True).start()
+        
+        # Pass the directory of the current file to resolve relative imports
+        cwd = os.path.dirname(self.current_file) if self.current_file else os.getcwd()
+        threading.Thread(target=self._solve_thread, args=(cwd,), daemon=True).start()
 
-    def _solve_thread(self):
-        result = self.backend.solve(self.shadow_path)
+    def _solve_thread(self, cwd=None):
+        result = self.backend.solve(self.shadow_path, cwd=cwd)
         self.after(0, lambda: self._handle_solve_result(result))
 
-    def _handle_solve_result(self, result):
-        if not result.get("success"):
-            self.status_bar.configure(text=f"  Error: {result.get('error')[:100]}", fg_color=color_status_Bad)
-            return
-
+    def _clear_trees(self):
         for item in self.tree.get_children(): self.tree.delete(item)
         for item in self.tree_res.get_children(): self.tree_res.delete(item)
+        
+    def _handle_solve_result(self, result):
+        solved = result.get("success")
+        
+        self._clear_trees()
         for var in result.get("variables", []):
             state = "FIX" if var["is_fixed"] else "SOL"
             self.tree.insert("", "end", values=(var["name"], f"{var['value']:.6}", var["unit"], state, var["line"]))
             
         for var in result.get("residuals", []):
             self.tree_res.insert("", "end", values=(var["id"], var["expression"], f"{var['value']:.5g}", var["line"]))
-            
-        perf = result.get("performance", {})
-        self.status_bar.configure(text=f"  Solved ({parse_time(perf.get('solver_ms', 0))})", fg_color=color_status_Success)
+        
+        if solved:
+            perf = result.get("performance", {})
+            self.status_bar.configure(text=f"  Solved ({parse_time(perf.get('solver_ms', 0))})", fg_color=color_status_Success)
+        else:
+            self.status_bar.configure(text=f"  Error: {result.get('error')[:100]}", fg_color=color_status_Bad)
 
 if __name__ == "__main__":
+    
+    # Instantiate
     app = CoNESStudio()
+    
+    # Load the path if it exists AND it ends in .cnes
     app.mainloop()
+    if len(sys.argv) > 1 and is_cnes(sys.argv[1]): app.load_file(sys.argv[1])

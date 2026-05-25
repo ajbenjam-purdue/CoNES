@@ -1,0 +1,21 @@
+include "thermo_lib"
+
+/*
+Simulates the Joule-Thomson effect of a valve expansion using a non-ideal gas (R134a).
+*/
+
+// Isenthalpic expansion across a valve using a real fluid (R134a)
+T_in := 40 [C]
+P_in := 1 [MPa] // 1 MPa
+P_out := 150 [kPa] // 150 kPa
+
+h_in = Enthalpy(R134a, T=T_in, P=P_in) [kJ/kg]
+
+// Process: Isenthalpic Expansion
+Isenthalpic_Expansion(R134a, T_in, P_in, P_out, T_out, h_in_check, h_out)
+
+// Joule-Thomson coefficient approximation (average)
+mu_JT = (T_in - T_out) / (P_in - P_out)
+
+h_out.unit := [kJ/kg] // Conformity
+T_out.unit := [C]

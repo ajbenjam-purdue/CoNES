@@ -25,6 +25,7 @@ class Parser {
     static constexpr int MAX_INCLUDE_DEPTH = 10;
 
     public:
+    // Create a parser instance with a set of tokens and a defined system
     Parser(std::vector<Token> tokens, System& sys, std::filesystem::path initial_path = ".", int depth = 0) 
         : tokens_(std::move(tokens)), system_(sys), include_depth_(depth) {
         if (include_depth_ > MAX_INCLUDE_DEPTH) {
@@ -38,8 +39,10 @@ class Parser {
         }
     }
 
+    // Overwrite the executable for the parser
     void set_exe_path(std::filesystem::path p) { exe_path_ = std::move(p); }
 
+    // Attempt to parse the held tokens
     void parse() {
         try {
             scrap_definitions();
@@ -52,14 +55,21 @@ class Parser {
     }
 
 private:
+
+    // Consume and add to the context any functions (contained local) or routines (uncontained local)
     void scrap_definitions() {
         current_ = 0;
         std::vector<Token> filtered;
 
         while (!is_at_end()) {
+            // Routines: create a routine and add to system
             if (match(TokenType::ROUTINE)) {
+
+                // Creation
                 RoutineDef def;
                 def.name = consume(TokenType::IDENTIFIER, "Expect routine name.").lexeme;
+
+                // Parameters
                 consume(TokenType::LPAREN, "Expect ( after routine name.");
                 if (!check(TokenType::RPAREN)) {
                     do {
@@ -68,16 +78,26 @@ private:
                 }
                 consume(TokenType::RPAREN, "Expect ) after parameters.");
 
+                // Body
                 while (!(check(TokenType::END) && peek_next().type == TokenType::ROUTINE)) {
-                    if (is_at_end()) throw error(peek(), "Unterminated routine.");
+                    if (is_at_end()) throw error(peek(), "Unterminated routine."); // TODO: More robust checking
                     def.body_tokens.push_back(advance());
                 }
                 consume(TokenType::END, "Expect end.");
                 consume(TokenType::ROUTINE, "Expect routine.");
+
+                // Register the contents
                 system_.definition_registry().register_routine(std::move(def));
-            } else if (match(TokenType::FUNCTION)) {
+            } 
+            
+            // Functions: create a function and add to system
+            else if (match(TokenType::FUNCTION)) {
+
+                // Creation
                 FunctionDef def;
                 def.name = consume(TokenType::IDENTIFIER, "Expect function name.").lexeme;
+
+                // Parameters
                 consume(TokenType::LPAREN, "Expect ( after function name.");
                 if (!check(TokenType::RPAREN)) {
                     do {
@@ -86,8 +106,11 @@ private:
                 }
                 consume(TokenType::RPAREN, "Expect ) after parameters.");
 
+                // PRIVATE local parsing
                 is_local_parsing_ = true;
                 while (!check(TokenType::END) && !is_at_end()) {
+
+                    // Explicit return value association
                     if (match(TokenType::RETURN)) {
                         def.return_node = expression();
                         if (match(TokenType::LBRACKET)) {
@@ -96,17 +119,25 @@ private:
                             consume(TokenType::RBRACKET, "Expect ].");
                             def.return_unit = Unit::from_string(uname);
                         } else def.return_unit = Unit::Dimensionless();
-                    } else {
+                    }
+                    
+                    // Contents
+                    else {
                         std::string lhs = consume(TokenType::IDENTIFIER, "Expect variable name in function.").lexeme;
                         consume(TokenType::EQUALS, "Expect =.");
                         def.body_assignments.push_back({lhs, expression()});
                     }
                 }
+
+                // End of function
                 is_local_parsing_ = false;
                 consume(TokenType::END, "Expect end function.");
                 consume(TokenType::FUNCTION, "Expect 'function'.");
                 system_.definition_registry().register_function(std::move(def));
-            } else {
+            } 
+            
+            // Other: add to filtered list
+            else {
                 filtered.push_back(advance());
             }
         }
@@ -122,6 +153,7 @@ private:
         current_ = 0;
     }
 
+    // Wrapper to allow dynamic pathing: libs/test.cnes, test.cnes, and test are all the same
     std::filesystem::path resolve_path(const std::string& original_path) {
         std::filesystem::path p(original_path);
         std::vector<std::string> trials;
@@ -131,17 +163,18 @@ private:
             trials.push_back(original_path + ".cnes");
         }
 
+        // Check each for validity
         for (const auto& trial_str : trials) {
             std::filesystem::path trial(trial_str);
 
-            if (!search_paths_.empty()) {
+            if (!search_paths_.empty()) { // First, check parent dir
                 std::filesystem::path rel = search_paths_.back() / trial;
                 if (std::filesystem::exists(rel)) return rel;
             }
 
-            if (std::filesystem::exists(trial)) return trial;
+            if (std::filesystem::exists(trial)) return trial; // Check the actual path
 
-            if (!exe_path_.empty()) {
+            if (!exe_path_.empty()) { // Check on the executable/lib path LAST
                 std::filesystem::path lib_path = exe_path_ / "libs" / trial;
                 if (std::filesystem::exists(lib_path)) return lib_path;
             }
@@ -150,23 +183,26 @@ private:
         return "";
     }
 
+    // "Include" and parse inclusion contents
     void include_statement() {
         Token path_token = consume(TokenType::STRING, "Expect file path after include.");
         std::string raw_path = path_token.lexeme;
 
+        // Get and check resolved path
         std::filesystem::path resolved = resolve_path(raw_path);
-        if (resolved.empty()) {
+        if (resolved.empty()) { // Empty if doesn't exist
             throw error(path_token, "Could not resolve include path: " + raw_path);
         }
 
+        // Open file and read
         std::ifstream file(resolved);
         if (!file.is_open()) {
             throw error(path_token, "Could not open included file: " + resolved.string());
         }
-
         std::stringstream ss;
         ss << file.rdbuf();
 
+        // Tokenize the inclusion
         Lexer lex(ss.str());
         std::vector<Token> included_tokens = lex.scan_tokens();
 
@@ -176,21 +212,23 @@ private:
         sub_parser.parse();
     }
 
-
+    // Global statement expansion
     void statement() {
-        if (match(TokenType::INCLUDE)) {
+        if (match(TokenType::INCLUDE)) { // Include statement
             include_statement();
             return;
         }
-        if (check(TokenType::IDENTIFIER)) {
+        if (check(TokenType::IDENTIFIER)) { // We have an identifier, what we do depends on the following token
             Token name = peek();
             TokenType next_t = peek_next().type;
-            
+
+            // Routine
             if (next_t == TokenType::LPAREN && system_.definition_registry().get_routine(name.lexeme)) {
                 expand_routine();
                 return;
             }
 
+            // Definition (assignment, equivalency, unit casting)
             if (next_t == TokenType::COLON_EQUALS || next_t == TokenType::DOT || next_t == TokenType::LBRACKET || next_t == TokenType::LBRACE) {
                 definition_statement();
                 return;
@@ -199,11 +237,15 @@ private:
         equation_statement();
     }
 
+    // Expand a routine into global scope, replacing the input tokens with the provided tokens
     void expand_routine() {
+
+        // Get name and definition of the matching routine
         Token name = advance();
         const RoutineDef* def = system_.definition_registry().get_routine(name.lexeme);
-        
         consume(TokenType::LPAREN, "Expect (.");
+
+        // Get parameters
         std::vector<Token> args;
         if (!check(TokenType::RPAREN)) {
             do {
@@ -212,15 +254,18 @@ private:
         }
         consume(TokenType::RPAREN, "Expect ).");
 
+        // Not enough/too many parameters
         if (args.size() != def->params.size()) {
             throw error(name, "Routine " + name.lexeme + " requires " + std::to_string(def->params.size()) + " arguments.");
         }
 
+        // Mapping (in-out)
         std::map<std::string, Token> mapping;
         for (size_t i = 0; i < args.size(); ++i) {
             mapping.emplace(def->params[i], args[i]);
         }
 
+        // Expansion
         std::vector<Token> expanded;
         for (const auto& body_token : def->body_tokens) {
             auto it = mapping.find(body_token.lexeme);
@@ -231,22 +276,26 @@ private:
             }
         }
 
+        // TODO: improve recursion detection so this stupid check isn't needed
         if (tokens_.size() + expanded.size() > 1000000) {
-            throw std::runtime_error("Parser: Script too large after routine expansion (possible infinite recursion).");
+            throw std::runtime_error("Parser: Script too large after routine (name: "+def->name+") expansion (possible infinite recursion).");
         }
 
+        // Add into global scope
         tokens_.insert(tokens_.begin() + current_, expanded.begin(), expanded.end());
     }
 
+    // Associate something with something else
     void definition_statement() {
         Token name = consume(TokenType::IDENTIFIER, "Expect name.");
         auto& reg = system_.registry();
         int idx = reg.register_variable(name.lexeme, name.line);
 
+        // attribute (.unit, .lower, .upper, or .guess)
         if (match(TokenType::DOT)) {
             Token attr = consume(TokenType::IDENTIFIER, "Expect attribute.");
             consume(TokenType::COLON_EQUALS, "Expect :=.");
-            if (attr.lexeme == "unit") {
+            if (attr.lexeme == "unit") { // Unit
                 std::string unit_val = "";
                 if (match(TokenType::LBRACKET)) {
                     while (!check(TokenType::RBRACKET) && !is_at_end()) unit_val += advance().lexeme;
@@ -254,61 +303,68 @@ private:
                 } else unit_val = consume(TokenType::IDENTIFIER, "Expect unit.").lexeme;
                 
                 Unit u = Unit::from_string(unit_val);
-                if (reg.get_variable(idx).unit.is_dimensionless() && !u.is_dimensionless()) {
-                    double v = reg.get_variable(idx).value;
-                    reg.set_value(idx, (v + u.offset) * u.scale);
-                    double l = reg.get_variable(idx).lower_bound;
-                    double up = reg.get_variable(idx).upper_bound;
-                    if (l > -1e30) l = (l + u.offset) * u.scale;
-                    if (up < 1e30) up = (up + u.offset) * u.scale;
-                    reg.set_bounds(idx, l, up);
-                }
                 reg.set_unit(idx, u, unit_val);
                 reg.suggest_guess(idx, u);
-            } else {
-                double val = evaluate_to_double(expression());
-                if (attr.lexeme == "guess") reg.set_value(idx, val);
-                else if (attr.lexeme == "lower") reg.set_bounds(idx, val, reg.get_variable(idx).upper_bound);
-                else if (attr.lexeme == "upper") reg.set_bounds(idx, reg.get_variable(idx).lower_bound, val);
+            } else { // Guess, Lower, or Upper bound
+                NodePtr rhs = expression();
+                double val = evaluate_to_double(rhs);
+                bool is_si = !rhs->get_unit(reg).is_dimensionless();
+
+                if (attr.lexeme == "guess") reg.set_value(idx, val, is_si);
+                else if (attr.lexeme == "lower") reg.set_lower_bound(idx, val, is_si);
+                else if (attr.lexeme == "upper") reg.set_upper_bound(idx, val, is_si);
+                else throw error(name, "Unknown property ."+attr.lexeme+" (must be .unit, .lower, .upper, or .guess).");
             }
-        } else if (match(TokenType::COLON_EQUALS) || check(TokenType::LBRACE)) {
+        } 
+        
+        // Definition (y:=x) or guess/lower/upper (y[x:x:x])
+        else if (match(TokenType::COLON_EQUALS) || check(TokenType::LBRACE)) {
             bool has_assign = (previous().type == TokenType::COLON_EQUALS);
             if (match(TokenType::LBRACE)) {
-                if (!match(TokenType::UNDERSCORE)) reg.set_value(idx, evaluate_to_double(expression()));
+                if (!match(TokenType::UNDERSCORE)) reg.set_value(idx, evaluate_to_double(expression()), true);
                 consume(TokenType::COLON, "Expect :.");
-                if (!match(TokenType::UNDERSCORE)) reg.set_bounds(idx, evaluate_to_double(expression()), reg.get_variable(idx).upper_bound);
+                if (!match(TokenType::UNDERSCORE)) reg.set_lower_bound(idx, evaluate_to_double(expression()), true);
                 consume(TokenType::COLON, "Expect :.");
-                if (!match(TokenType::UNDERSCORE)) reg.set_bounds(idx, reg.get_variable(idx).lower_bound, evaluate_to_double(expression()));
+                if (!match(TokenType::UNDERSCORE)) reg.set_upper_bound(idx, evaluate_to_double(expression()), true);
                 consume(TokenType::RBRACE, "Expect }.");
-            } else if (has_assign) {
+            }
+            else if (has_assign) {
                 NodePtr rhs = expression();
-                DualNumber res = evaluate_dual(rhs);
-                reg.set_value(idx, res.val);
-                reg.set_fixed(idx, true);
                 if (reg.get_variable(idx).unit.is_dimensionless()) {
                     Unit u = rhs->get_unit(reg);
                     if (!u.is_dimensionless()) reg.set_unit(idx, u, u.to_string());
                 }
+                DualNumber res = evaluate_dual(rhs); // static, NO dynamic assignments
+                reg.set_value(idx, res.val, true);
+                reg.set_fixed(idx, true);
             }
         }
     }
 
+    // Relate something to something else
     void equation_statement() {
         int line = peek().line;
+
+        // Get expression
         NodePtr lhs = expression();
         consume(TokenType::EQUALS, "Expect =.");
         NodePtr rhs = expression();
+
+        // If the variable can successfuly be ID'd, parse
         if (auto var_node = std::dynamic_pointer_cast<VariableNode>(lhs)) {
             auto& var_info = system_.registry().get_variable(system_.registry().get_index(var_node->to_string()));
-            if (var_info.unit.is_dimensionless()) {
+            if (var_info.unit.is_dimensionless()) { // In the event there is no assigned unit, try to assume one AND guess an initial val
                 Unit inherited = rhs->get_unit(system_.registry());
                 system_.registry().set_unit(var_info.index, inherited, inherited.to_string());
                 system_.registry().suggest_guess(var_info.index, inherited);
             }
         }
+
+        // Add eqn to the registry
         system_.add_equation(std::make_shared<SubNode>(lhs, rhs), line);
     }
 
+    // Binary Tree-esque structure
     NodePtr expression() { return addition(); }
     NodePtr addition() {
         NodePtr node = multiplication();
@@ -400,7 +456,7 @@ private:
             auto substance = system_.substance_manager().get(name.lexeme);
             int idx = system_.registry().register_variable(name.lexeme, name.line);
             if (constant && !system_.registry().get_variable(idx).is_fixed) {
-                system_.registry().set_value(idx, constant->value);
+                system_.registry().set_value(idx, constant->value, true);
                 system_.registry().set_fixed(idx, true);
                 system_.registry().set_reserved(idx, true);
                 if (!constant->unit.empty()) system_.registry().set_unit(idx, constant->unit);

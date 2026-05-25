@@ -55,6 +55,12 @@ struct dataColumn
     }
 };
 
+// True if the file exists and is of the correct ending
+bool is_cnes(std::string path)
+{
+    return std::filesystem::exists(path) && path.ends_with(".cnes");
+}
+
 // Print the help output message. Is there a better way to do this?
 void print_help()
 {
@@ -191,6 +197,34 @@ void print_table(std::ostream *out, std::string title, std::vector<dataColumn> d
     *out << std::string(total_width, '=') << "\n";
 }
 
+void print_metadata(System system)
+{
+    // Constants: Name:Value:Unit:Description
+    std::vector<std::string> c_names = system.constant_registry().get_constant_names();
+    for (size_t i = 0; i < c_names.size(); ++i)
+    {
+        const auto *c = system.constant_registry().get(c_names[i]);
+        std::cout << c->name << ":" << c->value << ":" << c->unit << ":" << c->desc << (i < c_names.size() - 1 ? "|" : "");
+    }
+    std::cout << "|||";
+
+    // Functions: Sig:Desc
+    auto f_meta = system.function_registry().get_function_metadata();
+    for (size_t i = 0; i < f_meta.size(); ++i)
+    {
+        std::cout << f_meta[i] << (i < f_meta.size() - 1 ? "|" : "");
+    }
+    std::cout << "|||";
+
+    // Substances: Name:Summary
+    auto s_names = system.substance_manager().get_substance_names();
+    for (size_t i = 0; i < s_names.size(); ++i)
+    {
+        auto sub = system.substance_manager().get(s_names[i]);
+        std::cout << sub->name() << ":" << sub->summary() << (i < s_names.size() - 1 ? "|" : "");
+    }
+}
+
 // Build the substances library using the Python interpreter on PATH
 int build_substances()
 {
@@ -214,7 +248,7 @@ int build_substances()
 }
 
 // Open CoNES studio via the Python interpreter on PATH
-int open_ide(std::string py_interp_path = "python3")
+int open_ide(std::string py_interp_path = "python3", std::string cnes_file_path = "")
 {
     // Should be platform agnostic
     int result = (win ? 
@@ -230,7 +264,7 @@ int open_ide(std::string py_interp_path = "python3")
     }
 
     // Attempt to open
-    std::system(std::string(py_interp_path + " cones_studio/main.py").c_str());
+    std::system(std::string(py_interp_path + " cones_studio/main.py" + (cnes_file_path.empty() ? "" : " ") + cnes_file_path).c_str());
     return 0;
 }
 
@@ -324,11 +358,22 @@ int main(int argc, char *argv[])
         }
         if (flag == "--IDE")
         {
-            if (i + 1 < argc) // Argument is passed
+            std::string cnes_file_path(""), py_interpreter_path("python3"), arg("");
+            while (i < argc - 1)
             {
-                open_ide(argv[++i]);
+                arg = argv[++i];
+                if (is_cnes(arg))
+                {
+                    cnes_file_path = arg;
+                    // std::cout << ".cnes identified: " << arg;
+                }
+                else 
+                {
+                    py_interpreter_path = arg;
+                    // std::cout << "python interpreter identified: " << py_interpreter_path;
+                }
             }
-            else open_ide(); // No argument
+            open_ide(py_interpreter_path, cnes_file_path);
             return 0;
         }
         if (flag == "-v")
@@ -398,30 +443,7 @@ int main(int argc, char *argv[])
         {
             // CONSTANTS_STR ||| FUNCTIONS_STR ||| SUBSTANCES_STR
 
-            // Constants: Name:Value:Unit:Description
-            std::vector<std::string> c_names = system.constant_registry().get_constant_names();
-            for (size_t i = 0; i < c_names.size(); ++i)
-            {
-                const auto *c = system.constant_registry().get(c_names[i]);
-                std::cout << c->name << ":" << c->value << ":" << c->unit << ":" << c->desc << (i < c_names.size() - 1 ? "|" : "");
-            }
-            std::cout << "|||";
-
-            // Functions: Sig:Desc
-            auto f_meta = system.function_registry().get_function_metadata();
-            for (size_t i = 0; i < f_meta.size(); ++i)
-            {
-                std::cout << f_meta[i] << (i < f_meta.size() - 1 ? "|" : "");
-            }
-            std::cout << "|||";
-
-            // Substances: Name:Summary
-            auto s_names = system.substance_manager().get_substance_names();
-            for (size_t i = 0; i < s_names.size(); ++i)
-            {
-                auto sub = system.substance_manager().get(s_names[i]);
-                std::cout << sub->name() << ":" << sub->summary() << (i < s_names.size() - 1 ? "|" : "");
-            }
+            print_metadata(system);
             return 0;
         }
 
@@ -494,6 +516,10 @@ int main(int argc, char *argv[])
         // Non-json output
         if (!silent || !output_path.empty())
         {
+            if (!report.success) {
+                std::cerr << "\nWARNING: Solver failed to converge! Results below are non-physical." << std::endl;
+                std::cerr << "Error: " << report.error_msg << "\n" << std::endl;
+            }
             std::ostream *out = &std::cout;
             std::ofstream file_out;
 

@@ -7,6 +7,9 @@ import tempfile
 
 DEFAULT_EXECUTABLE = "./cnes.exe" if sys.platform.startswith('win32') else "./cnes"
 
+def is_cnes(path:str) -> bool:
+    return os.path.exists(path) and path.endswith(".cnes")
+
 def parse_time(solver_ms):
     if solver_ms >= 60000:
         return f"{solver_ms/60000:.0f} min {(solver_ms/1000%60):.0f} sec"
@@ -16,28 +19,30 @@ def parse_time(solver_ms):
 
 class CoNESBackend:
     def __init__(self, executable_path=DEFAULT_EXECUTABLE):
-        self.exe = executable_path
+        self.exe = os.path.abspath(executable_path)
 
-    def solve(self, file_path):
+    def solve(self, file_path, cwd=None):
         """Runs the solver on a file and returns the JSON result."""
         try:
             result = subprocess.run([self.exe, file_path, "--json"], 
                                      capture_output=True, 
                                      text=True, 
-                                     check=False)
+                                     check=False,
+                                     cwd=cwd)
             if not result.stdout.strip():
                 return {"success": False, "error": result.stderr or "No output from solver."}
             return json.loads(result.stdout)
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def get_metadata(self):
+    def get_metadata(self, cwd=None):
         """Fetches substances, functions, and constants for autocomplete and rich tooltips."""
         try:
             result = subprocess.run([self.exe, "--out-vscode-metadata"], 
                                      capture_output=True, 
                                      text=True, 
-                                     check=False)
+                                     check=False,
+                                     cwd=cwd)
             if not result.stdout: return {"substances": {}, "functions": {}, "constants": {}}
             
             parts = result.stdout.split("|||")
@@ -85,7 +90,7 @@ class CoNESBackend:
         except Exception:
             return {"substances": {}, "functions": {}, "constants": {}}
 
-    def lint(self, script_content):
+    def lint(self, script_content, cwd=None):
         """Writes content to a temp file and runs the linter."""
         temp_dir = tempfile.gettempdir()
         temp_file = os.path.join(temp_dir, "cones_lint_target.cnes")
@@ -97,7 +102,8 @@ class CoNESBackend:
             result = subprocess.run([self.exe, temp_file, "--lint", "--json"], 
                                      capture_output=True, 
                                      text=True, 
-                                     check=False)
+                                     check=False,
+                                     cwd=cwd)
             
             if not result.stdout.strip():
                 # If solver crashed, return stderr as the error

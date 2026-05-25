@@ -1,0 +1,34 @@
+include "thermo_lib"
+
+/*
+This script simulates a pulse-jet engine using Air (ideal) as the working fluid.
+isochoric heat addition > isentropic expansion > isobaric heat rejection
+*/
+
+// Properties
+T_1 := 300 [K]
+P_1 := 101.325 [kPa]
+m := 1.0 [kg]
+Q_in := 800000 [J]
+
+// State 1
+v_1 = SpecificVolume(Air, T=T_1, P=P_1)
+h_1 = Enthalpy(Air, T=T_1, P=P_1)
+
+// Process 1->2: Isochoric Heat Addition
+// Volume is constant, v_2 = v_1. The macro uses v as input.
+Closed_Isochoric_Heat_Addition(Air, T_1, P_1, v_1, P_2, T_2, u_1, u_2, Q_in, m)
+
+// Process 2->3: Isentropic Expansion
+// Expands until pressure returns to P_1.
+P_3 = P_1
+Closed_Isentropic_Expansion(Air, T_2, P_2, v_1, v_3, P_3, T_3, s_2, u_2_check, u_3, W_t, m)
+
+// Process 3->1: Isobaric Heat Rejection
+// Rejects heat at constant pressure P_1.
+Isobaric_Heat_Rejection(Air, T_3, P_3, T_1, h_3, h_1_check, Q_out, m)
+W_isobaric = P_1 * (v_1 - v_3) * m
+
+// Performance
+W_net = W_t + W_isobaric
+eta_th = W_net / Q_in
