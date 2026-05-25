@@ -22,6 +22,7 @@ namespace cones
         bool is_reserved = false; // Materials/Reserved keywords
         Unit unit = Unit::Dimensionless();
         std::string unit_name = "";
+        int line = -1;
     };
 
     class VariableRegistry
@@ -30,17 +31,20 @@ namespace cones
         std::vector<Variable> variables_;
 
     public:
-        int register_variable(const std::string &name)
+        int register_variable(const std::string &name, int line = -1)
         {
             auto it = name_to_index_.find(name);
-            if (it != name_to_index_.end())
+            if (it != name_to_index_.end()) {
+                if (variables_[it->second].line == -1) variables_[it->second].line = line;
                 return it->second;
+            }
 
             int index = static_cast<int>(variables_.size());
             name_to_index_[name] = index;
             Variable v;
             v.name = name;
             v.index = index;
+            v.line = line;
             variables_.push_back(v);
             return index;
         }

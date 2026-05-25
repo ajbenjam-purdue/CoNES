@@ -1,21 +1,33 @@
 # courtesy of https://stackoverflow.com/questions/46419607/how-to-automatically-install-required-packages-from-a-python-script-as-necessary
-import importlib.metadata, subprocess, sys
+import importlib.metadata, subprocess, sys, socket
 
-# Get required package
-required  = {'customtkinter','coolprop'}
+# Get required packages
+required  = {'customtkinter','CoolProp'}
 installed = {pkg.metadata['Name'] for pkg in importlib.metadata.distributions()}
 missing   = required - installed
 
+def is_connected():
+    try:
+        # Attempt to connect to Google's public DNS
+        socket.create_connection(("8.8.8.8", 53), timeout=4)
+        return True
+    except OSError:
+        return False
+
 # Install if needed
 if missing:
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', *missing])
+    try:
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', *missing])
+    except Exception as e:
+        if is_connected(): raise TimeoutError("Connection timed out when attempting to install packages: "+str(list(missing))+". The local machine does not seem to be able to connect to Google's DNS server, please check your network and try again.")
+        raise TimeoutError("Connection timed out when attempting to install packages: "+str(list(missing))+". Exception: "+str(e))
 
 import customtkinter as ctk
-from tkinter import ttk, filedialog, messagebox
-import os, re
+from tkinter import ttk, filedialog
+import os
 import threading
 import tempfile
-from typing import Optional, Any
+from typing import Optional
 from editor import CodeEditor, UI_FONT, UI_FONT_SMALL, MONOSPACED_FONT
 from backend import CoNESBackend, parse_time
 
@@ -114,6 +126,7 @@ class CoNESStudio(ctk.CTk):
         
         self._setup_solution_table()
         self.tree.bind("<<TreeviewSelect>>", self._on_table_select)
+        self.tree_res.bind("<<TreeviewSelect>>", self._on_residual_select)
         
         # Status Bar
         self.status_bar = ctk.CTkLabel(self, text="  Ready", anchor="w", 
@@ -134,6 +147,17 @@ class CoNESStudio(ctk.CTk):
         item = self.tree.item(selected[0])
         var_name = item['values'][0] # Variable name is first col
         self.editor.highlight_symbol(var_name)
+
+    def _on_residual_select(self, event):
+        """Highlights the corresponding line in the code editor."""
+        selected = self.tree_res.selection()
+        if not selected: return
+
+        line = self.tree_res.item(selected[0])["values"][3]
+        self.editor.highlight_line(line)
+        # item = self.tree_res.item(selected[0])
+        # var_name = item['values'][0] # Variable name is first col
+        # self.editor.highlight_symbol(var_name)
 
     def _setup_solution_table(self):
         style = ttk.Style()
@@ -177,8 +201,9 @@ class CoNESStudio(ctk.CTk):
         
         style.map("Treeview", background=[('selected', '#37373d')])
         
-        # Create Treeview inside the tab
-        self.tree = ttk.Treeview(self.tab_solution, columns=("Name", "Value", "Unit", "State"), show="headings", style="Treeview")
+        # Create Treeview inside the tab: RESULTS
+        self.tree = ttk.Treeview(self.tab_solution, columns=("Name", "Value", "Unit", "State", "LINE"), show="headings", style="Treeview")
+        self.tree["displaycolumns"] = ("Name", "Value", "Unit", "State")
         self.tree.heading("Name", text="NAME")
         self.tree.heading("Value", text="VALUE")
         self.tree.heading("Unit", text="UNIT")
@@ -190,6 +215,19 @@ class CoNESStudio(ctk.CTk):
         self.tree.column("State", width=50, anchor="center")
         
         self.tree.pack(fill="both", expand=True)
+        
+        # Create Treeview inside the tab: RESIDUALS
+        self.tree_res = ttk.Treeview(self.tab_residuals, columns=("ID", "EQN", "Value", "LINE"), show="headings", style="Treeview")
+        self.tree_res["displaycolumns"] = ("ID", "EQN", "Value")
+        self.tree_res.heading("ID", text="ID")
+        self.tree_res.heading("EQN", text="Equation")
+        self.tree_res.heading("Value", text="Value")
+        
+        self.tree_res.column("ID", width=30, anchor="w")
+        self.tree_res.column("EQN", width=100)
+        self.tree_res.column("Value", width=50, anchor="e")
+        
+        self.tree_res.pack(fill="both", expand=True)
 
     def run_lint(self):
         """Debounced linting trigger."""
@@ -265,9 +303,13 @@ class CoNESStudio(ctk.CTk):
             return
 
         for item in self.tree.get_children(): self.tree.delete(item)
+        for item in self.tree_res.get_children(): self.tree_res.delete(item)
         for var in result.get("variables", []):
             state = "FIX" if var["is_fixed"] else "SOL"
-            self.tree.insert("", "end", values=(var["name"], f"{var['value']:.6}", var["unit"], state))
+            self.tree.insert("", "end", values=(var["name"], f"{var['value']:.6}", var["unit"], state, var["line"]))
+            
+        for var in result.get("residuals", []):
+            self.tree_res.insert("", "end", values=(var["id"], var["expression"], f"{var['value']:.5g}", var["line"]))
             
         perf = result.get("performance", {})
         self.status_bar.configure(text=f"  Solved ({parse_time(perf.get('solver_ms', 0))})", fg_color=color_status_Success)

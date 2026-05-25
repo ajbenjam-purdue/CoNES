@@ -17,8 +17,11 @@ namespace cones
 
     class Node
     {
+        int line_ = -1;
     public:
         virtual ~Node() = default;
+        void set_line(int l) { line_ = l; }
+        int get_line() const { return line_; }
         virtual DualNumber evaluate(const std::vector<DualNumber> &values, const VariableRegistry& reg, const std::unordered_map<std::string, DualNumber>* local_scope = nullptr) const = 0;
         virtual std::string to_string() const = 0;
         virtual Unit get_unit(const VariableRegistry& reg) const = 0;

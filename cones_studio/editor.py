@@ -74,7 +74,7 @@ class CodeEditor(ctk.CTkFrame):
         self.text_area.tag_configure("unit", foreground="#b5cea8") 
         self.text_area.tag_configure("error", underline=True, underlinefg="#f44747")
         self.text_area.tag_configure("ghost", foreground="#505050")
-        self.text_area.tag_configure("symbol_highlight", background="#37373d")
+        self.text_area.tag_configure("symbol_highlight", background="#485748")
         self.text_area.tag_configure("comment", foreground="#6a9955") 
 
     def _setup_shortcuts(self):
@@ -93,6 +93,14 @@ class CodeEditor(ctk.CTkFrame):
             start = f"{line}.0"
             end = f"{line}.end"
             self.text_area.tag_add("error", start, end)
+            self.text_area.see(start)
+
+    def highlight_line(self, line):
+        self.text_area.tag_remove("symbol_highlight", "1.0", "end")
+        if line > 0:
+            start = f"{line}.0"
+            end = f"{line}.end"
+            self.text_area.tag_add("symbol_highlight", start, end)
             self.text_area.see(start)
 
     def highlight_symbol(self, name):

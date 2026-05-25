@@ -80,22 +80,22 @@ void print_help()
               << "    --version             Show the current CoNES version\n"
               << "    --help, -h            Show this help message\n"
               << "    --build-substances    (Standalone) Attempt to build the binary substance tables using Python\n"
-              << "    --IDE                 (Standalone) Open the Python-based IDE (Need python on PATH)\n"
+              << "    --IDE [int. path]     (Standalone) Open the Python-based IDE (Need python on PATH, or optionally provide the desired interpreter's path)\n"
               << std::endl;
 }
 
 // Print the raw json string including metadata, variables, and solution metrics like solve time
-void print_json_output(const System &system, double t_lexer, double t_parser, double t_solver, bool success, int solver_iters = -1, const std::string &error_msg = "")
+void print_json_output(const System &system, const SolverReport &report, double t_lexer, double t_parser, double t_solver)
 {
     // Metadata
     std::cout << "{\n";
     std::cout << "  \"version\": \"" << Version::full() << "\",\n";
-    std::cout << "  \"success\": " << (success ? "true" : "false") << ",\n";
+    std::cout << "  \"success\": " << (report.success ? "true" : "false") << ",\n";
 
     // An error exists, provide it
-    if (!error_msg.empty())
+    if (!report.error_msg.empty())
     {
-        std::cout << "  \"error\": \"" << error_msg << "\",\n";
+        std::cout << "  \"error\": \"" << report.error_msg << "\",\n";
     }
 
     // Print all the variables
@@ -110,28 +110,44 @@ void print_json_output(const System &system, double t_lexer, double t_parser, do
         if (v.is_reserved)
             continue;
 
-        // This is messy. TODO: Abstract json manipulation/output
-        if (!first)
-            std::cout << ",\n";
+        if (!first) std::cout << ",\n";
         first = false;
         double display_val = (v.value / v.unit.scale) - v.unit.offset;
         std::cout << "    {\n";
         std::cout << "      \"name\": \"" << v.name << "\",\n";
         std::cout << "      \"value\": " << std::fixed << std::setprecision(10) << display_val << ",\n";
         std::cout << "      \"unit\": \"" << (v.unit_name.empty() ? "" : v.unit_name) << "\",\n";
+        std::cout << "      \"line\": " << v.line << ",\n";
         std::cout << "      \"is_fixed\": " << (v.is_fixed ? "true" : "false") << "\n";
         std::cout << "    }";
     }
+    std::cout << "\n  ],\n";
+
+    // Residuals
+    std::cout << "  \"residuals\": [\n";
+    for (size_t i = 0; i < system.get_equation_count(); ++i)
+    {
+        if (i > 0) std::cout << ",\n";
+        double res_val = 0.0;
+        if (report.residuals.size() > (int)i) {
+            res_val = report.residuals(i);
+        }
+        std::cout << "    {\n";
+        std::cout << "      \"id\": " << i << ",\n";
+        std::cout << "      \"expression\": " << std::quoted(system.get_equation_plaintext(i)) << ",\n";
+        std::cout << "      \"value\": " << std::scientific << std::setprecision(10) << res_val << ",\n";
+        std::cout << "      \"line\": " << system.get_equation_line(i) << "\n";
+        std::cout << "    }";
+    }
+    std::cout << "\n  ],\n";
 
     // Solution metrics
-    std::cout << "\n  ],\n";
     std::cout << "  \"performance\": {\n";
     std::cout << "    \"lexer_ms\": " << t_lexer << ",\n";
     std::cout << "    \"parser_ms\": " << t_parser << ",\n";
-    std::cout << "    \"solver_ms\": " << t_solver;
-    if (solver_iters != -1)
-        std::cout << ",\n    \"iterations\": " << solver_iters;
-    std::cout << "\n  }\n";
+    std::cout << "    \"solver_ms\": " << t_solver << ",\n";
+    std::cout << "    \"iterations\": " << report.iterations << "\n";
+    std::cout << "  }\n";
     std::cout << "}\n";
 }
 
@@ -198,23 +214,23 @@ int build_substances()
 }
 
 // Open CoNES studio via the Python interpreter on PATH
-int open_ide()
+int open_ide(std::string py_interp_path = "python3")
 {
     // Should be platform agnostic
     int result = (win ? 
-        std::system("python3 --version > NUL 2>&1") : 
-        std::system("python3 --version > /dev/null 2>&1")
+        std::system(std::string(py_interp_path + " --version > NUL 2>&1").c_str()) : 
+        std::system(std::string(py_interp_path + " --version > /dev/null 2>&1").c_str())
     );
     
     // Not installed
     if (result != 0) {
-        std::cout << "Python is not installed or not in PATH." << std::endl;
+        if (py_interp_path == "python3") std::cerr << "Python is not installed or not in PATH." << std::endl;
+        else std::cerr << "An invalid interpreter path (" << py_interp_path << ") was passed." << std::endl;
         return 1;
     }
 
     // Attempt to open
-    std::system("python3 cones_studio/main.py");
-    // TODO: Error checking for CoolProp not installed (same as build_substances)
+    std::system(std::string(py_interp_path + " cones_studio/main.py").c_str());
     return 0;
 }
 
@@ -287,6 +303,7 @@ int main(int argc, char *argv[])
     double tol_override = 1e-9;
     int max_iter_override = 100;
 
+    // Flags
     for (int i = 1; i < argc; ++i)
     {
         std::string flag = argv[i];
@@ -307,7 +324,11 @@ int main(int argc, char *argv[])
         }
         if (flag == "--IDE")
         {
-            open_ide();
+            if (i + 1 < argc) // Argument is passed
+            {
+                open_ide(argv[++i]);
+            }
+            else open_ide(); // No argument
             return 0;
         }
         if (flag == "-v")
@@ -440,10 +461,12 @@ int main(int argc, char *argv[])
         {
             if (json_out)
             {
-                print_json_output(system,
+                SolverReport report;
+                report.success = true;
+                print_json_output(system, report,
                                   std::chrono::duration<double, std::milli>(time_lexer - start_time).count(),
                                   std::chrono::duration<double, std::milli>(time_parser - time_lexer).count(),
-                                  0, true, -1);
+                                  0);
             }
             else
             {
@@ -454,7 +477,7 @@ int main(int argc, char *argv[])
 
         // Otherwise, solve system and yield the results
         NewtonSolver solver(tol_override, max_iter_override, verbose);
-        int sol_iterations = solver.solve(system);
+        SolverReport report = solver.solve(system);
 
         auto end_time = std::chrono::high_resolution_clock::now(); // Total time & durations
         double d_lexer = std::chrono::duration<double, std::milli>(time_lexer - start_time).count();
@@ -464,7 +487,7 @@ int main(int argc, char *argv[])
         // For json output, yield the results via json
         if (json_out)
         {
-            print_json_output(system, d_lexer, d_parser, d_solver, true, sol_iterations);
+            print_json_output(system, report, d_lexer, d_parser, d_solver);
             return 0;
         }
 
@@ -508,7 +531,10 @@ int main(int argc, char *argv[])
     {
         if (json_out)
         {
-            print_json_output(system, 0, 0, 0, false, -1, "System error: Out of memory. The script may be too large or contains circular dependencies.");
+            SolverReport report;
+            report.success = false;
+            report.error_msg = "System error: Out of memory. The script may be too large or contains circular dependencies.";
+            print_json_output(system, report, 0, 0, 0);
         }
         else
         {
@@ -520,7 +546,10 @@ int main(int argc, char *argv[])
     { // Blunder! This shouldn't be necessary anymore EXCEPT for file IO
         if (json_out)
         {
-            print_json_output(system, 0, 0, 0, false, -1, e.what());
+            SolverReport report;
+            report.success = false;
+            report.error_msg = e.what();
+            print_json_output(system, report, 0, 0, 0);
         }
         else
         {

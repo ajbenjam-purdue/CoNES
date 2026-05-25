@@ -102,7 +102,7 @@ When calling `Pressure(R134a, T=T1, x=1)`, the first positional argument is auto
 To maintain clarity and prevent solver divergence, scripts should follow this structured sequence:
 
 1. **Imports & Inclusions**:
-   ```ees
+   ```cnes
    include "fluids"
    include "heat_exchanger_lib"
    ```
@@ -111,19 +111,19 @@ To maintain clarity and prevent solver divergence, scripts should follow this st
    *(Internal logic used multiple times across the script)*
 
 3. **Problem Constants & Boundary Conditions**:
-   ```ees
+   ```cnes
    P_amb := 101325 [Pa]
    T_inlet := 25 [C]
    ```
 
 4. **Solver Setup (Guesses & Bounds)**:
-   ```ees
+   ```cnes
    T_out.guess := 300 [K]
    T_out.lower := 250
    ```
 
 5. **Active Program (Equations)**:
-   ```ees
+   ```cnes
    Q_dot = m_dot * (h_out - h_in)
    h_in = Enthalpy(Water, T=T_inlet, P=P_amb)
    ```
@@ -136,7 +136,7 @@ To maintain clarity and prevent solver divergence, scripts should follow this st
 If a variable is assigned a unit but lacks a `.guess`, CoNES provides ballpark starting values:
 - **Pressure**: 101,325 Pa
 - **Temperature**: 293.15 K
-- **Specific Enthalpy**: 250,000 J/kg
+- **Specific Enthalpy**: 1,500 J/kg
 - **Density**: 1.2 kg/m³
 
 ---

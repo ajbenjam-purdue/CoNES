@@ -16,6 +16,7 @@ namespace cones
     class System
     {
         std::vector<NodePtr> equations_;
+        std::vector<int> equation_lines_;
         VariableRegistry registry_;
         FunctionRegistry function_registry_;
         SubstanceManager substance_manager_;
@@ -23,7 +24,19 @@ namespace cones
         DefinitionRegistry definition_registry_;
 
     public:
-        void add_equation(NodePtr eq) { equations_.push_back(std::move(eq)); }
+        void add_equation(NodePtr eq, int line = -1) { 
+            equations_.push_back(std::move(eq)); 
+            equation_lines_.push_back(line);
+        }
+        size_t get_equation_count() const { return equations_.size(); }
+        std::string get_equation_plaintext(size_t index) const {
+            if (index >= equations_.size()) return "";
+            return equations_[index]->to_string();
+        }
+        int get_equation_line(size_t index) const {
+            if (index >= equation_lines_.size()) return -1;
+            return equation_lines_[index];
+        }
         VariableRegistry &registry() { return registry_; } // Yield the address for the System's VariableRegistry
         const VariableRegistry &registry() const { return registry_; }
         FunctionRegistry &function_registry() { return function_registry_; }

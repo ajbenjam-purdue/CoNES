@@ -1,5 +1,12 @@
 ## CoNES Changelog
-CoNES versioning follows the Major.Minor.Patch pattern. The current version is 0.1.4.
+CoNES versioning follows the Major.Minor.Patch pattern. The current version is 0.1.5.
+
+### Version 0.1.5
+  - Updated JSON output to include residuals information for use in CoNES Studio
+    - Included internal reworks to use a new `SolverReport` data struct for cleaner reading code
+  - Updated CoNES studio to make use of the new residuals information and display the identified line information on selection
+  - Added support for custom Python interpreter path usage
+  - Updated python scripts (CoNES Studio and Substance Table Builder Tool) to automatically download dependencies
 
 ### Version 0.1.4
   - Changed parameters to improve performance

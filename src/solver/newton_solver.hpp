@@ -11,6 +11,13 @@
 
 namespace cones {
 
+struct SolverReport {
+    int iterations = 0;
+    bool success = false;
+    Eigen::VectorXd residuals;
+    std::string error_msg = "";
+};
+
 class NewtonSolver {
     double tolerance_;
     int max_iterations_;
@@ -21,17 +28,16 @@ public:
     explicit NewtonSolver(double tol = 1e-8, int max_iter = 500, bool verbose = false)
         : tolerance_(tol), max_iterations_(max_iter), verbose_(verbose) {}
 
-    int solve(System& system) { // Yields the count of iterations needed to converge to the system's tolerance OR -1 if tolerance is not reached
-
-        // TODO: Fix this architecture. It currently shifts guesses randomly both within solve_internal and outside. 
-        // Should be just one method with optional parameters
+    SolverReport solve(System& system) { 
+        SolverReport report;
         
-        int iters = solve_internal(system);
-        if (iters != -1)
-            return iters;
-        else if (verbose_) 
+        // Initial solve attempt
+        solve_internal(system, report);
+        if (report.success)
+            return report;
+        
+        if (verbose_) 
             std::cout << "Initial solve failed. Starting Multistart..." << std::endl;
-        
 
         std::mt19937 gen(1337);
         auto& reg = system.registry();
@@ -40,10 +46,9 @@ public:
         for (int attempt = 0; attempt < max_attempts_; ++attempt) {
             if (verbose_) std::cout << "Attempt " << attempt + 1 << "/" << std::to_string(max_attempts_) << "..." << std::endl;
             
-            double jitter_range = 0.1 * (attempt + 1); // Step up the jitter as more failures occur
+            double jitter_range = 0.1 * (attempt + 1);
             std::uniform_real_distribution<> dis(1.0 - jitter_range, 1.0 + jitter_range);
 
-            // Scramble
             Eigen::VectorXd jittered_x = original_x;
             for (int i = 0; i < jittered_x.size(); ++i) {
                 jittered_x(i) *= dis(gen);
@@ -53,15 +58,14 @@ public:
             reg.update_active_values(jittered_x);
             reg.apply_bounds();
 
-            int iters_additional = solve_internal(system);
-            if (iters_additional != -1) // Good solution! Exit
-            {
-                return iters + iters_additional;
-            }
-            else
-            {
-                iters += iters_additional;
-                continue;
+            SolverReport sub_report;
+            solve_internal(system, sub_report);
+            report.iterations += sub_report.iterations;
+            
+            if (sub_report.success) {
+                report.success = true;
+                report.residuals = sub_report.residuals;
+                return report;
             }
         }
 
@@ -72,11 +76,12 @@ public:
                 std::cout << "  " << v.name << " = " << v.value << " [" << v.unit_name << "]" << std::endl;
             }
         }
-        throw std::runtime_error("NewtonSolver: Failed to converge after " + std::to_string(max_attempts_) + " attempts.");
+        report.error_msg = "NewtonSolver: Failed to converge after " + std::to_string(max_attempts_) + " attempts.";
+        return report;
     }
 
 private:
-    int solve_internal(System& system) { // Yields the count of iterations needed to converge to the system's tolerance OR -1 if tolerance is not reached
+    void solve_internal(System& system, SolverReport& report) {
         Eigen::VectorXd f;
         Eigen::MatrixXd j;
         auto& reg = system.registry();
@@ -92,7 +97,12 @@ private:
             double current_inf_norm = f.lpNorm<Eigen::Infinity>();
             double current_l2_norm = f.norm();
 
-            if (current_inf_norm < tolerance_) return iter;
+            if (current_inf_norm < tolerance_) {
+                report.success = true;
+                report.iterations = iter;
+                report.residuals = f;
+                return;
+            }
 
             // Solve (J^T J + lambda * I) dx = -J^T f
             // Instead of directly trying to deal with transposition and inversions, we attempt a more conservative approach:
@@ -148,7 +158,7 @@ private:
                 alpha *= 0.25; // Quarter the step size for every failure
             }
 
-            if (verbose_ && iter % 10 == 0) { // Print every tenth run (verb only)
+            if (verbose_ && iter % 5 == 0) { // Print every fifth run (verb only)
                 std::cout << "  Iter " << iter << " Resid: " << current_inf_norm << " (L=" << lambda << ")" << std::endl;
             }
 
@@ -164,7 +174,9 @@ private:
                 reg.apply_bounds();
             }
         }
-        return -1;
+        report.success = false;
+        report.iterations = max_iterations_;
+        report.residuals = f;
     }
 
 public:

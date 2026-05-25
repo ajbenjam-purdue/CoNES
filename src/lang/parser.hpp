@@ -241,7 +241,7 @@ private:
     void definition_statement() {
         Token name = consume(TokenType::IDENTIFIER, "Expect name.");
         auto& reg = system_.registry();
-        int idx = reg.register_variable(name.lexeme);
+        int idx = reg.register_variable(name.lexeme, name.line);
 
         if (match(TokenType::DOT)) {
             Token attr = consume(TokenType::IDENTIFIER, "Expect attribute.");
@@ -294,6 +294,7 @@ private:
     }
 
     void equation_statement() {
+        int line = peek().line;
         NodePtr lhs = expression();
         consume(TokenType::EQUALS, "Expect =.");
         NodePtr rhs = expression();
@@ -305,7 +306,7 @@ private:
                 system_.registry().suggest_guess(var_info.index, inherited);
             }
         }
-        system_.add_equation(std::make_shared<SubNode>(lhs, rhs));
+        system_.add_equation(std::make_shared<SubNode>(lhs, rhs), line);
     }
 
     NodePtr expression() { return addition(); }
@@ -350,7 +351,11 @@ private:
     }
 
     NodePtr primary_base() {
-        if (match(TokenType::NUMBER)) return std::make_shared<ConstantNode>(std::stod(previous().lexeme));
+        if (match(TokenType::NUMBER)) {
+            auto node = std::make_shared<ConstantNode>(std::stod(previous().lexeme));
+            node->set_line(previous().line);
+            return node;
+        }
         if (match(TokenType::IDENTIFIER)) {
             Token name = previous();
             if (match(TokenType::LPAREN)) {
@@ -367,25 +372,33 @@ private:
                 }
                 consume(TokenType::RPAREN, "Expect ).");
                 auto custom_func = system_.function_registry().get(name.lexeme);
-                if (custom_func) return std::make_shared<CustomFunctionNode>(custom_func, args);
+                if (custom_func) {
+                    auto node = std::make_shared<CustomFunctionNode>(custom_func, args);
+                    node->set_line(name.line);
+                    return node;
+                }
 
                 auto user_func = system_.definition_registry().get_function(name.lexeme);
                 if (user_func) {
                     std::vector<NodePtr> arg_nodes;
                     for (const auto& arg : args) arg_nodes.push_back(arg.node);
-                    return std::make_shared<UserFunctionNode>(user_func, arg_nodes);
+                    auto node = std::make_shared<UserFunctionNode>(user_func, arg_nodes);
+                    node->set_line(name.line);
+                    return node;
                 }
 
                 throw error(name, "Unknown function.");
             }
             
             if (is_local_parsing_) {
-                return std::make_shared<LocalVariableNode>(name.lexeme);
+                auto node = std::make_shared<LocalVariableNode>(name.lexeme);
+                node->set_line(name.line);
+                return node;
             }
 
             auto constant = system_.constant_registry().get(name.lexeme);
             auto substance = system_.substance_manager().get(name.lexeme);
-            int idx = system_.registry().register_variable(name.lexeme);
+            int idx = system_.registry().register_variable(name.lexeme, name.line);
             if (constant && !system_.registry().get_variable(idx).is_fixed) {
                 system_.registry().set_value(idx, constant->value);
                 system_.registry().set_fixed(idx, true);
@@ -393,7 +406,9 @@ private:
                 if (!constant->unit.empty()) system_.registry().set_unit(idx, constant->unit);
             }
             if (substance) { system_.registry().set_fixed(idx, true); system_.registry().set_reserved(idx, true); }
-            return std::make_shared<VariableNode>(idx, name.lexeme);
+            auto node = std::make_shared<VariableNode>(idx, name.lexeme);
+            node->set_line(name.line);
+            return node;
         }
         if (match(TokenType::LPAREN)) {
             NodePtr node = expression();
