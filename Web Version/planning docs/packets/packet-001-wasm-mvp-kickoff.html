@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 001: WASM MVP Kickoff</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 001</p>
+        <h1>WASM MVP Kickoff</h1>
+        <p class="summary">
+          This packet is now a completed discovery record for the CoNES Web Version. It preserves the original mission, integrates
+          the lane outputs, records the evidence gathered, and names the exact handoff state for Packet 002.
+        </p>
+        <div class="meta-row" aria-label="Packet metadata">
+          <span class="tag accent">Complete</span>
+          <span class="tag accent">Gate 1 cleared</span>
+          <span class="tag">Browser-only runtime</span>
+          <span class="tag">Upload-first test</span>
+          <span class="tag">Wrap, do not refactor</span>
+          <span class="tag">Review required</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="mission-title">
+          <div class="section-header">
+            <h2 id="mission-title">Mission</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Primary Outcome</h3>
+              <p>
+                Prove or disprove that the existing CoNES CLI-shaped C++ program can run inside the browser through WebAssembly,
+                accept an uploaded <code>.cnes</code> file, execute with <code>--json</code>, and return downloadable JSON output.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Scrum Review Standard</h3>
+              <p>
+                Every sub-agent must return concrete evidence: commands attempted, files changed, errors observed, output captured,
+                and the next decision needed. Speculative reports without reproducible details do not pass review.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="status-title">
+          <div class="section-header">
+            <h2 id="status-title">Current Review State</h2>
+          </div>
+          <div class="section-body two-column">
+            <div class="callout ok">
+              <strong>Packet 001 is complete</strong>
+              <p>
+                The discovery lanes are closed. Emscripten is installed, the CLI-shaped source compiles to WASM, and Node-hosted
+                <code>callMain()</code> probes succeeded for unit, include, and material-dependent cases. Browser Worker execution is
+                not yet proven.
+              </p>
+            </div>
+            <div class="callout info">
+              <strong>Packet 002 is the active next step</strong>
+              <p>
+                The next implementation packet should build the browser upload/run/download runner around the proven modular runtime
+                path. Full IDE work should still wait.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="results-title">
+          <div class="section-header">
+            <h2 id="results-title">Packet Results</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Lane</th>
+                  <th>Status</th>
+                  <th>Finding</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Lane A: Compile</td>
+                  <td>Passed after toolchain install</td>
+                  <td>Emscripten 5.0.7 compiled the existing CLI-shaped source with the Eigen include path and no C++ core refactor.</td>
+                </tr>
+                <tr>
+                  <td>Lane B: Wrapper</td>
+                  <td>Validated</td>
+                  <td>Use a modular Emscripten factory, <code>INVOKE_RUN=0</code>, <code>FS</code>, and <code>callMain()</code>.</td>
+                </tr>
+                <tr>
+                  <td>Lane C: Filesystem</td>
+                  <td>Validated</td>
+                  <td>Use <code>/app/cnes</code>, <code>/app/materials</code>, <code>/app/libs</code>, and <code>/work/input.cnes</code>.</td>
+                </tr>
+                <tr>
+                  <td>Lane D: Runner</td>
+                  <td>Ready for implementation</td>
+                  <td>Build a minimal upload, run, status, output, and download shell before any full IDE work.</td>
+                </tr>
+                <tr>
+                  <td>Lane E: Parity</td>
+                  <td>Ready for implementation</td>
+                  <td>Compare parsed JSON for unit, normal, invalid, include, and material-dependent cases.</td>
+                </tr>
+                <tr>
+                  <td>Lane F: Deployment</td>
+                  <td>Ready for implementation</td>
+                  <td>Static Vercel layout needs explicit runtime/material paths and likely header rules for WASM and binary tables.</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="callout ok">
+              <strong>Scrum review decision</strong>
+              <p>
+                Packet 001 is complete as discovery. Packet 002 should implement the minimal browser runner around the proven
+                modular runtime path.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="rules-title">
+          <div class="section-header">
+            <h2 id="rules-title">Non-Negotiables</h2>
+          </div>
+          <div class="section-body">
+            <ul class="component-list">
+              <li>The first MVP is all client-side and deployable as static assets on Vercel.</li>
+              <li>The first interface uses user upload for an existing <code>.cnes</code> file. Do not hide behind bundled examples.</li>
+              <li>The first result format is captured <code>cnes --json</code> output.</li>
+              <li>The CoNES C++ core is not refactored in this packet. Agents may propose wrapper-only adapters or build shims.</li>
+              <li>The solver must run in a Web Worker or equivalent isolation path so browser UI remains responsive.</li>
+              <li>Any change that weakens native CLI behavior must be flagged before implementation.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="inventory-title">
+          <div class="section-header">
+            <h2 id="inventory-title">Known Inventory</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Current Understanding</th>
+                  <th>Review Need</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>C++ entry point</td>
+                  <td><code>CoNES/src/main.cpp</code> owns CLI args, file reads, material discovery, JSON output, and standalone modes.</td>
+                  <td>Confirmed compilable to WASM as-is with Emscripten and Eigen include path. Use wrapper invocation, not a core refactor.</td>
+                </tr>
+                <tr>
+                  <td>Runtime data</td>
+                  <td><code>CoNES/materials/</code> contains binary material tables used by tabulated substances.</td>
+                  <td>Confirmed mount target is <code>/app/materials</code>. Directory must exist before <code>main</code> runs.</td>
+                </tr>
+                <tr>
+                  <td>Existing GUI</td>
+                  <td><code>CoNES/cones_studio/</code> shells out to <code>./cnes file.cnes --json</code>.</td>
+                  <td>Confirmed as behavioral contract: upload file, invoke CLI with <code>--json</code>, consume stdout JSON.</td>
+                </tr>
+                <tr>
+                  <td>Deployment target</td>
+                  <td>Vercel should host static frontend, worker, WASM glue, and assets.</td>
+                  <td>Deployment design is ready. Browser and Vercel proof move to Packet 002 and later static deploy work.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="lanes-title">
+          <div class="section-header">
+            <h2 id="lanes-title">Lane Closeouts</h2>
+          </div>
+          <div class="section-body">
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Lane A: Emscripten Compile Probe</h3>
+                <small>Status: passed after toolchain install</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Initial finding: <code>em++</code> and <code>emcc</code> were absent locally.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Emscripten 5.0.7 was installed with Homebrew.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Default Emscripten cache path was blocked, so probes used <code>EM_CACHE=/private/tmp/emscripten-cache</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Compile succeeded with <code>-I . -I /opt/homebrew/include/eigen3</code>; README's project-root Eigen assumption is not true locally.</span></li>
+              </ul>
+              <div class="callout ok">
+                <strong>Evidence</strong>
+                <p>
+                  Generated <code>/private/tmp/cnes-wasm-probe/cnes-module.js</code> and
+                  <code>/private/tmp/cnes-wasm-probe/cnes-module.wasm</code>. No C++ core refactor was required for the proof.
+                </p>
+              </div>
+            </article>
+
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Lane B: CLI Invocation Wrapper</h3>
+                <small>Status: validated in Node-hosted runtime</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Use a modular Emscripten factory with <code>INVOKE_RUN=0</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Invoke the existing CLI contract through <code>module.callMain(["/work/input.cnes", "--json"])</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Capture stdout with <code>print</code> and stderr with <code>printErr</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Prefer a fresh module instance per solver run for the MVP until same-instance reuse is proven.</span></li>
+              </ul>
+              <div class="callout warn">
+                <strong>Risk carried forward</strong>
+                <p>
+                  The JSON writer is manual and some error strings may not be escaped perfectly. Packet 002 should preserve raw
+                  stdout and stderr so failures remain inspectable.
+                </p>
+              </div>
+            </article>
+
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Lane C: Virtual Filesystem And Assets</h3>
+                <small>Status: validated by native and WASM probes</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Use virtual executable path <code>/app/cnes</code> so executable-relative assets resolve under <code>/app</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Write the uploaded MVP script to <code>/work/input.cnes</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Mount bundled standard libraries under <code>/app/libs</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Create <code>/app/materials</code> before invoking <code>main</code>, even if empty.</span></li>
+              </ul>
+              <div class="callout info">
+                <strong>Important behavior</strong>
+                <p>
+                  If <code>/app/materials</code> is missing, CoNES attempts the Python <code>build_substances()</code> fallback and
+                  pollutes stdout. Empty <code>/app/materials</code> is acceptable for ideal-gas cases.
+                </p>
+              </div>
+            </article>
+
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Lane D: Minimal Browser Runner</h3>
+                <small>Status: ready for Packet 002 implementation</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Component plan: <code>RunnerPage</code>, <code>FilePicker</code>, <code>RunControls</code>, <code>StatusPanel</code>, <code>OutputPanel</code>, and <code>DownloadJsonButton</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Worker messages should carry <code>requestId</code>, input metadata, stdout, stderr, exit code, parsed JSON, and timings.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>UI states include no file, uploading, runtime loading, running, success, JSON parse warning, solver failure, and worker load failure.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Full IDE, autocomplete, project tree, multi-file upload, and polished result tables should wait.</span></li>
+              </ul>
+              <div class="callout info">
+                <strong>Implementation implication</strong>
+                <p>
+                  Packet 002 should implement a runner, not an IDE. Raw stdout JSON remains the source of truth.
+                </p>
+              </div>
+            </article>
+
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Lane E: Native Parity Harness</h3>
+                <small>Status: test matrix ready</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Tiny valid case: <code>tests/test_units.cnes</code>, expecting <code>Power=50</code>, <code>T2=298.15</code>, and <code>v_copy=10</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Normal example: <code>examples/Brayton_Cycle_example.cnes</code>, expecting <code>eta=0.3685210678</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Include case: <code>examples/test.cnes</code>, expecting <code>T_surface=40</code> when <code>heat_transfer_lib.cnes</code> is mounted.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Material case: <code>examples/HVAC_example.cnes</code>, expecting <code>COP_HP=11.7950669027</code> when all 240 material tables are mounted.</span></li>
+              </ul>
+              <div class="callout info">
+                <strong>Comparison rule</strong>
+                <p>
+                  Compare parsed JSON, not raw text. Ignore timing fields. Classify mismatches as numerical drift, structural JSON,
+                  runtime failure, or unsupported browser filesystem behavior.
+                </p>
+              </div>
+            </article>
+
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Lane F: Vercel Static Deployment Probe</h3>
+                <small>Status: deployment plan ready</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Use static paths for frontend assets, worker, Emscripten glue, WASM binary, materials, libs, and planning docs.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Serve <code>.wasm</code> as <code>application/wasm</code> and <code>.cnesbin</code> as <code>application/octet-stream</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Use immutable caching for content-hashed runtime files; use versioned or manifest-managed material tables.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Do not add Vercel serverless functions, API routes, or backend solve endpoints for the MVP.</span></li>
+              </ul>
+              <div class="callout info">
+                <strong>Production warning</strong>
+                <p>
+                  Local <code>file://</code> testing is not representative. Worker imports, fetches, WASM MIME behavior, and binary
+                  assets must be tested over HTTP.
+                </p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="review-title">
+          <div class="section-header">
+            <h2 id="review-title">Review Gates</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Gate</th>
+                  <th>Required Evidence</th>
+                  <th>Decision</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Gate 1: Compile</td>
+                  <td>Emscripten build emitted runnable modular artifacts and passed Node-hosted probes.</td>
+                  <td>Passed in Node-hosted Emscripten. Continue to browser Worker implementation.</td>
+                </tr>
+                <tr>
+                  <td>Gate 2: Run</td>
+                  <td>Node-hosted virtual FS writes succeeded; browser worker still needs implementation.</td>
+                  <td>Partially passed. Packet 002 owns browser proof.</td>
+                </tr>
+                <tr>
+                  <td>Gate 3: Parity</td>
+                  <td>At least one successful native-vs-WASM output comparison and one useful failure case.</td>
+                  <td>Continue to material/includes work or fix runtime mismatch.</td>
+                </tr>
+                <tr>
+                  <td>Gate 4: Static Deploy</td>
+                  <td>Vercel-hosted page loads frontend, worker, WASM, and required assets.</td>
+                  <td>Promote to next sprint: minimal IDE shell.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="handoff-title">
+          <div class="section-header">
+            <h2 id="handoff-title">Sub-Agent Handoff Contract</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Each Agent Returns</h3>
+              <ol class="numbered-list">
+                <li>Files touched or intentionally left untouched.</li>
+                <li>Commands run and whether they are reproducible.</li>
+                <li>Observed outputs, errors, screenshots, or artifacts.</li>
+                <li>Risks discovered and the next decision requested.</li>
+              </ol>
+            </article>
+            <article class="component">
+              <h3>Scrum Lord Reviews</h3>
+              <ol class="numbered-list">
+                <li>Whether the work obeys the non-negotiables.</li>
+                <li>Whether evidence supports the claimed result.</li>
+                <li>Whether scope has drifted toward full IDE design too early.</li>
+                <li>Whether the next packet should implement, investigate, or stop.</li>
+              </ol>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="next-title">
+          <div class="section-header">
+            <h2 id="next-title">Next Packet Candidate</h2>
+          </div>
+          <div class="section-body">
+            <div class="callout ok">
+              <strong>Packet 002 should be based on Gate 1</strong>
+              <p>
+                Gate 1 succeeded. Packet 002 should build the upload-to-worker runner, wire it to the modular WASM runtime, and
+                preserve stdout JSON plus separate stderr for review.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Packet owner: Scrum Lord. Packet status: complete after Gate 1 WASM proof. Last updated: May 24, 2026.</p>
+    </main>
+  </body>
+</html>

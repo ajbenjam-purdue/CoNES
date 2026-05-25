@@ -1,0 +1,44 @@
+{
+  "rewrites": [
+    {
+      "source": "/runner",
+      "destination": "/"
+    },
+    {
+      "source": "/runner/:path*",
+      "destination": "/"
+    },
+    {
+      "source": "/cli",
+      "destination": "/"
+    },
+    {
+      "source": "/cli/:path*",
+      "destination": "/"
+    },
+    {
+      "source": "/linter",
+      "destination": "/"
+    },
+    {
+      "source": "/linter/:path*",
+      "destination": "/"
+    },
+    {
+      "source": "/tools",
+      "destination": "/"
+    },
+    {
+      "source": "/tools/:path*",
+      "destination": "/"
+    },
+    {
+      "source": "/docs",
+      "destination": "/"
+    },
+    {
+      "source": "/docs/:path*",
+      "destination": "/"
+    }
+  ]
+}

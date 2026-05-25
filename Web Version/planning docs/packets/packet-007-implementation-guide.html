@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 007 Companion: IDE Workbench Implementation Guide</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 007 Companion</p>
+        <h1>IDE Workbench Implementation Guide</h1>
+        <p class="summary">
+          This is the opinionated build companion for Packet 007. It names the concrete files, dependencies, components, helper
+          shapes, and code blocks that should turn the current Editor, Runner, Runtime, and Results surfaces into one Monaco-backed
+          workbench loop.
+        </p>
+        <div class="meta-row" aria-label="Guide status">
+          <span class="tag accent">Draft for implementation</span>
+          <span class="tag accent">Monaco required</span>
+          <span class="tag">Reuse worker client</span>
+          <span class="tag">Reuse ResultsViewer</span>
+          <span class="tag">No backend</span>
+          <span class="tag">No runtime contract rewrite</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="principle-title">
+          <div class="section-header">
+            <h2 id="principle-title">Build Principle</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>One Loop</h3>
+              <p>
+                The workbench should make one loop obvious: edit source in Monaco, run the current buffer, inspect structured
+                results, inspect raw stdout/stderr, then save or download artifacts.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Small Runtime Change</h3>
+              <p>
+                Do not change the worker protocol. Add a small <code>runSource</code> helper to the client that turns editor text
+                into a <code>File</code> and delegates to the existing <code>run(file)</code> method.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="steps-title">
+          <div class="section-header">
+            <h2 id="steps-title">Implementation Order</h2>
+          </div>
+          <div class="section-body">
+            <ol class="numbered-list">
+              <li>Add Monaco dependencies and verify the app still builds.</li>
+              <li>Add <code>runSource</code> to <code>src/features/runtime/worker-client.ts</code>.</li>
+              <li>Create <code>src/features/workbench</code> with source state, Monaco editor, run panel, and output panel.</li>
+              <li>Wire a new <code>Workbench</code> route beside Runner, not in place of Runner.</li>
+              <li>Add browser smoke coverage for edit-run-results from the workbench.</li>
+              <li>Run local verification, deploy, then run hosted smoke against the Vercel public URL.</li>
+            </ol>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="dependency-title">
+          <div class="section-header">
+            <h2 id="dependency-title">Dependency Step</h2>
+          </div>
+          <div class="section-body">
+            <div class="callout info">
+              <strong>Install Monaco through the React wrapper</strong>
+              <p>
+                Use the wrapper for a first integration because it keeps the React component small. If Vite worker handling becomes
+                noisy, solve that inside the Monaco integration rather than falling back to a textarea.
+              </p>
+            </div>
+            <pre><code>npm install @monaco-editor/react monaco-editor</code></pre>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="runtime-title">
+          <div class="section-header">
+            <h2 id="runtime-title">Runtime Client Addition</h2>
+          </div>
+          <div class="section-body">
+            <p>
+              Add this helper to <code>src/features/runtime/worker-client.ts</code>. It preserves the existing <code>run(file)</code>
+              path and the worker still receives a normal <code>run</code> message with <code>argv: [...runArgv]</code>.
+            </p>
+            <pre><code>type SourceRunInput = {
+  fileName: string;
+  contents: string;
+  lastModified?: number;
+};
+
+async runSource(
+  input: SourceRunInput,
+  options: { onStatus?: (message: WorkerStatusMessage) =&gt; void } = {},
+) {
+  const fileName = normalizeCnesFileName(input.fileName);
+  const file = new File([input.contents], fileName, {
+    type: "text/plain;charset=utf-8",
+    lastModified: input.lastModified ?? Date.now(),
+  });
+
+  return this.run(file, options);
+}</code></pre>
+            <p>
+              Add the helper near the bottom of the same file, outside the class.
+            </p>
+            <pre><code>function normalizeCnesFileName(fileName: string) {
+  const trimmed = fileName.trim() || "untitled.cnes";
+  return trimmed.toLowerCase().endsWith(".cnes") ? trimmed : `${trimmed}.cnes`;
+}</code></pre>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="state-title">
+          <div class="section-header">
+            <h2 id="state-title">Workbench Source State</h2>
+          </div>
+          <div class="section-body">
+            <p>
+              Create <code>src/features/workbench/workbench-source-state.ts</code>. Keep this hook browser-local and explicit. No
+              localStorage, IndexedDB, multi-file projects, or implicit autosave in Packet 007.
+            </p>
+            <pre><code>import { useMemo, useRef, useState } from "react";
+
+const defaultSource = `# New CoNES file
+h = 100 W/m^2*K
+A_c = 0.5 m^2
+T_fluid = 20 C
+Q = 1 kW
+
+Q = h * A_c * (T_surface - T_fluid)
+`;
+
+type SourceMeta = {
+  fileName: string;
+  loadedText: string;
+  source: string;
+  lastModified: number | null;
+};
+
+export function useWorkbenchSource() {
+  const inputRef = useRef&lt;HTMLInputElement | null&gt;(null);
+  const [meta, setMeta] = useState&lt;SourceMeta&gt;({
+    fileName: "untitled.cnes",
+    loadedText: defaultSource,
+    source: defaultSource,
+    lastModified: null,
+  });
+  const [error, setError] = useState&lt;string | null&gt;(null);
+
+  const dirty = meta.source !== meta.loadedText;
+  const stats = useMemo(() =&gt; ({
+    characters: meta.source.length,
+    lines: meta.source.length === 0 ? 0 : meta.source.split(/\r\n|\r|\n/).length,
+  }), [meta.source]);
+
+  async function openFile(file: File | null) {
+    setError(null);
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".cnes")) {
+      setError(`${file.name} is not a .cnes file`);
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
+
+    const source = await file.text();
+    setMeta({
+      fileName: file.name,
+      loadedText: source,
+      source,
+      lastModified: file.lastModified || null,
+    });
+  }
+
+  function setSource(source: string) {
+    setMeta((current) =&gt; ({ ...current, source }));
+  }
+
+  function newDraft() {
+    setMeta({
+      fileName: "untitled.cnes",
+      loadedText: defaultSource,
+      source: defaultSource,
+      lastModified: null,
+    });
+    setError(null);
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  function markSaved() {
+    setMeta((current) =&gt; ({ ...current, loadedText: current.source }));
+  }
+
+  return {
+    inputRef,
+    source: meta.source,
+    fileName: meta.fileName,
+    lastModified: meta.lastModified,
+    dirty,
+    stats,
+    error,
+    openFile,
+    setSource,
+    newDraft,
+    markSaved,
+  };
+}</code></pre>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="monaco-title">
+          <div class="section-header">
+            <h2 id="monaco-title">Monaco Editor Component</h2>
+          </div>
+          <div class="section-body">
+            <p>
+              Create <code>src/features/workbench/MonacoSourceEditor.tsx</code>. This component owns only editing. It should not run
+              CoNES, parse results, or own file IO.
+            </p>
+            <pre><code>import Editor, { type OnMount } from "@monaco-editor/react";
+import type * as Monaco from "monaco-editor";
+import { registerCnesLanguage } from "@/features/workbench/monaco-cnes-language";
+
+type MonacoSourceEditorProps = {
+  value: string;
+  onChange: (value: string) =&gt; void;
+  readOnly?: boolean;
+};
+
+export function MonacoSourceEditor({ value, onChange, readOnly = false }: MonacoSourceEditorProps) {
+  const handleMount: OnMount = (_editor, monaco) =&gt; {
+    registerCnesLanguage(monaco);
+  };
+
+  return (
+    &lt;div className="min-h-[520px] flex-1 overflow-hidden border-t" data-workbench-editor&gt;
+      &lt;Editor
+        height="100%"
+        defaultLanguage="cnes"
+        language="cnes"
+        theme="vs"
+        value={value}
+        onMount={handleMount}
+        onChange={(nextValue) =&gt; onChange(nextValue ?? "")}
+        options={{
+          automaticLayout: true,
+          fontSize: 13,
+          minimap: { enabled: false },
+          readOnly,
+          renderLineHighlight: "line",
+          scrollBeyondLastLine: false,
+          tabSize: 2,
+          wordWrap: "on",
+        }}
+      /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+            <p>
+              Create <code>src/features/workbench/monaco-cnes-language.ts</code>. Keep it lightweight: language id, comments, and
+              basic tokens. No diagnostics or completion providers yet.
+            </p>
+            <pre><code>import type * as Monaco from "monaco-editor";
+
+let registered = false;
+
+export function registerCnesLanguage(monaco: typeof Monaco) {
+  if (registered) return;
+  registered = true;
+
+  monaco.languages.register({
+    id: "cnes",
+    extensions: [".cnes"],
+    aliases: ["CoNES", "cones"],
+  });
+
+  monaco.languages.setLanguageConfiguration("cnes", {
+    comments: { lineComment: "#" },
+    brackets: [["(", ")"], ["[", "]"]],
+    autoClosingPairs: [
+      { open: "(", close: ")" },
+      { open: "[", close: "]" },
+      { open: '"', close: '"' },
+    ],
+  });
+
+  monaco.languages.setMonarchTokensProvider("cnes", {
+    tokenizer: {
+      root: [
+        [/#.*$/, "comment"],
+        [/"[^"]*"/, "string"],
+        [/\b\d+(\.\d+)?\b/, "number"],
+        [/[+\-*/=()]/, "operator"],
+        [/[A-Za-z_][\w.]*/, "identifier"],
+      ],
+    },
+  });
+}</code></pre>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="page-title">
+          <div class="section-header">
+            <h2 id="page-title">Workbench Page Shape</h2>
+          </div>
+          <div class="section-body">
+            <p>
+              Create <code>src/features/workbench/WorkbenchPage.tsx</code>. It should compose the existing worker client,
+              prewarm state, <code>ResultsViewer</code>, and <code>RunnerOutput</code>. This is the core integration surface.
+            </p>
+            <pre><code>import { useEffect, useRef, useState } from "react";
+import { Download, FilePlus2, Play, Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { getRuntimeWorkerClient, subscribeRuntimePrewarm, getRuntimePrewarmState } from "@/features/runtime/runtime-prewarm";
+import type { RuntimePrewarmState } from "@/features/runtime/runtime-prewarm";
+import type { WorkerRunResult } from "@/features/runtime/worker-contract";
+import { RunnerOutput } from "@/features/runner/RunnerOutput";
+import { ResultsViewer } from "@/features/results/ResultsViewer";
+import { MonacoSourceEditor } from "@/features/workbench/MonacoSourceEditor";
+import { useWorkbenchSource } from "@/features/workbench/workbench-source-state";
+
+export function WorkbenchPage() {
+  const source = useWorkbenchSource();
+  const clientRef = useRef(getRuntimeWorkerClient());
+  const runTokenRef = useRef(0);
+  const [prewarmState, setPrewarmState] = useState&lt;RuntimePrewarmState&gt;(() =&gt; getRuntimePrewarmState());
+  const [isRunning, setIsRunning] = useState(false);
+  const [result, setResult] = useState&lt;WorkerRunResult | null&gt;(null);
+  const [workerLabel, setWorkerLabel] = useState(prewarmState.label);
+  const [downloadUrl, setDownloadUrl] = useState("");
+
+  useEffect(() =&gt; subscribeRuntimePrewarm(setPrewarmState), []);
+  useEffect(() =&gt; {
+    if (!isRunning) setWorkerLabel(prewarmState.label);
+  }, [isRunning, prewarmState.label]);
+
+  useEffect(() =&gt; {
+    const blob = new Blob([source.source], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    setDownloadUrl(url);
+
+    return () =&gt; URL.revokeObjectURL(url);
+  }, [source.source]);
+
+  async function handleRun() {
+    if (isRunning) return;
+
+    const activeToken = ++runTokenRef.current;
+    setIsRunning(true);
+    setResult(null);
+    setWorkerLabel(prewarmState.status === "ready" ? "Running" : "Preparing runtime");
+
+    const nextResult = await clientRef.current.runSource({
+      fileName: source.fileName,
+      contents: source.source,
+      lastModified: source.lastModified ?? undefined,
+    }, {
+      onStatus: (message) =&gt; setWorkerLabel(message.phase || "running"),
+    });
+
+    if (activeToken !== runTokenRef.current) return;
+    setIsRunning(false);
+    setWorkerLabel(nextResult.type === "success" ? "Complete" : nextResult.error?.code || "Failed");
+    setResult(nextResult);
+  }
+
+  return (
+    &lt;section className="grid min-h-[calc(100svh-4rem)] grid-cols-[minmax(0,1fr)_420px] max-xl:grid-cols-1" data-workbench-page&gt;
+      &lt;main className="flex min-w-0 flex-col"&gt;
+        &lt;header className="flex flex-wrap items-center justify-between gap-3 border-b p-4"&gt;
+          &lt;div className="min-w-0"&gt;
+            &lt;div className="mb-2 flex flex-wrap items-center gap-2"&gt;
+              &lt;Badge variant="secondary"&gt;Workbench&lt;/Badge&gt;
+              &lt;Badge variant={source.dirty ? "outline" : "secondary"}&gt;{source.dirty ? "Unsaved changes" : "Clean"}&lt;/Badge&gt;
+              &lt;Badge variant="outline"&gt;{workerLabel}&lt;/Badge&gt;
+            &lt;/div&gt;
+            &lt;h2 className="truncate text-xl font-semibold tracking-normal"&gt;{source.fileName}&lt;/h2&gt;
+          &lt;/div&gt;
+
+          &lt;div className="flex flex-wrap gap-2"&gt;
+            &lt;Button type="button" variant="outline" onClick={source.newDraft}&gt;&lt;FilePlus2 /&gt; New&lt;/Button&gt;
+            &lt;Button asChild type="button" variant="outline"&gt;
+              &lt;label className="cursor-pointer"&gt;
+                &lt;Upload /&gt; Open
+                &lt;input ref={source.inputRef} className="sr-only" type="file" accept=".cnes" onChange={(event) =&gt; void source.openFile(event.target.files?.[0] ?? null)} /&gt;
+              &lt;/label&gt;
+            &lt;/Button&gt;
+            &lt;Button asChild type="button" variant="outline"&gt;
+              &lt;a href={downloadUrl} download={source.fileName} onClick={source.markSaved}&gt;&lt;Download /&gt; Save&lt;/a&gt;
+            &lt;/Button&gt;
+            &lt;Button type="button" onClick={handleRun} disabled={isRunning || source.source.trim().length === 0} data-workbench-run-button&gt;
+              &lt;Play /&gt; {isRunning ? "Running" : "Run"}
+            &lt;/Button&gt;
+          &lt;/div&gt;
+        &lt;/header&gt;
+
+        &lt;MonacoSourceEditor value={source.source} onChange={source.setSource} readOnly={isRunning} /&gt;
+      &lt;/main&gt;
+
+      &lt;aside className="min-w-0 border-l bg-muted/30 max-xl:border-l-0 max-xl:border-t"&gt;
+        &lt;ResultsViewer stdout={result?.stdout || ""} stderr={result?.stderr || ""} isRunning={isRunning} /&gt;
+        &lt;RunnerOutput stdout={result?.stdout || ""} stderr={result?.stderr || ""} /&gt;
+      &lt;/aside&gt;
+    &lt;/section&gt;
+  );
+}</code></pre>
+            <p>
+              Add <code>src/features/workbench/index.ts</code> so route imports stay consistent with the rest of the app. The
+              focused IDE pass later removed the old upload-only Runner route and made Workbench the primary route.
+            </p>
+            <pre><code>export { WorkbenchPage } from "@/features/workbench/WorkbenchPage";</code></pre>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="route-title">
+          <div class="section-header">
+            <h2 id="route-title">Route Wiring</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3><code>src/app/routes.ts</code></h3>
+              <pre><code>import { MonitorCog } from "lucide-react";
+
+export type AppRouteId =
+  | "runner"
+  | "workbench"
+  | "workspace"
+  | "editor"
+  | "cli"
+  | "linter"
+  | "tools"
+  | "docs";
+
+{
+  id: "workbench",
+  label: "Workbench",
+  description: "Edit CoNES source, run the current buffer, and inspect results.",
+  icon: MonitorCog,
+}</code></pre>
+            </article>
+            <article class="component">
+              <h3><code>src/app/App.tsx</code></h3>
+              <pre><code>import { WorkbenchPage } from "@/features/workbench";
+
+{activeRoute === "workbench" ? &lt;WorkbenchPage /&gt; : null}</code></pre>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="browser-title">
+          <div class="section-header">
+            <h2 id="browser-title">Browser Smoke Addition</h2>
+          </div>
+          <div class="section-body">
+            <p>
+              Extend <code>runner verification/verify-browser-runner.mjs</code> after the existing Runner cases. The implemented
+              helper routes to Workbench, waits for Monaco to mount, drives a dedicated source test hook, runs the current buffer,
+              and verifies the edited source changes the solved result.
+            </p>
+            <pre><code>async function verifyWorkbenchRun(cdp) {
+  await clickRoute(cdp, "workbench");
+  await waitForSelector(cdp, "[data-workbench-page]");
+
+  await evaluate(cdp, `(() =&gt; {
+    const input = document.querySelector("[data-workbench-source-test-input]");
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+    setter.call(input, \`
+include "heat_transfer_lib"
+h := 100 [W/m^2*K]
+A_c := 0.5
+T_fluid := 20 [C]
+Q := 2 [kW]
+NewtonCooling(h, A_c, T_surface, T_fluid, Q)
+\`);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  })()`);
+
+  await click(cdp, "[data-workbench-run-button]");
+  await waitForText(cdp, "T_surface");
+
+  const result = await evaluate(cdp, `(() =&gt; document.body.innerText)()`);
+  if (!/T_surface/.test(result) || !/60/.test(result)) {
+    throw new Error("Workbench did not run edited source buffer.");
+  }
+}</code></pre>
+            <div class="callout warn">
+              <strong>Smoke detail</strong>
+              <p>
+                If Monaco is not exposed on <code>window</code> in the test page, drive the editor through DOM events or add a
+                test-only data hook in <code>MonacoSourceEditor</code>. Do not skip workbench smoke because Monaco is harder to
+                automate than a textarea.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="acceptance-title">
+          <div class="section-header">
+            <h2 id="acceptance-title">Acceptance Checklist</h2>
+          </div>
+          <div class="section-body">
+            <ul class="checklist">
+              <li><span class="box" aria-hidden="true"></span><span>Monaco loads inside the workbench and is visibly the source editor.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Run executes the current Monaco buffer without requiring a second file upload.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Structured results and raw output update from the same run result.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Workbench browser smoke proves the edited buffer is the primary path.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>No worker message shape, <code>runArgv</code>, <code>thisProgram</code>, or CoNES core behavior changes.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Public Vercel URL passes hosted browser smoke after push.</span></li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Companion owner: Scrum Lord. Guide status: implementation accepted; lint diagnostics move to Packet 008A/B. Last updated: May 24, 2026.</p>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CoNES Web Version Next Phase Map</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">CoNES Web Version</p>
+        <h1>Next Phase Map</h1>
+        <p class="summary">
+          Packet 002 proved the local browser runtime, and Packet 003 packaged it in a Vite, React, Tailwind v4, and shadcn/ui app
+          shell. Packet 004A connected the project to a new Git origin and Vercel deployment loop, then passed human verification.
+          Packet 004 and Packet 004B hardened the runtime and moved loading into app startup. Packet 005 is deployed, Packet 006
+          IDE surfaces are integrated, Packet 008A/B implement lint diagnostics, and Packet 009 is turning the app into the
+          CoNES Studio product shell.
+        </p>
+        <div class="meta-row" aria-label="Phase map status">
+          <span class="tag accent">Packet 002 accepted</span>
+          <span class="tag accent">Packet 003 accepted</span>
+          <span class="tag accent">Tailwind v4 + shadcn/ui chosen</span>
+          <span class="tag">Packet 004A accepted</span>
+          <span class="tag">Packet 004B accepted</span>
+          <span class="tag">Packet 005 deployed</span>
+          <span class="tag">Packet 006A/B/C integrated locally</span>
+          <span class="tag">Packet 008A/B implemented locally</span>
+          <span class="tag">Packet 009 product shell in review</span>
+          <span class="tag">Static Vercel target</span>
+          <span class="tag">Client-side execution</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="north-star-title">
+          <div class="section-header">
+            <h2 id="north-star-title">North Star</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Product Shape</h3>
+              <p>
+                CoNES Studio becomes a local-first browser IDE for CoNES. Users can open or write <code>.cnes</code>,
+                run the solver, lint input, inspect structured results, and read targeted docs without sending solve work to a
+                server.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Technical Shape</h3>
+              <p>
+                The browser app is a static Vercel deployment. React owns interface state and composition. The accepted Packet 002
+                worker owns execution, runtime data mounting, stdout/stderr capture, and the existing <code>--json</code> contract.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="stack-title">
+          <div class="section-header">
+            <h2 id="stack-title">Stack Decision</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Layer</th>
+                  <th>Decision</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>App shell</td>
+                  <td>Vite + React + TypeScript</td>
+                  <td>Static build output, fast local feedback, clear component boundaries, and no server framework assumptions.</td>
+                </tr>
+                <tr>
+                  <td>Styling</td>
+                  <td>Tailwind CSS v4</td>
+                  <td>Token-based interface styling that pairs with shadcn/ui and avoids bespoke CSS for normal app controls.</td>
+                </tr>
+                <tr>
+                  <td>Components</td>
+                  <td>shadcn/ui</td>
+                  <td>Source-owned components for tabs, sidebar, dialogs, forms, tables, alerts, command palette, and resizable panes.</td>
+                </tr>
+                <tr>
+                  <td>Icons</td>
+                  <td>lucide-react unless shadcn project context selects otherwise</td>
+                  <td>Matches existing guidance and provides tool/IDE icon coverage without hand-drawn SVG controls.</td>
+                </tr>
+                <tr>
+                  <td>Editor</td>
+                  <td>Monaco after runner migration</td>
+                  <td>Best fit for an IDE-like text surface, diagnostics, and future completion work.</td>
+                </tr>
+                <tr>
+                  <td>Terminal/CLI view</td>
+                  <td>xterm.js when interactive CLI affordances are needed</td>
+                  <td>Keep raw stdout/stderr simple first; add terminal affordances only when the workflow needs them.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="phases-title">
+          <div class="section-header">
+            <h2 id="phases-title">Phase Sequence</h2>
+          </div>
+          <div class="section-body">
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Packet 003: Vite React Shell</h3>
+                <small>Accepted</small>
+              </div>
+              <p>
+                Created the app scaffold, preserved accepted runtime assets, migrated the runner UI into React components, and kept
+                the Packet 002 browser verification passing. Human review confirmed the React runner works with local
+                <code>.cnes</code> selection.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Packet 004A: Vercel Origin And Preview Loop</h3>
+                <small>Accepted</small>
+              </div>
+              <p>
+                Pointed the repo at <code>https://github.com/Rmorr2001/cones-web-version.git</code>, connected Vercel automatic
+                deployments, established project settings for <code>Web Version</code>, and verified the public test URL
+                <code>https://cones-web-version.vercel.app/runner/</code>. Future web work should use commit, push, Vercel deploy,
+                and browser smoke as the normal review loop.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Packet 004: Runtime Hardening</h3>
+                <small>Local implementation complete</small>
+              </div>
+              <p>
+                Added runtime metadata, stable diagnostics, checksum reporting, Tools runtime status, last-run timings, and
+                negative-path verification locally.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Packet 004B: Runtime Prewarm</h3>
+                <small>Accepted</small>
+              </div>
+              <p>
+                Starts the shared Worker on app load, loads WASM and runtime-data before file selection, shows readiness in Tools,
+                and reuses the warmed runtime when the user clicks Run. Human review confirmed the perceived run delay is no longer
+                dominated by runtime asset loading.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Packet 005: Results Viewer</h3>
+                <small>Deployed</small>
+              </div>
+              <p>
+                Adds a structured result pane for variables, values, units, fixed/solved status, parser/runtime summaries, raw JSON,
+                and downloadable artifacts. Local and hosted browser smoke checks pass.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Packet 006A: Editor Shell</h3>
+                <small>Integrated locally</small>
+              </div>
+              <p>
+                Adds local <code>.cnes</code> upload, edit, new draft, dirty state, source statistics, and download. Run-from-editor
+                remains a later integration step.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Packet 006B: Workspace Overview</h3>
+                <small>Integrated locally</small>
+              </div>
+              <p>
+                Adds a compact workspace view for active lanes, runtime paths, guardrails, and current workflow so app status is
+                visible without reading planning docs.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Packet 006C: In-App Docs</h3>
+                <small>Integrated locally</small>
+              </div>
+              <p>
+                Replaces the Docs placeholder with current runtime facts, workflow, guardrails, verification commands, and public
+                review URL.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Packet 007: IDE Workbench MVP</h3>
+                <small>Accepted</small>
+              </div>
+              <p>
+                Adds the Monaco-backed Workbench as the primary app experience. Users can create or open <code>.cnes</code>, edit
+                the current buffer, run it through the existing worker client, and inspect structured results with Raw output kept
+                secondary.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Packet 008A: Manual Lint Diagnostics</h3>
+                <small>Implemented locally</small>
+              </div>
+              <p>
+                Adds a deliberate Lint action beside Run, invokes the current Monaco buffer through
+                <code>["/work/input.cnes", "--lint", "--json"]</code>, normalizes diagnostics, keeps raw lint output inspectable,
+                and applies line-level Monaco markers when real line data exists.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Packet 008B: Debounced Auto Lint</h3>
+                <small>Implemented locally</small>
+              </div>
+              <p>
+                Reuses <code>client.lintSource</code> and the fixed <code>--lint --json</code> path to run lint after a short
+                editing pause, ignore stale responses, keep markers line-level, and keep Run separate from diagnostics.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Packet 009: Product Shell And Naming</h3>
+                <small>Implementation in review</small>
+              </div>
+              <p>
+                Applies the CoNES Studio name, default dark IDE presentation, hidden debug surfaces, and inline rename for the one
+                active <code>.cnes</code> buffer without introducing project file management.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Packet 010: Vercel Release Candidate</h3>
+                <small>Release proof</small>
+              </div>
+              <p>
+                Re-run the deployment proof as a release candidate: verify WASM MIME behavior, worker loading, asset paths, cache
+                headers, public alias behavior, and the full smoke matrix against the deployed URL.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="app-map-title">
+          <div class="section-header">
+            <h2 id="app-map-title">Application Map</h2>
+          </div>
+          <div class="section-body">
+            <div class="flow" aria-label="Application modules">
+              <article class="flow-step">
+                <span>Workbench</span>
+                <p>Edit the active <code>.cnes</code> buffer in Monaco, rename it, lint it, run it, and save it.</p>
+              </article>
+              <article class="flow-step">
+                <span>Results</span>
+                <p>Show structured <code>--json</code> output and offer a JSON download.</p>
+              </article>
+              <article class="flow-step">
+                <span>Diagnostics</span>
+                <p>Run manual and debounced lint with line-level Monaco markers.</p>
+              </article>
+              <article class="flow-step">
+                <span>Debug surfaces</span>
+                <p>Tools, Docs, Workspace, raw output, and runtime internals stay hidden unless the hard-coded debug flag is enabled.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="guardrails-title">
+          <div class="section-header">
+            <h2 id="guardrails-title">Guardrails</h2>
+          </div>
+          <div class="section-body two-column">
+            <div class="callout ok">
+              <strong>Carry forward</strong>
+              <p>
+                Preserve raw stdout/stderr, the downloadable JSON contract, static <code>/runtime</code> and
+                <code>/runtime-data</code> paths, manifest byte/sha256 checks, and <code>thisProgram: "/app/cnes"</code>.
+              </p>
+            </div>
+            <div class="callout warn">
+              <strong>Do not introduce</strong>
+              <p>
+                No Next.js, Prisma, auth, server actions, Railway, Redis, backend solve API, or casual C++ core rewrite. The web
+                app packages and exposes the accepted CoNES runtime.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Phase map owner: Scrum Lord. Status: Packet 009 product shell implementation is in review after runtime metadata/data/build checks; scripted browser smoke awaits DevTools-enabled Chrome verification. Last updated: May 25, 2026.</p>
+    </main>
+  </body>
+</html>

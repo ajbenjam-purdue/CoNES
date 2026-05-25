@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 004: Runtime Hardening</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 004</p>
+        <h1>Runtime Hardening</h1>
+        <p class="summary">
+          Packet 004 makes the accepted client-side CoNES runtime easier to inspect, diagnose, and trust before the project adds
+          editor, linter, multi-file, or richer results workflows. The runtime contract stays stable; this packet improves metadata,
+          error reporting, status visibility, and verification coverage around that contract.
+        </p>
+        <div class="meta-row" aria-label="Packet metadata">
+          <span class="tag accent">Implemented</span>
+          <span class="tag accent">Human accepted</span>
+          <span class="tag accent">Local verification passed</span>
+          <span class="tag accent">Runtime-focused</span>
+          <span class="tag">After Packet 003 acceptance</span>
+          <span class="tag">After accepted Packet 004A</span>
+          <span class="tag">Verify on Vercel alias</span>
+          <span class="tag">No solver refactor</span>
+          <span class="tag">No backend</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="context-title">
+          <div class="section-header">
+            <h2 id="context-title">Context</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Vercel Interrupt Resolved</h3>
+              <p>
+                Packet 004A established the new Git origin, Vercel automatic deployments, and public test URL first. Runtime
+                hardening can now use both local and hosted deployments for verification. The public reviewer target is
+                <code>https://cones-web-version.vercel.app/runner/</code>.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Packet 004 Reminder</h3>
+              <p>
+                Packet 004 is not the editor, linter, or richer results phase. It is the runtime trust phase: metadata, stable
+                diagnostics, Tools status, cache policy, and verification expansion before larger IDE layers depend on the worker.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Accepted Baseline</h3>
+              <p>
+                Packet 002 proved the browser worker runtime and Packet 003 moved it into a Vite, React, Tailwind v4, and
+                shadcn-compatible app shell. Human verification confirmed that selecting a <code>.cnes</code> file in the React
+                runner works as intended.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Implemented Result</h3>
+              <p>
+                The runtime now has generated metadata, checksum verification, stable diagnostic codes, a Tools runtime status
+                page, last-run timing visibility, and browser verification for positive and negative paths.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="contract-title">
+          <div class="section-header">
+            <h2 id="contract-title">Preserved Contract</h2>
+          </div>
+          <div class="section-body">
+            <div class="callout ok">
+              <strong>Do not change the runtime surface casually</strong>
+              <p>
+                Packet 004 may add metadata and diagnostics, but the accepted solve path remains
+                <code>/runtime/cnes-worker.js</code>, <code>/runtime-data</code>, <code>thisProgram: "/app/cnes"</code>, and
+                <code>callMain(["/work/input.cnes", "--json"])</code>.
+              </p>
+            </div>
+            <pre><code>Accepted run path:
+React Runner
+  -> CoNESWorkerClient
+  -> /runtime/cnes-worker.js
+  -> /runtime/cnes-module.js + /runtime/cnes-module.wasm
+  -> /runtime-data/materials/manifest.json
+  -> /runtime-data/libs/manifest.json
+  -> /work/input.cnes
+  -> callMain(["/work/input.cnes", "--json"])
+  -> raw stdout/stderr returned to UI</code></pre>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="implemented-title">
+          <div class="section-header">
+            <h2 id="implemented-title">Implementation Results</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Metadata</h3>
+              <p>
+                <code>npm run generate:runtime-metadata</code> writes
+                <code>public/runtime/runtime-metadata.json</code> with runtime artifact bytes, sha256 values, manifest summaries,
+                the WASM build command, and the preserved <code>thisProgram: "/app/cnes"</code> contract.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Diagnostics</h3>
+              <p>
+                Worker and client failures now use a stable diagnostic taxonomy including module load, module init, WASM load,
+                manifest fetch, manifest invalid, byte mismatch, sha256 mismatch, missing file, unsupported message, invalid
+                worker response, and nonzero CoNES exit.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Tools Status</h3>
+              <p>
+                The Tools route now reads <code>/runtime/runtime-metadata.json</code> and shows worker paths, artifact checksums,
+                runtime-data manifest counts, mount roots, accepted invocation arguments, and locally stored last-run timings.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Verification</h3>
+              <p>
+                Local verification passed with <code>npm run verify:runtime-metadata</code>,
+                <code>npm run verify:runtime-data</code>, <code>npm run build</code>, and
+                <code>npm run verify:browser</code> against <code>http://127.0.0.1:4173/runner/</code>.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="workstreams-title">
+          <div class="section-header">
+            <h2 id="workstreams-title">Workstreams</h2>
+          </div>
+          <div class="section-body">
+            <article class="phase">
+              <div class="phase-title">
+                <h3>1. Runtime Metadata</h3>
+                <small>Build facts</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Add a static runtime metadata file under <code>public/runtime</code> or <code>public/runtime-data</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Record CoNES version, Emscripten version if available, build command, artifact byte counts, and sha256 for <code>cnes-module.js</code> and <code>cnes-module.wasm</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Record material and library manifest summaries: counts, total bytes, and manifest sha256.</span></li>
+              </ul>
+            </article>
+
+            <article class="phase">
+              <div class="phase-title">
+                <h3>2. Worker Error Taxonomy</h3>
+                <small>Diagnosable failures</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Normalize worker errors into stable codes for module load, WASM load, manifest fetch, byte mismatch, sha256 mismatch, missing file, unsupported message, invalid worker response, and CoNES nonzero exit.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Keep stdout and stderr visible separately for failures.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Do not mask the raw CoNES JSON error output; surface diagnostics as an additional layer.</span></li>
+              </ul>
+            </article>
+
+            <article class="phase">
+              <div class="phase-title">
+                <h3>3. Tools Runtime Status</h3>
+                <small>User-visible inspection</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Replace the Tools placeholder with a runtime status page.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Show worker path, module paths, runtime-data paths, artifact sizes, manifest counts, checksums, and accepted invocation arguments.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Show last-run timings from the worker when available: module load, runtime-data mount, solve, and wall time.</span></li>
+              </ul>
+            </article>
+
+            <article class="phase">
+              <div class="phase-title">
+                <h3>4. Fetch And Cache Policy</h3>
+                <small>Explicit behavior</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Document current behavior: runtime data is fetched and verified per worker run.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Decide whether Packet 004 keeps per-run verification or introduces session-level worker/runtime-data reuse.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>If caching changes, keep checksum verification and make invalidation explicit.</span></li>
+              </ul>
+            </article>
+
+            <article class="phase">
+              <div class="phase-title">
+                <h3>5. Verification Expansion</h3>
+                <small>Negative paths</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Keep <code>npm run build</code>, <code>npm run verify:runtime-data</code>, and <code>npm run verify:browser</code> passing.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Add at least one negative-path verification for missing manifest, checksum mismatch, or worker response validation if feasible without destabilizing the app.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Update verification notes with the exact commands and observed results.</span></li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="scope-title">
+          <div class="section-header">
+            <h2 id="scope-title">Scope Boundaries</h2>
+          </div>
+          <div class="section-body two-column">
+            <div class="callout ok">
+              <strong>In scope</strong>
+              <p>
+                Runtime metadata, worker diagnostics, Tools runtime status, explicit cache policy, and verification improvements.
+              </p>
+            </div>
+            <div class="callout warn">
+              <strong>Out of scope</strong>
+              <p>
+                Monaco editor, lint UI, result tables, multi-file projects, changing Vercel project ownership/settings, backend
+                solve APIs, and C++ solver refactors.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="agent-title">
+          <div class="section-header">
+            <h2 id="agent-title">Suggested Agent Lanes</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Lane</th>
+                  <th>Owned Files</th>
+                  <th>Output</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Metadata</td>
+                  <td><code>Web Version/scripts</code>, <code>Web Version/public/runtime*</code>, package scripts</td>
+                  <td>Runtime metadata generation and verification command.</td>
+                </tr>
+                <tr>
+                  <td>Worker Diagnostics</td>
+                  <td><code>public/runtime/cnes-worker.js</code>, <code>src/features/runtime</code></td>
+                  <td>Stable error codes and typed client-side diagnostics.</td>
+                </tr>
+                <tr>
+                  <td>Tools UI</td>
+                  <td><code>src/features/tools</code>, app routing shell</td>
+                  <td>Runtime status page that reads metadata and last-run facts.</td>
+                </tr>
+                <tr>
+                  <td>Verification</td>
+                  <td><code>runner verification</code>, docs</td>
+                  <td>Positive smoke preservation plus one practical negative-path check.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="done-title">
+          <div class="section-header">
+            <h2 id="done-title">Done Criteria</h2>
+          </div>
+          <div class="section-body">
+            <ul class="checklist">
+              <li><span class="box done" aria-hidden="true"></span><span>Runtime/build metadata exists and is visible in the app.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Worker failures report stable, understandable error codes without hiding raw stdout/stderr.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Tools lane shows runtime artifact, manifest, and worker contract status.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Cache/fetch policy is explicit in docs and code comments where needed.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Existing browser smoke matrix still passes.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Human verification passes against <code>https://cones-web-version.vercel.app/runner/</code>.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>At least one negative-path runtime verification is documented or automated.</span></li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Packet owner: Scrum Lord. Packet status: accepted after local automation and human verification. Last updated: May 24, 2026.</p>
+    </main>
+  </body>
+</html>

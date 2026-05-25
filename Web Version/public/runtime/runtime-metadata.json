@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "name": "cones-web-version",
+    "version": "0.3.0"
+  },
+  "build": {
+    "command": "env EM_CACHE=${EM_CACHE:-/private/tmp/emscripten-cache} em++ -O2 -std=c++20 \\\n  -fexceptions \\\n  -I . -I ${EIGEN_INCLUDE:-/opt/homebrew/include/eigen3} \\\n  src/main.cpp \\\n  -o Web Version/public/runtime/cnes-module.js \\\n  -sMODULARIZE=1 \\\n  -sEXPORT_NAME=createCoNESModule \\\n  -sENVIRONMENT=worker,node \\\n  -sINVOKE_RUN=0 \\\n  -sEXPORTED_RUNTIME_METHODS=FS,callMain \\\n  -sALLOW_MEMORY_GROWTH=1",
+    "emscriptenVersion": null,
+    "note": "Emscripten version is environment-local; regenerate after changing the WASM build toolchain or artifacts."
+  },
+  "artifacts": [
+    {
+      "label": "cnes-worker.js",
+      "path": "/runtime/cnes-worker.js",
+      "bytes": 12624,
+      "sha256": "9f96a0237dbd325e6c285d7964ddac28b2e856a2414db107f2dd5eca547a1d43"
+    },
+    {
+      "label": "cnes-module.js",
+      "path": "/runtime/cnes-module.js",
+      "bytes": 77265,
+      "sha256": "7fd9e736e626021a01266fb22894d18e76ef1932c1496070dd736912a3756550"
+    },
+    {
+      "label": "cnes-module.wasm",
+      "path": "/runtime/cnes-module.wasm",
+      "bytes": 665587,
+      "sha256": "1505a46aa0b0a4ba509a8c6091b038a6f67fd2b0f36a222c4e5630e1ad3091a5"
+    }
+  ],
+  "artifactSummary": {
+    "worker": {
+      "path": "/runtime/cnes-worker.js",
+      "bytes": 12624,
+      "sha256": "9f96a0237dbd325e6c285d7964ddac28b2e856a2414db107f2dd5eca547a1d43"
+    },
+    "moduleJs": {
+      "path": "/runtime/cnes-module.js",
+      "bytes": 77265,
+      "sha256": "7fd9e736e626021a01266fb22894d18e76ef1932c1496070dd736912a3756550"
+    },
+    "moduleWasm": {
+      "path": "/runtime/cnes-module.wasm",
+      "bytes": 665587,
+      "sha256": "1505a46aa0b0a4ba509a8c6091b038a6f67fd2b0f36a222c4e5630e1ad3091a5"
+    }
+  },
+  "manifests": [
+    {
+      "label": "materials",
+      "path": "/runtime-data/materials/manifest.json",
+      "bytes": 62857,
+      "sha256": "78fdae9c9dd7516d65b7337f6e80bddfec4d2e8b9250675d169748cf975c0a5f",
+      "kind": "cones-materials",
+      "mountRoot": "/app/materials",
+      "integrity": "sha256",
+      "count": 240,
+      "totalBytes": 2163600,
+      "manifestSha256": "78fdae9c9dd7516d65b7337f6e80bddfec4d2e8b9250675d169748cf975c0a5f",
+      "perFileSha256": {
+        "exists": true,
+        "complete": true,
+        "filesWithSha256": 240,
+        "fileCount": 240
+      }
+    },
+    {
+      "label": "libs",
+      "path": "/runtime-data/libs/manifest.json",
+      "bytes": 428,
+      "sha256": "3b2e3070692215af08803cb844d280ce3725f96a504b01fbc46300d5346eac9c",
+      "kind": "cones-libs",
+      "mountRoot": "/app/libs",
+      "integrity": "sha256",
+      "count": 1,
+      "totalBytes": 1276,
+      "manifestSha256": "3b2e3070692215af08803cb844d280ce3725f96a504b01fbc46300d5346eac9c",
+      "perFileSha256": {
+        "exists": true,
+        "complete": true,
+        "filesWithSha256": 1,
+        "fileCount": 1
+      }
+    }
+  ],
+  "runtimeData": {
+    "materials": {
+      "label": "materials",
+      "path": "/runtime-data/materials/manifest.json",
+      "bytes": 62857,
+      "sha256": "78fdae9c9dd7516d65b7337f6e80bddfec4d2e8b9250675d169748cf975c0a5f",
+      "kind": "cones-materials",
+      "mountRoot": "/app/materials",
+      "integrity": "sha256",
+      "count": 240,
+      "totalBytes": 2163600,
+      "manifestSha256": "78fdae9c9dd7516d65b7337f6e80bddfec4d2e8b9250675d169748cf975c0a5f",
+      "perFileSha256": {
+        "exists": true,
+        "complete": true,
+        "filesWithSha256": 240,
+        "fileCount": 240
+      }
+    },
+    "libs": {
+      "label": "libs",
+      "path": "/runtime-data/libs/manifest.json",
+      "bytes": 428,
+      "sha256": "3b2e3070692215af08803cb844d280ce3725f96a504b01fbc46300d5346eac9c",
+      "kind": "cones-libs",
+      "mountRoot": "/app/libs",
+      "integrity": "sha256",
+      "count": 1,
+      "totalBytes": 1276,
+      "manifestSha256": "3b2e3070692215af08803cb844d280ce3725f96a504b01fbc46300d5346eac9c",
+      "perFileSha256": {
+        "exists": true,
+        "complete": true,
+        "filesWithSha256": 1,
+        "fileCount": 1
+      }
+    }
+  },
+  "runtime": {
+    "thisProgram": "/app/cnes",
+    "callMainArgs": [
+      "/work/input.cnes",
+      "--json"
+    ]
+  },
+  "runtimeContract": {
+    "workerPath": "/runtime/cnes-worker.js",
+    "moduleScriptUrl": "/runtime/cnes-module.js",
+    "wasmPath": "/runtime/cnes-module.wasm",
+    "runtimeDataManifests": [
+      "/runtime-data/materials/manifest.json",
+      "/runtime-data/libs/manifest.json"
+    ],
+    "thisProgram": "/app/cnes",
+    "inputPath": "/work/input.cnes",
+    "callMainArgs": [
+      "/work/input.cnes",
+      "--json"
+    ],
+    "outputContract": "Raw stdout and stderr remain the source of truth; stdout is expected to contain CoNES --json output on successful runs."
+  }
+}

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 005: Results Viewer</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 005</p>
+        <h1>Results Viewer</h1>
+        <p class="summary">
+          Packet 005 turns the accepted <code>--json</code> output into a structured results surface while keeping raw stdout,
+          stderr, exit code, and JSON download available as the source of truth.
+        </p>
+        <div class="meta-row" aria-label="Packet status">
+          <span class="tag accent">Implemented</span>
+          <span class="tag accent">Verified locally</span>
+          <span class="tag accent">Deployed</span>
+          <span class="tag">No runtime argument changes</span>
+          <span class="tag">Raw output preserved</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="goal-title">
+          <div class="section-header">
+            <h2 id="goal-title">Goal</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>User Outcome</h3>
+              <p>
+                After running a <code>.cnes</code> file, users can scan variables, values, units, fixed/solved state, performance,
+                and parser failures without reading raw JSON first.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Engineering Boundary</h3>
+              <p>
+                The viewer reads the existing worker result. It does not change <code>callMain(["/work/input.cnes", "--json"])</code>,
+                mutate CoNES output, or hide raw stdout and stderr.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="delivered-title">
+          <div class="section-header">
+            <h2 id="delivered-title">Delivered Components</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Component</th>
+                  <th>Path</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Structured viewer</td>
+                  <td><code>src/features/results/ResultsViewer.tsx</code></td>
+                  <td>Displays solver success, variable rows, units, fixed/solved state, performance, and parser/runtime summaries.</td>
+                </tr>
+                <tr>
+                  <td>Runner integration</td>
+                  <td><code>src/features/runner/RunnerPage.tsx</code></td>
+                  <td>Mounts the structured viewer above raw output so the readable pane and raw artifacts coexist.</td>
+                </tr>
+                <tr>
+                  <td>Browser smoke</td>
+                  <td><code>runner verification/verify-browser-runner.mjs</code></td>
+                  <td>Adds assertions for rendered result rows and invalid-parser summary behavior.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="verification-title">
+          <div class="section-header">
+            <h2 id="verification-title">Verification</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Local Commands Passed</h3>
+              <pre><code>npm run verify:runtime-metadata
+npm run verify:runtime-data
+npm run build
+npm run verify:browser</code></pre>
+            </article>
+            <article class="component">
+              <h3>Hosted Smoke Passed</h3>
+              <pre><code>CONES_RUNNER_URL=https://cones-web-version.vercel.app/runner/ npm run verify:browser</code></pre>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="acceptance-title">
+          <div class="section-header">
+            <h2 id="acceptance-title">Acceptance State</h2>
+          </div>
+          <div class="section-body two-column">
+            <div class="callout ok">
+              <strong>Ready for human review</strong>
+              <p>
+                The Vercel public URL is <code>https://cones-web-version.vercel.app/runner/</code>. Automated local and hosted
+                smoke checks pass.
+              </p>
+            </div>
+            <div class="callout info">
+              <strong>Residual Risk</strong>
+              <p>
+                The viewer intentionally depends on the current <code>--json</code> shape. Future CLI flag or JSON contract changes
+                must update the viewer and browser smoke together.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Packet owner: Scrum Lord. Packet status: implemented, verified, and deployed. Last updated: May 24, 2026.</p>
+    </main>
+  </body>
+</html>

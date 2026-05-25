@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 008A: Manual Lint Diagnostics</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 008A</p>
+        <h1>Manual Lint Diagnostics</h1>
+        <p class="summary">
+          Packet 008A adds a deliberate Lint action to the Monaco Workbench. The goal is to prove the diagnostic contract before
+          automatic linting starts running while the user types.
+        </p>
+        <div class="meta-row" aria-label="Packet status">
+          <span class="tag accent">Implemented locally</span>
+          <span class="tag accent">Manual first</span>
+          <span class="tag accent">Line-level markers</span>
+          <span class="tag">Monaco markers</span>
+          <span class="tag">Browser smoke added</span>
+          <span class="tag">No C++ refactor</span>
+          <span class="tag">Client-only</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="position-title">
+          <div class="section-header">
+            <h2 id="position-title">Position</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Opinionated Decision</h3>
+              <p>
+                Lint starts as a button, not as a background process. A user asks for diagnostics when ready, and the app proves
+                the worker mode, diagnostic shape, Monaco marker behavior, and failure UI before any debounce loop exists.
+              </p>
+            </article>
+            <article class="component">
+              <h3>User Outcome</h3>
+              <p>
+                From the Workbench, a user can edit <code>.cnes</code>, click <strong>Lint</strong>, and see diagnostics near the
+                editor without running a solve.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="review-title">
+          <div class="section-header">
+            <h2 id="review-title">Review Finding</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Native Probe Result</h3>
+              <p>
+                Local native probes show <code>--lint --json</code> returns a stable JSON envelope. Valid lint exits
+                <code>0</code> with <code>success: true</code>. Invalid lint exits <code>1</code> with
+                <code>success: false</code> and parser errors such as <code>[Line 2]</code>.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Marker Precision</h3>
+              <p>
+                Current CoNES lint output gives line data, not column data. Packet 008A should ship line-level Monaco markers only.
+                Column precision is a future diagnostic-format improvement, not a blocker.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="scope-title">
+          <div class="section-header">
+            <h2 id="scope-title">Scope</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Object</th>
+                  <th>Modify</th>
+                  <th>Do Not Modify</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>worker-contract.ts</code></td>
+                  <td>Add an explicit <code>lint</code> request/result shape if the current worker needs one.</td>
+                  <td>Do not alter existing solve result semantics or <code>WorkerRunResult</code> for solve.</td>
+                </tr>
+                <tr>
+                  <td><code>worker-client.ts</code></td>
+                  <td>Add <code>lintSource</code>, parallel to <code>runSource</code>.</td>
+                  <td>Do not change <code>runSource</code>, <code>runArgv</code>, or solve behavior.</td>
+                </tr>
+                <tr>
+                  <td><code>cnes-worker.js</code></td>
+                  <td>Add a <code>type: "lint"</code> message mode that invokes <code>--lint --json</code>.</td>
+                  <td>Do not change WASM loading, runtime-data mounting, <code>thisProgram</code>, or solve invocation.</td>
+                </tr>
+                <tr>
+                  <td><code>WorkbenchPage.tsx</code></td>
+                  <td>Add a Lint action, lint status, and diagnostics panel/state.</td>
+                  <td>Do not make lint block Run, Save, Monaco editing, or raw output preservation.</td>
+                </tr>
+                <tr>
+                  <td><code>MonacoSourceEditor.tsx</code></td>
+                  <td>Accept diagnostic marker input and apply Monaco markers.</td>
+                  <td>Do not add completion, language server behavior, or semantic analysis.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="runtime-contract-title">
+          <div class="section-header">
+            <h2 id="runtime-contract-title">Runtime Contract</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Solve Stays Fixed</h3>
+              <p>
+                Solve still uses the existing argument vector. Do not mutate <code>runArgv</code> or infer CLI arguments from UI
+                state.
+              </p>
+              <pre><code>const runArgv = ["/work/input.cnes", "--json"] as const;</code></pre>
+            </article>
+            <article class="component">
+              <h3>Lint Gets Its Own Path</h3>
+              <p>
+                Lint uses a separate worker/client path with an internal constant. The UI should not pass arbitrary argv.
+              </p>
+              <pre><code>const lintArgv = ["/work/input.cnes", "--lint", "--json"] as const;</code></pre>
+            </article>
+            <article class="component">
+              <h3>Client API</h3>
+              <p>
+                Add a dedicated method so Workbench can lint the current Monaco buffer without pretending lint is a solve.
+              </p>
+              <pre><code>client.lintSource({
+  fileName,
+  contents,
+  lastModified,
+});</code></pre>
+            </article>
+            <article class="component">
+              <h3>Result Handling</h3>
+              <p>
+                The raw lint response may reuse the existing runtime result envelope, but UI diagnostics should be normalized in a
+                separate adapter before reaching Monaco markers.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="diagnostic-title">
+          <div class="section-header">
+            <h2 id="diagnostic-title">Diagnostic Contract</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Normalize First</h3>
+              <p>
+                Normalize from parsed JSON <code>error</code> first, then fall back to stderr or raw text. Extract line numbers
+                from messages like <code>[Line 2]</code>. Do not invent column data.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Raw Text Remains</h3>
+              <p>
+                Raw lint stdout/stderr must remain inspectable under Raw output. The normalized diagnostics panel is a view, not a
+                replacement for the CLI output.
+              </p>
+            </article>
+            <pre><code>type LintDiagnostic = {
+  severity: "error" | "warning" | "info";
+  message: string;
+  line?: number;
+  column?: number;
+  source: "cnes-lint";
+  raw?: string;
+};</code></pre>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="ui-title">
+          <div class="section-header">
+            <h2 id="ui-title">Workbench UI</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Controls</h3>
+              <p>
+                Add <strong>Lint</strong> beside Run. Lint has idle, linting, clean, warnings, and errors states. Run and Lint are
+                separate commands because solve output and diagnostic output answer different questions.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Markers</h3>
+              <p>
+                Monaco markers are line-level for Packet 008A. The side panel remains the source of truth for diagnostics that
+                cannot be attached to a line.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Panel</h3>
+              <p>
+                The diagnostics panel should stay quiet when clean. When errors exist, it should show count, severity, line, and
+                message without covering the editor.
+              </p>
+            </article>
+            <article class="component">
+              <h3>No Red Noise</h3>
+              <p>
+                Packet 008A should not create squiggles while the user is halfway through typing. Diagnostics appear because the
+                user clicked Lint.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="verification-title">
+          <div class="section-header">
+            <h2 id="verification-title">Verification</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Required Commands</h3>
+              <pre><code>npm run verify:runtime-metadata
+npm run verify:runtime-data
+npm run build
+npm run verify:browser</code></pre>
+            </article>
+            <article class="component">
+              <h3>Browser Smoke</h3>
+              <p>
+                Browser smoke coverage now opens Workbench, injects valid lint, parser-invalid lint, missing-include lint, stale
+                auto-lint, and run-after-lint cases. Parent in-app browser smoke passed for invalid lint, clean lint, run-after-lint,
+                and Tools runtime status. The scripted <code>verify:browser</code> command still needs Chrome DevTools listening on
+                <code>127.0.0.1:9223</code>.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Required Cases</h3>
+              <p>
+                Cover valid lint, parser-invalid lint, missing include lint, the existing solve matrix, invalid parser solve,
+                negative worker probe, and Tools runtime status.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="accept-title">
+          <div class="section-header">
+            <h2 id="accept-title">Acceptance Criteria</h2>
+          </div>
+          <div class="section-body">
+            <ul class="checklist">
+              <li><span class="box done" aria-hidden="true"></span><span>Workbench has a Lint action beside Run.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Lint executes current Monaco buffer with <code>["/work/input.cnes", "--lint", "--json"]</code>.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Diagnostics panel shows normalized messages.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Line-level Monaco markers appear only for diagnostics with real line data.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Run behavior, raw output, JSON download, and Tools runtime status remain covered; parent in-app browser smoke passed while scripted DevTools smoke remains externally blocked.</span></li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Packet owner: Scrum Lord. Packet status: implemented locally; runtime metadata/data/build and parent in-app browser smoke pass; scripted DevTools browser smoke remains pending. Last updated: May 25, 2026.</p>
+    </main>
+  </body>
+</html>

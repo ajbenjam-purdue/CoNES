@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 009A: Runtime Wait State Spec</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 009A Spec Sheet</p>
+        <h1>Runtime Wait State</h1>
+        <p class="summary">
+          Replace inert runtime-loading language with a compact rotating operations status while the browser worker prepares the
+          validated CoNES runtime. The wait should feel directional without exposing debug tooling or changing solver behavior.
+        </p>
+        <div class="meta-row" aria-label="Packet status">
+          <span class="tag accent">Implemented locally</span>
+          <span class="tag">Workbench only</span>
+          <span class="tag">No worker contract change</span>
+          <span class="tag">No CoNES core change</span>
+          <span class="tag">No deploy setting change</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="intent-title">
+          <div class="section-header">
+            <h2 id="intent-title">Intent</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Problem</h3>
+              <p>
+                The current pre-run state reads like passive loading. It does not reassure the user that the browser runtime is
+                doing useful setup work before Run and Lint become available.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Decision</h3>
+              <p>
+                Use a rotating list of operational startup messages in the Workbench header while the worker is preparing. The copy
+                should sound like an IDE boot sequence, not a marketing explanation.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="scope-title">
+          <div class="section-header">
+            <h2 id="scope-title">Modification Scope</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Modify</h3>
+              <p>
+                <code>WorkbenchPage.tsx</code> may add local UI state for the rotating wait message and replace the visible
+                <code>prewarmState.label</code> in the runtime gate.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Do Not Modify</h3>
+              <p>
+                Do not change <code>runtime-prewarm.ts</code>, <code>worker-client.ts</code>, <code>worker-contract.ts</code>,
+                <code>cnes-worker.js</code>, runtime manifests, CLI flags, CoNES C++ source, or Vercel settings.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Visible Copy</h3>
+              <p>
+                Avoid public copy such as <code>Loading assets</code>. Prefer operation-oriented labels like starting the worker,
+                mounting runtime files, indexing materials, linking libraries, checking JSON output, and unlocking the Workbench.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Failure State</h3>
+              <p>
+                If the runtime fails, stop rotating and show the actual runtime failure label/message. Optimism must not hide real
+                errors.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="acceptance-title">
+          <div class="section-header">
+            <h2 id="acceptance-title">Acceptance</h2>
+          </div>
+          <div class="section-body">
+            <ul class="checklist">
+              <li><span class="box" aria-hidden="true"></span><span>Before runtime readiness, Workbench actions remain hidden.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>The runtime gate rotates through multiple operation labels.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Once ready, normal New/Open/Save/Lint/Run actions appear.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>No worker payloads, runtime files, or solver contracts change.</span></li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

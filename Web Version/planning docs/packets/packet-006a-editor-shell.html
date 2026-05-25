@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 006A: Editor Shell</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 006A</p>
+        <h1>Editor Shell</h1>
+        <p class="summary">
+          Packet 006A adds the first local authoring surface: load a <code>.cnes</code> file, edit text in the browser, and download
+          the current draft. Running from editor is intentionally outside this packet.
+        </p>
+        <div class="meta-row" aria-label="Packet status">
+          <span class="tag accent">Integrated locally</span>
+          <span class="tag">No Monaco yet</span>
+          <span class="tag">No diagnostics yet</span>
+          <span class="tag">No run-from-editor yet</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="scope-title">
+          <div class="section-header">
+            <h2 id="scope-title">Scope</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Included</h3>
+              <p>
+                A route-backed editor surface with <code>.cnes</code> upload, text editing, dirty state, source statistics, file
+                metadata, new draft, and save/download as <code>.cnes</code>.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Excluded</h3>
+              <p>
+                This packet does not call the worker, alter runtime contracts, add Monaco, run lints, or introduce project folders.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="implementation-title">
+          <div class="section-header">
+            <h2 id="implementation-title">Implementation</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Component</th>
+                  <th>Path</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Editor page</td>
+                  <td><code>src/features/editor/EditorShellPage.tsx</code></td>
+                  <td>Owns file read, textarea state, metadata, dirty state, and download blob creation.</td>
+                </tr>
+                <tr>
+                  <td>Feature export</td>
+                  <td><code>src/features/editor/index.ts</code></td>
+                  <td>Exposes the page for parent route integration.</td>
+                </tr>
+                <tr>
+                  <td>App route</td>
+                  <td><code>src/app/routes.ts</code> and <code>src/app/App.tsx</code></td>
+                  <td>Parent integration adds the Editor route without changing Runner behavior.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="acceptance-title">
+          <div class="section-header">
+            <h2 id="acceptance-title">Acceptance Checks</h2>
+          </div>
+          <div class="section-body two-column">
+            <ul class="checklist">
+              <li><span class="box done" aria-hidden="true"></span><span>Opening a <code>.cnes</code> file populates the editor.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Editing updates dirty state and line/character counts.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Save downloads the current text as a <code>.cnes</code> file.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Non-<code>.cnes</code> input is rejected locally.</span></li>
+            </ul>
+            <div class="callout warn">
+              <strong>Human review needed</strong>
+              <p>
+                The page is ready for workflow review, especially text density, save wording, and whether the later run-from-editor
+                integration should live in Runner or Editor.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Packet owner: Scrum Lord. Packet status: integrated locally; human acceptance pending. Last updated: May 24, 2026.</p>
+    </main>
+  </body>
+</html>

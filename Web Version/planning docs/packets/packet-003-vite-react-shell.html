@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 003: Vite React App Shell</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 003</p>
+        <h1>Vite React App Shell</h1>
+        <p class="summary">
+          This packet turns the accepted Packet 002 browser runner into the foundation of the real Web Version app. The stack is
+          Vite, React, TypeScript, Tailwind CSS v4, and shadcn/ui, deployed as static assets to Vercel with all solver execution
+          remaining in the client browser.
+        </p>
+        <div class="meta-row" aria-label="Packet metadata">
+          <span class="tag accent">Accepted by human review</span>
+          <span class="tag accent">Vite + React</span>
+          <span class="tag accent">Tailwind v4 + shadcn/ui</span>
+          <span class="tag">Preserve Packet 002 runtime</span>
+          <span class="tag">Static Vercel target</span>
+          <span class="tag">Packet 004A next</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="scaffold-result-title">
+          <div class="section-header">
+            <h2 id="scaffold-result-title">Scaffold Pass Result</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Implemented</h3>
+              <p>
+                The Web Version now has a Vite, React, TypeScript, Tailwind CSS v4, and shadcn-compatible source component
+                scaffold. The application opens to a React Runner screen and includes thin navigation lanes for Runner, CLI,
+                Linter, Tools, and Docs.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Verified</h3>
+              <p>
+                <code>npm run build</code>, <code>npm run verify:runtime-data</code>, and the Chrome browser smoke matrix passed
+                against the React app at <code>http://127.0.0.1:4173/runner/</code>.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Human Accepted</h3>
+              <p>
+                The React runner was manually verified after the scaffold commit. Selecting a <code>.cnes</code> file from the
+                Vite app works as intended and preserves the accepted browser runtime behavior from Packet 002.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Runtime Contract Preserved</h3>
+              <p>
+                The React shell still calls <code>/runtime/cnes-worker.js</code>. The worker continues to use
+                <code>thisProgram: "/app/cnes"</code>, mounts assets from <code>/runtime-data</code>, and invokes
+                <code>callMain(["/work/input.cnes", "--json"])</code>.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Component Status</h3>
+              <p>
+                <code>npx shadcn@latest info --json</code> recognizes the project as Vite, Tailwind v4, Radix base, and lucide.
+                Packet 003 currently uses local source-owned shadcn-style primitives for buttons, badges, alerts, tabs, scroll
+                area, tooltip, and separator.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="goal-title">
+          <div class="section-header">
+            <h2 id="goal-title">Goal</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>User Outcome</h3>
+              <p>
+                A user lands on a real app shell instead of a proof page. The first screen is still the runner, but the layout can
+                grow into Runner, CLI, Linter, Tools, and Docs sections without moving away from client-side execution.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Engineering Outcome</h3>
+              <p>
+                The accepted Worker and WASM assets remain stable while UI code moves into React components. Local development,
+                static build, runtime-data verification, and browser runner verification become package scripts.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="stack-title">
+          <div class="section-header">
+            <h2 id="stack-title">Stack Contract</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Area</th>
+                  <th>Use</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Framework</td>
+                  <td>Vite React TypeScript</td>
+                  <td>Use a static SPA build. Do not introduce Next.js or server-only conventions.</td>
+                </tr>
+                <tr>
+                  <td>Styling</td>
+                  <td>Tailwind CSS v4</td>
+                  <td>Theme tokens belong in the Tailwind global CSS file generated for the Vite app.</td>
+                </tr>
+                <tr>
+                  <td>Component system</td>
+                  <td>shadcn/ui</td>
+                  <td>Use source-owned shadcn components before custom controls: Sidebar, Tabs, Button, Badge, Alert, Table, ScrollArea, Resizable, Tooltip, Dialog, Command.</td>
+                </tr>
+                <tr>
+                  <td>Icons</td>
+                  <td>lucide-react unless shadcn project context says otherwise</td>
+                  <td>Use icons in buttons and tool controls; avoid text-only controls where a familiar icon exists.</td>
+                </tr>
+                <tr>
+                  <td>Validation</td>
+                  <td>zod for worker messages and manifest-facing data</td>
+                  <td>Keep runtime contracts explicit without changing CoNES JSON output.</td>
+                </tr>
+                <tr>
+                  <td>Editor candidate</td>
+                  <td>Monaco in a later packet</td>
+                  <td>Do not add the editor in Packet 003 unless the shell migration is already passing cleanly.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="target-structure-title">
+          <div class="section-header">
+            <h2 id="target-structure-title">Target Structure</h2>
+          </div>
+          <div class="section-body">
+            <pre><code>Web Version/
+  package.json
+  index.html
+  vite.config.ts
+  tsconfig.json
+  components.json
+  public/
+    runtime/
+      cnes-module.js
+      cnes-module.wasm
+      cnes-worker.js
+    runtime-data/
+      materials/
+      libs/
+  src/
+    main.tsx
+    app/
+      App.tsx
+      AppShell.tsx
+      routes.ts
+    features/
+      runner/
+        RunnerPage.tsx
+        RunnerToolbar.tsx
+        RunnerOutput.tsx
+        runner-state.ts
+      runtime/
+        worker-client.ts
+        worker-contract.ts
+    components/
+      ui/
+    styles/
+      globals.css
+  runner verification/
+    verify-runtime-data.mjs
+    verify-browser-runner.mjs</code></pre>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="workstreams-title">
+          <div class="section-header">
+            <h2 id="workstreams-title">Workstreams</h2>
+          </div>
+          <div class="section-body">
+            <article class="phase">
+              <div class="phase-title">
+                <h3>1. App Scaffold</h3>
+                <small>Foundation</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Create the Vite React TypeScript app inside <code>Web Version</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Install Tailwind CSS v4 and initialize shadcn/ui for the Vite app.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Add package scripts for <code>dev</code>, <code>build</code>, <code>preview</code>, <code>build:wasm</code>, <code>verify:runtime-data</code>, and <code>verify:browser</code>.</span></li>
+              </ul>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>2. Runtime Preservation</h3>
+                <small>Do not break Packet 002</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Keep <code>public/runtime</code> and <code>public/runtime-data</code> static paths stable.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Keep worker invocation at <code>callMain(["/work/input.cnes", "--json"])</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Keep <code>thisProgram: "/app/cnes"</code> and manifest <code>bytes</code>/<code>sha256</code> checks.</span></li>
+              </ul>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>3. Runner Migration</h3>
+                <small>React components</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Move the existing file input, run/reset controls, status, stdout, stderr, and download behavior into React components.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Preserve raw stdout JSON as source of truth; parsed views are secondary.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Use shadcn components for controls, panels, alerts, tabs, badges, tooltips, and resizable output areas.</span></li>
+              </ul>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>4. App Navigation</h3>
+                <small>Thin shell</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Add top-level sections for Runner, CLI, Linter, Tools, and Docs.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Only Runner needs full behavior in Packet 003; other sections can be empty states with clear ownership.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Do not make a marketing landing page; the application should open to the usable runner.</span></li>
+              </ul>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>5. Verification</h3>
+                <small>Carry forward</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Run <code>npm run build</code> or equivalent before acceptance.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Run runtime-data verification against the packaged manifests.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Run Chrome browser verification against the Vite dev server or preview server.</span></li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="commands-title">
+          <div class="section-header">
+            <h2 id="commands-title">Command Targets</h2>
+          </div>
+          <div class="section-body">
+            <pre><code>npm run dev
+npm run build
+npm run preview
+npm run build:wasm
+npm run verify:runtime-data
+npm run verify:browser</code></pre>
+            <div class="callout info">
+              <strong>Verification target</strong>
+              <p>
+                <code>verify:browser</code> should retain the Packet 002 smoke cases: include, units, material tables, invalid
+                parser input, stdout/stderr separation, and JSON download readiness.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="done-title">
+          <div class="section-header">
+            <h2 id="done-title">Done Criteria</h2>
+          </div>
+          <div class="section-body">
+            <ul class="checklist">
+              <li><span class="box done" aria-hidden="true"></span><span>Vite app runs locally with React and Tailwind v4.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>shadcn/ui is initialized and used for the shell and runner controls.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>The runner opens as the first usable screen.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Accepted Packet 002 worker/runtime behavior still passes in Chrome.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Static build output is suitable for Vercel deployment.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Docs identify Packet 004A as the Vercel/origin interruption before runtime hardening.</span></li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="next-title">
+          <div class="section-header">
+            <h2 id="next-title">Next Handoff</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Packet 004A</h3>
+              <p>
+                The next packet should establish the new Git origin and Vercel preview loop before runtime hardening resumes. It
+                should make automatic deployment previews part of the core workflow.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Do Not Reopen</h3>
+              <p>
+                Packet 004A should not rebuild the Vite shell, replace the accepted runner contract, or add a backend. It should
+                connect the static app to a deploy loop and surface preview URLs for review.
+              </p>
+            </article>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Packet owner: Scrum Lord. Packet status: accepted after automated and human verification. Last updated: May 24, 2026.</p>
+    </main>
+  </body>
+</html>
