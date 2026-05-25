@@ -1,0 +1,55 @@
+include "thermo_lib"
+
+// --- Ideal Air-Standard Otto Cycle ---
+// State 1: Intake (Fixed)
+T_1 := 300 [K]
+P_1 := 101325 [Pa]
+m := 1.0 [kg]
+r_comp := 8
+Q_in := 800000 [J]
+
+// Solved States (Units & Physical Guesses)
+T_2.unit := [K]
+T_2.guess := 689
+P_2.unit := [Pa]
+P_2.guess := 1.85e6
+
+T_3.unit := [K]
+T_3.guess := 1803
+P_3.unit := [Pa]
+P_3.guess := 4.8e6
+
+T_4.unit := [K]
+T_4.guess := 785
+P_4.unit := [Pa]
+P_4.guess := 260000
+
+// --- Cycle Logic ---
+// We define state lookups directly to avoid redundant routine calls for now.
+
+v_1 = SpecificVolume(Air, T=T_1, P=P_1)
+s_1 = Entropy(Air, T=T_1, P=P_1)
+u_1 = InternalEnergy(Air, T=T_1, P=P_1)
+
+v_2 = v_1 / r_comp
+s_1 = Entropy(Air, T=T_2, P=P_2)
+v_2 = SpecificVolume(Air, T=T_2, P=P_2)
+u_2 = InternalEnergy(Air, T=T_2, P=P_2)
+W_c = (u_2 - u_1) * m
+
+v_3 = v_2
+u_3 = u_2 + Q_in / m
+v_3 = SpecificVolume(Air, T=T_3, P=P_3)
+u_3 = InternalEnergy(Air, T=T_3, P=P_3)
+s_3 = Entropy(Air, T=T_3, P=P_3)
+
+v_4 = v_1
+s_4 = s_3
+s_4 = Entropy(Air, T=T_4, P=P_4)
+v_4 = SpecificVolume(Air, T=T_4, P=P_4)
+u_4 = InternalEnergy(Air, T=T_4, P=P_4)
+W_t = (u_3 - u_4) * m
+
+// Performance
+W_net = W_t - W_c
+eta_th = W_net / Q_in

@@ -1,6 +1,12 @@
 # CoNES: Coupled Nonlinear Equation Solver
 
-A high-performance C++ environment for solving large-scale systems of coupled nonlinear equations, specializing in thermophysical systems. CoNES utilizes a symbolic-numerical hybrid approach with a custom interpreted scripting language.
+A high-performance C++ environment for solving large-scale systems of coupled nonlinear equations, specializing in thermophysical systems. CoNES utilizes a symbolic-numerical hybrid approach with a custom interpreted scripting language. For guidance on the design, usage, and best practices of the language, please see [the standards](CoNES-Standards.md). For information on previous builds, release candidates, and releases, see [the changelog](CHANGELOG.md).
+
+---
+
+## 0. Compilation & Usage
+
+### Compilation
 
 To compile the interpreter, ensure Eigen is in the project root and run:
 
