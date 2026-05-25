@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 004B: Runtime Prewarm</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 004B</p>
+        <h1>Runtime Prewarm</h1>
+        <p class="summary">
+          Packet 004B moves runtime loading out of the Run click path. The app should begin preparing the CoNES Worker as soon as
+          the browser app loads, then show runtime readiness in Tools before the user selects a file.
+        </p>
+        <div class="meta-row" aria-label="Packet metadata">
+          <span class="tag accent">Human accepted</span>
+          <span class="tag accent">Runtime ready before file selection</span>
+          <span class="tag accent">Optimistic runtime</span>
+          <span class="tag">After Packet 004</span>
+          <span class="tag">No solver refactor</span>
+          <span class="tag">No backend</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="goal-title">
+          <div class="section-header">
+            <h2 id="goal-title">Goal</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>User Experience</h3>
+              <p>
+                Opening the app starts runtime preparation. By the time the user inspects Tools or selects a file, the Worker
+                should report <code>Runtime ready</code>. Clicking Run should go straight to solve work rather than visibly loading
+                WASM and runtime-data.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Runtime Shape</h3>
+              <p>
+                A shared browser Worker accepts a <code>prewarm</code> message, loads <code>cnes-module.js</code> and
+                <code>cnes-module.wasm</code>, verifies and mounts <code>/runtime-data</code>, then stays alive for subsequent
+                <code>run</code> messages.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="contract-title">
+          <div class="section-header">
+            <h2 id="contract-title">Preserved Contract</h2>
+          </div>
+          <div class="section-body">
+            <div class="callout ok">
+              <strong>The solve contract is unchanged</strong>
+              <p>
+                Runtime prewarm does not change CoNES input or output. Runs still write the selected file to
+                <code>/work/input.cnes</code> and call <code>callMain(["/work/input.cnes", "--json"])</code> with
+                <code>thisProgram: "/app/cnes"</code>.
+              </p>
+            </div>
+            <pre><code>App load
+  -> shared CoNESWorkerClient
+  -> worker.postMessage({ type: "prewarm" })
+  -> load WASM and mount runtime-data
+  -> Tools shows Runtime ready
+  -> Run writes input and calls CoNES</code></pre>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="implemented-title">
+          <div class="section-header">
+            <h2 id="implemented-title">Implementation Results</h2>
+          </div>
+          <div class="section-body three-column">
+            <article class="component">
+              <h3>Shared Worker</h3>
+              <p>
+                The client now keeps a shared Worker alive instead of creating and terminating one Worker per run. A prewarmed
+                runtime is reused by Runner and Tools.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Prewarm Status</h3>
+              <p>
+                <code>runtime-prewarm.ts</code> tracks idle, preparing, ready, and failed states. Runner and Tools subscribe to the
+                same readiness state.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Verification</h3>
+              <p>
+                Browser verification waits for <code>data-runtime-prewarm-state="ready"</code> before running solve cases, then
+                checks that Tools shows runtime readiness. Local verification passed with
+                <code>npm run verify:runtime-metadata</code>, <code>npm run verify:runtime-data</code>,
+                <code>npm run build</code>, and <code>npm run verify:browser</code>.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="done-title">
+          <div class="section-header">
+            <h2 id="done-title">Done Criteria</h2>
+          </div>
+          <div class="section-body">
+            <ul class="checklist">
+              <li><span class="box done" aria-hidden="true"></span><span>App load starts Worker prewarm automatically.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Tools reports <code>Runtime ready</code> before file selection after prewarm completes.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Runner reuses the warmed Worker for Run.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Browser verification waits for prewarm before solve cases.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Human acceptance confirms the perceived Run delay is no longer dominated by runtime asset loading.</span></li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Packet owner: Scrum Lord. Packet status: human accepted. Last updated: May 24, 2026.</p>
+    </main>
+  </body>
+</html>

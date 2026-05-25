@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CoNES Web Version Engineering Checklist</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">CoNES Web Version</p>
+        <h1>Web Version Engineering Checklist</h1>
+        <p class="summary">
+          This checklist translates the browser-only plan into concrete engineering work. It assumes a static Vercel deployment,
+          local browser execution, Monaco-backed <code>.cnes</code> authoring, wrapped CLI behavior, and downloadable
+          <code>--json</code> results.
+        </p>
+        <div class="meta-row" aria-label="Checklist assumptions">
+          <span class="tag accent">Monaco Workbench first</span>
+          <span class="tag accent">Compile proof passed</span>
+          <span class="tag accent">Browser runner accepted</span>
+          <span class="tag accent">Vercel preview accepted</span>
+          <span class="tag accent">Packet 004 accepted</span>
+          <span class="tag accent">Packet 004B accepted</span>
+          <span class="tag accent">Packet 005 deployed</span>
+          <span class="tag accent">Packet 006A/B/C integrated</span>
+          <span class="tag accent">Runtime data packaged</span>
+          <span class="tag">Vite + React accepted</span>
+          <span class="tag">Tailwind v4 + shadcn/ui</span>
+          <span class="tag">Wrap existing CLI</span>
+          <span class="tag">Web Worker runtime</span>
+          <span class="tag">No backend</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="assumptions-title">
+          <div class="section-header">
+            <h2 id="assumptions-title">Fixed Decisions</h2>
+          </div>
+          <div class="section-body two-column">
+            <ul class="component-list">
+              <li>The planning docs live under <code>Web Version/planning docs</code>.</li>
+              <li>The accepted Workbench can open an existing <code>.cnes</code> file or draft a new one in Monaco.</li>
+              <li>The C++ core is not refactored for the first roadmap; the CLI-shaped entry point is wrapped.</li>
+              <li>The first downloadable result format is the existing <code>cnes --json</code> output.</li>
+              <li>The app shell will use Vite, React, TypeScript, Tailwind CSS v4, and shadcn/ui.</li>
+            </ul>
+            <div class="callout warn">
+              <strong>Decision boundary</strong>
+              <p>
+                If wrapping the CLI becomes impossible without changing core source structure, that result should be recorded as a
+                feasibility finding. The next decision would be whether to permit a narrow adapter layer or defer browser-only
+                execution.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="current-status-title">
+          <div class="section-header">
+            <h2 id="current-status-title">Current Status</h2>
+          </div>
+          <div class="section-body two-column">
+            <div class="callout ok">
+              <strong>Packets 002 through 008 are implemented; Packet 009 is in product-shell review</strong>
+              <p>
+                The CLI-shaped C++ program compiled to WASM, executes from a browser Worker, and now runs inside the Vite React
+                shell. Runtime metadata, diagnostics, Tools status, negative-path verification, prewarm, and structured results are
+                in place. The app now opens to the Monaco-backed Workbench, hides debug surfaces by default, and Packet 008A/B add
+                manual lint, debounced auto lint, and line-level Monaco diagnostics. Packet 009 is applying the CoNES Studio name,
+                inline active-buffer rename, and a default dark IDE presentation.
+              </p>
+            </div>
+            <div class="callout ok">
+              <strong>Core delivery loop</strong>
+              <p>
+                Commit locally, push <code>master</code> to <code>https://github.com/Rmorr2001/cones-web-version.git</code>, then
+                review the Vercel-hosted runner at <code>https://cones-web-version.vercel.app/runner/</code>.
+              </p>
+            </div>
+            <div class="callout warn">
+              <strong>Implementation guardrail</strong>
+              <p>
+                The browser runner must set <code>thisProgram: "/app/cnes"</code>, load the packaged material and library manifests,
+                then mount their files before invoking CoNES. Missing materials trigger a Python fallback path that is not
+                browser-compatible.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="runtime-package-title">
+          <div class="section-header">
+            <h2 id="runtime-package-title">Runtime Data Package</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Checklist Item</th>
+                  <th>Status</th>
+                  <th>Path</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Binary material tables copied for web runtime</td>
+                  <td>Complete: 240 files</td>
+                  <td><code>Web Version/public/runtime-data/materials</code></td>
+                </tr>
+                <tr>
+                  <td>Material manifest generated</td>
+                  <td>Complete with <code>bytes</code> and <code>sha256</code></td>
+                  <td><code>Web Version/public/runtime-data/materials/manifest.json</code></td>
+                </tr>
+                <tr>
+                  <td>Standard CoNES libraries copied for web runtime</td>
+                  <td>Complete: 1 file</td>
+                  <td><code>Web Version/public/runtime-data/libs</code></td>
+                </tr>
+                <tr>
+                  <td>Library manifest generated</td>
+                  <td>Complete with <code>bytes</code> and <code>sha256</code></td>
+                  <td><code>Web Version/public/runtime-data/libs/manifest.json</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="multi-packet-title">
+          <div class="section-header">
+            <h2 id="multi-packet-title">Multi-Packet Integration Status</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Packet</th>
+                  <th>Status</th>
+                  <th>Current Surface</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>005 Results Viewer</td>
+                  <td>Implemented, verified, deployed</td>
+                  <td><code>src/features/results/ResultsViewer.tsx</code> inside Runner</td>
+                </tr>
+                <tr>
+                  <td>006A Editor Shell</td>
+                  <td>Integrated locally</td>
+                  <td><code>src/features/editor/EditorShellPage.tsx</code></td>
+                </tr>
+                <tr>
+                  <td>006B Workspace Overview</td>
+                  <td>Integrated locally</td>
+                  <td><code>src/features/workspace/WorkspaceOverview.tsx</code></td>
+                </tr>
+                <tr>
+                  <td>006C In-App Docs</td>
+                  <td>Integrated locally</td>
+                  <td><code>src/features/docs/DocsPage.tsx</code></td>
+                </tr>
+                <tr>
+                  <td>007 IDE Workbench MVP</td>
+                  <td>Accepted and deployed</td>
+                  <td><code>src/features/workbench/WorkbenchPage.tsx</code></td>
+                </tr>
+                <tr>
+                  <td>008A Manual Lint Diagnostics</td>
+                  <td>Implemented locally; parent browser smoke passed</td>
+                  <td><code>src/features/workbench/WorkbenchPage.tsx</code></td>
+                </tr>
+                <tr>
+                  <td>008B Debounced Auto Lint</td>
+                  <td>Implemented locally; scripted DevTools smoke pending</td>
+                  <td><code>src/features/workbench/workbench-lint-diagnostics.ts</code></td>
+                </tr>
+                <tr>
+                  <td>009 Product Shell And Naming</td>
+                  <td>Implemented locally; product review pending</td>
+                  <td><code>src/features/workbench/WorkbenchPage.tsx</code> and <code>src/styles/globals.css</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="artifact-contract-title">
+          <div class="section-header">
+            <h2 id="artifact-contract-title">WASM Artifact Contract</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Accepted Path</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Emscripten factory</td>
+                  <td><code>Web Version/public/runtime/cnes-module.js</code></td>
+                  <td>Built from <code>CoNES/src/main.cpp</code>; do not depend on <code>/private/tmp</code>.</td>
+                </tr>
+                <tr>
+                  <td>WASM binary</td>
+                  <td><code>Web Version/public/runtime/cnes-module.wasm</code></td>
+                  <td>Loaded by the worker through <code>locateFile</code>.</td>
+                </tr>
+                <tr>
+                  <td>Program identity</td>
+                  <td><code>thisProgram: "/app/cnes"</code></td>
+                  <td>Required so executable-relative <code>materials</code> and <code>libs</code> resolve under <code>/app</code>.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="phase-zero-title">
+          <div class="section-header">
+            <h2 id="phase-zero-title">Phase 0: Emscripten Compile Probe</h2>
+          </div>
+          <div class="section-body">
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Goal</h3>
+                <small>Answer whether the current CLI can become WASM</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Install or locate an Emscripten toolchain in the development environment.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Compile <code>src/main.cpp</code> with <code>-std=c++20</code>, project includes, and Eigen from <code>/opt/homebrew/include/eigen3</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Build a modular runtime with <code>MODULARIZE</code>, <code>INVOKE_RUN=0</code>, <code>FS</code>, and <code>callMain</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Run unit, include, and material-dependent probes through the WASM runtime.</span></li>
+              </ul>
+            </article>
+            <pre><code>Working modular probe:
+env EM_CACHE=/private/tmp/emscripten-cache em++ -O2 -std=c++20 \
+  -I . -I /opt/homebrew/include/eigen3 \
+  src/main.cpp \
+  -o /private/tmp/cnes-wasm-probe/cnes-module.js \
+  -sMODULARIZE=1 \
+  -sEXPORT_NAME=createCoNESModule \
+  -sENVIRONMENT=worker,node \
+  -sINVOKE_RUN=0 \
+  -sEXPORTED_RUNTIME_METHODS=FS,callMain \
+  -sALLOW_MEMORY_GROWTH=1</code></pre>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="phase-one-title">
+          <div class="section-header">
+            <h2 id="phase-one-title">Phase 1: Minimal Browser Runner</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Interface Tasks</h3>
+                <small>Keep it plain</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Create a static page with a file input restricted to <code>.cnes</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Add a run button with disabled, running, success, and failure states.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Render captured JSON text in a readable output region.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Create a download control for the JSON result blob.</span></li>
+              </ul>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Runtime Tasks</h3>
+                <small>Worker-owned execution</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Load the Emscripten-generated runtime inside a Web Worker.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Write uploaded file contents to a known virtual path such as <code>/work/input.cnes</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Invoke the wrapped program with arguments equivalent to <code>/work/input.cnes --json</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Capture stdout and stderr separately so failures are diagnosable.</span></li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="packet-four-title">
+          <div class="section-header">
+            <h2 id="packet-four-title">Packet 004 Focus</h2>
+          </div>
+          <div class="section-body">
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Harden The Accepted Runtime</h3>
+                <small>Accepted and deployed</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Add runtime/build metadata for <code>cnes-module.js</code>, <code>cnes-module.wasm</code>, manifests, byte counts, and checksums.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Normalize worker failures into stable diagnostic codes without hiding raw stdout or stderr.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Replace the Tools placeholder with runtime status for artifacts, manifests, paths, invocation, and last-run timings.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Clarify runtime-data fetch and cache behavior.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Verify the Vercel-hosted target after push; local browser smoke and negative-path checks already pass.</span></li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="phase-two-title">
+          <div class="section-header">
+            <h2 id="phase-two-title">Phase 2: Filesystem And Assets</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Area</th>
+                  <th>Task</th>
+                  <th>Success Criteria</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Materials</td>
+                  <td>Load the packaged material manifest and mount every listed <code>.cnesbin</code> file.</td>
+                  <td>Tabulated substance cases succeed without a special developer-only copy step.</td>
+                </tr>
+                <tr>
+                  <td>Includes</td>
+                  <td>Document how single-file upload behaves when a script contains <code>include</code>.</td>
+                  <td>The MVP either reports a clear include failure or supports a planned multi-file upload path.</td>
+                </tr>
+                <tr>
+                  <td>Libraries</td>
+                  <td>Evaluate whether <code>libs/</code> should be pre-mounted from static assets.</td>
+                  <td>Common library includes can be made available without server execution.</td>
+                </tr>
+                <tr>
+                  <td>Storage</td>
+                  <td>Decide whether material tables should be bundled, fetched on demand, or cached in browser storage.</td>
+                  <td>The chosen strategy has acceptable startup size and predictable offline behavior.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="phase-three-title">
+          <div class="section-header">
+            <h2 id="phase-three-title">Phase 3: Minimal IDE Shell</h2>
+          </div>
+          <div class="section-body three-column">
+            <article class="component">
+              <h3>Editor</h3>
+              <p>
+                Add a browser editor only after the upload runner works. Start with file contents loaded into the editor, then run
+                from editor text.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Lint</h3>
+              <p>
+                Reuse the same WASM runtime to invoke lint-style arguments. Surface line errors only after stdout and stderr are
+                stable.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Results</h3>
+              <p>
+                Keep raw JSON download as the source of truth. A formatted table can be a convenience layer once result shape is
+                confirmed.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="verification-title">
+          <div class="section-header">
+            <h2 id="verification-title">Verification Plan</h2>
+          </div>
+          <div class="section-body">
+            <ol class="numbered-list">
+              <li>Run one simple uploaded script that does not require material tables.</li>
+              <li>Run one uploaded script that requires a known material table.</li>
+              <li>Run one intentionally invalid script and confirm useful failure output.</li>
+              <li>Run one script with an <code>include</code> statement and record MVP behavior.</li>
+              <li>Compare WASM JSON output against native CLI JSON output for the same input file.</li>
+              <li>Run browser verification against <code>https://cones-web-version.vercel.app/runner/</code> after pushed changes deploy.</li>
+            </ol>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="open-decisions-title">
+          <div class="section-header">
+            <h2 id="open-decisions-title">Open Decisions</h2>
+          </div>
+          <div class="section-body two-column">
+            <div class="callout risk">
+              <strong>Wrapper tolerance</strong>
+              <p>
+                How much wrapper code is acceptable if the current CLI needs a browser-specific invocation layer around it?
+              </p>
+            </div>
+            <div class="callout risk">
+              <strong>Multi-file project handling</strong>
+              <p>
+                Should the post-MVP workflow accept folders, multiple uploads, or an in-browser project filesystem?
+              </p>
+            </div>
+            <div class="callout risk">
+              <strong>Materials delivery</strong>
+              <p>
+                Should tabulated materials be loaded eagerly for reliability or lazily for faster page startup?
+              </p>
+            </div>
+            <div class="callout risk">
+              <strong>Native parity</strong>
+              <p>
+                What level of byte-for-byte or value-level parity is required before the browser version is considered credible?
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="done-title">
+          <div class="section-header">
+            <h2 id="done-title">MVP Done Criteria</h2>
+          </div>
+          <div class="section-body">
+            <ul class="checklist">
+              <li><span class="box done" aria-hidden="true"></span><span>Static app loads from a Vercel deployment without backend services.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>User can upload a local <code>.cnes</code> file.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Uploaded input is written into the WASM virtual filesystem.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Wrapped CoNES CLI executes with <code>--json</code> semantics.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>stdout JSON is displayed or clearly surfaced in the browser.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>JSON result can be downloaded as a file.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Failure output is captured without freezing the browser tab.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Remaining blockers for materials and includes are documented from real tests.</span></li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Working checklist for the WASM-first CoNES Web Version. Last updated: May 25, 2026 after Packet 008A/B local implementation.</p>
+    </main>
+  </body>
+</html>

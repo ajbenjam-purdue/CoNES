@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 004A: Vercel Origin And Preview Loop</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 004A</p>
+        <h1>Vercel Origin And Preview Loop</h1>
+        <p class="summary">
+          This interrupt packet promotes Vercel from a later release concern to a core project component. The goal is to point the
+          repo at a new Git origin, connect that origin to Vercel for automatic deployments, and create a repeatable preview loop
+          that can continue while the human reviewer is away.
+        </p>
+        <div class="meta-row" aria-label="Packet metadata">
+          <span class="tag accent">Implemented</span>
+          <span class="tag accent">Human verified</span>
+          <span class="tag accent">Vercel becomes core</span>
+          <span class="tag">Origin connected</span>
+          <span class="tag">Public alias verified</span>
+          <span class="tag">Browser smoke passed</span>
+          <span class="tag">Runtime hardening resumes next</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="result-title">
+          <div class="section-header">
+            <h2 id="result-title">Implementation Result</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Origin</h3>
+              <p>
+                The repository now has origin <code>https://github.com/Rmorr2001/cones-web-version.git</code>. The current
+                committed state was pushed to <code>master</code>, and Vercel is connected to that GitHub repository.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Public Test URL</h3>
+              <p>
+                The direct reviewer URL is <code>https://cones-web-version.vercel.app/runner/</code>. It serves a small redirect
+                shim into the React app, whose first screen is the Runner.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Vercel Settings</h3>
+              <p>
+                Project <code>cones-web-version</code> is configured with root directory <code>Web Version</code>, framework
+                <code>Vite</code>, build command <code>npm run build</code>, install command <code>npm install</code>, and output
+                directory <code>dist</code>.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Human Acceptance</h3>
+              <p>
+                The public runner URL has been manually verified by the human reviewer. Treat Packet 004A as accepted and use the
+                Vercel loop as a core part of future packet verification.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Verification</h3>
+              <p>
+                <code>npm run build</code>, <code>npm run verify:runtime-data</code>, and
+                <code>CONES_RUNNER_URL=https://cones-web-version.vercel.app/runner/ npm run verify:browser</code> passed.
+              </p>
+            </article>
+          </div>
+          <div class="section-body">
+            <div class="callout warn">
+              <strong>Preview URL caveat</strong>
+              <p>
+                Generated deployment URLs such as <code>cones-web-version-jbny7ivln-rmorr2001s-projects.vercel.app</code> are
+                currently protected by Vercel SSO. The public alias <code>https://cones-web-version.vercel.app/runner/</code> is
+                the direct test link available without disabling SSO protection.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="context-title">
+          <div class="section-header">
+            <h2 id="context-title">Current State</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Local App</h3>
+              <p>
+                Packet 003 is accepted locally. <code>Web Version</code> builds with Vite and the React runner works against the
+                accepted WASM runtime. Static runtime assets already live under <code>Web Version/public</code>.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Deployment State</h3>
+              <p>
+                The git repository is now connected to GitHub and the Vercel project is linked to that origin. Automatic Vercel
+                deployment is active for <code>master</code>, with the public alias available for testing.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Core Component Status</h3>
+              <p>
+                Vercel is no longer a later release afterthought. The project now treats commit, push, automatic deploy, and public
+                browser smoke as the normal review path for web-facing work.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="goal-title">
+          <div class="section-header">
+            <h2 id="goal-title">Goal</h2>
+          </div>
+          <div class="section-body">
+            <div class="flow" aria-label="Vercel origin flow">
+              <article class="flow-step">
+                <span>Origin</span>
+                <p>Create or select the new Git remote that should own automatic deploys.</p>
+              </article>
+              <article class="flow-step">
+                <span>Push</span>
+                <p>Push the current committed Web Version state to that origin.</p>
+              </article>
+              <article class="flow-step">
+                <span>Link</span>
+                <p>Connect the repository to a Vercel project with <code>Web Version</code> as root.</p>
+              </article>
+              <article class="flow-step">
+                <span>Preview</span>
+                <p>Produce preview URLs for the human reviewer to test independently.</p>
+              </article>
+              <article class="flow-step">
+                <span>Verify</span>
+                <p>Run build and browser smoke checks against deployed URLs where possible.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="vercel-title">
+          <div class="section-header">
+            <h2 id="vercel-title">Vercel Configuration Contract</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Setting</th>
+                  <th>Expected Value</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Framework</td>
+                  <td>Vite</td>
+                  <td>The app is a static Vite React build.</td>
+                </tr>
+                <tr>
+                  <td>Root directory</td>
+                  <td><code>Web Version</code></td>
+                  <td><code>package.json</code>, <code>vite.config.ts</code>, and <code>public/runtime</code> live there.</td>
+                </tr>
+                <tr>
+                  <td>Install command</td>
+                  <td><code>npm install</code> or Vercel default npm install</td>
+                  <td><code>package-lock.json</code> is present.</td>
+                </tr>
+                <tr>
+                  <td>Build command</td>
+                  <td><code>npm run build</code></td>
+                  <td>Runs TypeScript build and Vite build.</td>
+                </tr>
+                <tr>
+                  <td>Output directory</td>
+                  <td><code>dist</code></td>
+                  <td>Vite static output.</td>
+                </tr>
+                <tr>
+                  <td>Runtime assets</td>
+                  <td><code>/runtime</code> and <code>/runtime-data</code></td>
+                  <td>Worker, WASM, materials, and libs must remain static public assets.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="success-title">
+          <div class="section-header">
+            <h2 id="success-title">Success Metrics</h2>
+          </div>
+          <div class="section-body">
+            <ul class="checklist">
+              <li><span class="box done" aria-hidden="true"></span><span>A new Git remote is configured and visible in <code>git remote -v</code>.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>The current committed repo state is pushed to the new origin.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Vercel is linked to that origin and automatically deploys pushes.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Vercel project root is <code>Web Version</code>, build command is <code>npm run build</code>, output directory is <code>dist</code>.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>A public test URL is available for the human reviewer.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>The public URL loads the React runner and fetches <code>/runtime/cnes-worker.js</code>, <code>/runtime/cnes-module.wasm</code>, and <code>/runtime-data</code> successfully.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>The deployed public URL can run valid <code>.cnes</code> files and the invalid parser smoke without a backend.</span></li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="roadblocks-title">
+          <div class="section-header">
+            <h2 id="roadblocks-title">Potential Roadblocks Without Human Present</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Roadblock</th>
+                  <th>Impact</th>
+                  <th>Fallback While Human Is Away</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>No GitHub/Git remote URL provided</td>
+                  <td>Cannot set the correct new origin or push for automatic deployments.</td>
+                  <td>Prepare all deploy config locally and report the exact <code>git remote add origin ...</code> step needed.</td>
+                </tr>
+                <tr>
+                  <td>No permission to create or push the remote repository</td>
+                  <td>Vercel cannot auto-update from the intended source.</td>
+                  <td>Use local Vercel preview deploy if authenticated; otherwise stop with a credential/permission note.</td>
+                </tr>
+                <tr>
+                  <td>Vercel CLI not authenticated or wrong team selected</td>
+                  <td>Cannot link or deploy to the correct Vercel project.</td>
+                  <td>Run read-only status checks and record the needed login/team/project decision.</td>
+                </tr>
+                <tr>
+                  <td>GitHub-Vercel integration missing</td>
+                  <td>Manual CLI deploy may work, but push-triggered preview deployments will not.</td>
+                  <td>Generate CLI preview URL and document that automatic deploy linkage needs human account authorization.</td>
+                </tr>
+                <tr>
+                  <td>Repository scope ambiguity</td>
+                  <td><code>CoNES/</code> is currently untracked locally; a pushed repo may contain only the Web Version artifacts and docs.</td>
+                  <td>Do not stage <code>CoNES/</code> without approval. Confirm whether deployment origin should include source engine history or only Web Version runtime artifacts.</td>
+                </tr>
+                <tr>
+                  <td>WASM or worker MIME/path issue on Vercel</td>
+                  <td>Preview loads but solver fails at runtime.</td>
+                  <td>Add a small static-route verification and inspect deployed asset headers before changing runtime code.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="commands-title">
+          <div class="section-header">
+            <h2 id="commands-title">Command Plan</h2>
+          </div>
+          <div class="section-body">
+            <pre><code>Local verification:
+cd "/Users/rj/Documents/Benjamins Project/Web Version"
+npm run build
+npm run verify:runtime-data
+
+Origin setup, after remote URL is known:
+cd "/Users/rj/Documents/Benjamins Project"
+git remote add origin &lt;new-origin-url&gt;
+git push -u origin master
+
+Vercel linkage, after auth/team/project are confirmed:
+cd "/Users/rj/Documents/Benjamins Project/Web Version"
+vercel link
+vercel deploy
+
+Preview verification:
+CONES_RUNNER_URL=&lt;preview-url&gt;/runner/ npm run verify:browser</code></pre>
+            <div class="callout warn">
+              <strong>Human absence rule</strong>
+              <p>
+                Do not guess account-sensitive values such as remote URL, GitHub owner, Vercel team, or production domain. If those
+                are unavailable, produce local-ready config and stop at a clearly named blocker.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="done-title">
+          <div class="section-header">
+            <h2 id="done-title">Done Criteria</h2>
+          </div>
+          <div class="section-body">
+            <ul class="checklist">
+              <li><span class="box done" aria-hidden="true"></span><span>Deployment packet is accepted as the active interruption before runtime hardening.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Remote origin decision is captured or a precise blocker is reported.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Vercel project is linked to the new origin or the account/permission blocker is explicit.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>At least one public test URL is provided if credentials allow deployment.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Preview testing instructions are short enough for the human reviewer to use after a walk.</span></li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Packet owner: Scrum Lord. Packet status: accepted after human verification of the public Vercel alias. Last updated: May 24, 2026.</p>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 007: IDE Workbench MVP</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 007</p>
+        <h1>IDE Workbench MVP</h1>
+        <p class="summary">
+          Packet 007 closes the first real IDE loop: edit current CoNES source, run that exact source from the browser, inspect
+          structured results, and keep raw stdout/stderr available. This packet connects authoring and execution without changing
+          the CoNES C++ core or introducing a backend.
+        </p>
+        <div class="meta-row" aria-label="Packet status">
+          <span class="tag accent">Human accepted</span>
+          <span class="tag accent">Deployed</span>
+          <span class="tag accent">IDE experience</span>
+          <span class="tag accent">Monaco required</span>
+          <span class="tag">Run from editor buffer</span>
+          <span class="tag">Raw output preserved</span>
+          <span class="tag">Client-only</span>
+          <span class="tag">No C++ refactor</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="goal-title">
+          <div class="section-header">
+            <h2 id="goal-title">Goal</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>User Outcome</h3>
+              <p>
+                A user can open or create a <code>.cnes</code> file, edit it, run the current editor contents, and inspect results
+                without re-uploading the same file through a separate Runner workflow.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Product Outcome</h3>
+              <p>
+                The Web Version begins to feel like a CoNES workbench: source on one side, run controls and results nearby, and
+                operational tooling visible without marketing-style framing.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Engineering Outcome</h3>
+              <p>
+                Editor source, worker execution, structured results, raw artifacts, and downloads share one contract. Existing
+                Runner behavior remains valid.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Boundary</h3>
+              <p>
+                This is not a linter, diagnostics engine, multi-file project system, or CoNES language server. Those should land
+                after the edit-run-results loop is stable.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="companion-title">
+          <div class="section-header">
+            <h2 id="companion-title">Implementation Companion</h2>
+          </div>
+          <div class="section-body">
+            <div class="callout info">
+              <strong>Build guide</strong>
+              <p>
+                The opinionated implementation companion for this packet is
+                <a href="packet-007-implementation-guide.html">Packet 007 Companion: IDE Workbench Implementation Guide</a>. It
+                names the expected files, dependency step, Monaco component, runtime helper, route wiring, and browser smoke shape.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="success-title">
+          <div class="section-header">
+            <h2 id="success-title">Success Metrics</h2>
+          </div>
+          <div class="section-body">
+            <ul class="checklist">
+              <li><span class="box" aria-hidden="true"></span><span>Open or create a <code>.cnes</code> file in the IDE workbench.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Edit source text in Monaco with line numbers and keep dirty state visible.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Click Run from the workbench and execute the current editor buffer.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Update structured results, raw stdout, stderr, exit code, and JSON download from that buffer.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Runtime prewarm still reaches ready before file selection or first run.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Raw output is secondary: success cases keep it quiet, failure cases open Diagnostics.</span></li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="lanes-title">
+          <div class="section-header">
+            <h2 id="lanes-title">Implementation Lanes</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Lane</th>
+                  <th>Owns</th>
+                  <th>Do Not Touch</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Workbench layout</td>
+                  <td>A route-backed IDE page with editor, run controls, result pane, and raw output pane.</td>
+                  <td>Do not replace the Runner route or remove existing Tools visibility.</td>
+                </tr>
+                <tr>
+                  <td>Shared source state</td>
+                  <td>Current file name, source contents, dirty state, loaded source snapshot, and download behavior.</td>
+                  <td>Do not introduce browser storage, project folders, or multi-file include behavior in this packet.</td>
+                </tr>
+                <tr>
+                  <td>Run current buffer</td>
+                  <td>A source-text run path that sends the current buffer through the existing worker client.</td>
+                  <td>Do not change <code>callMain(["/work/input.cnes", "--json"])</code> or the worker result contract.</td>
+                </tr>
+                <tr>
+                  <td>Results integration</td>
+                  <td>Reuse the Packet 005 structured result viewer and preserve raw stdout/stderr.</td>
+                  <td>Do not parse around CoNES JSON in a way that hides raw output or changes failure semantics.</td>
+                </tr>
+                <tr>
+                  <td>Editor engine</td>
+                  <td>Install and integrate Monaco as the source editor for the workbench.</td>
+                  <td>Do not add diagnostics, completion, syntax validation, or language-server assumptions yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="architecture-title">
+          <div class="section-header">
+            <h2 id="architecture-title">Target Architecture</h2>
+          </div>
+          <div class="section-body">
+            <pre><code>src/
+  features/
+    workbench/
+      WorkbenchPage.tsx
+      MonacoSourceEditor.tsx
+      workbench-source-state.ts
+      monaco-cnes-language.ts
+      index.ts
+    editor/
+      EditorShellPage.tsx
+    runner/
+      RunnerPage.tsx
+    results/
+      ResultsViewer.tsx
+    runtime/
+      worker-client.ts
+      worker-contract.ts</code></pre>
+            <div class="callout info">
+              <strong>Preferred shape</strong>
+              <p>
+                Workbench should compose existing editor, runner, results, and runtime pieces where practical. If extraction is
+                needed, extract small source-state and run-result helpers rather than rewriting current feature pages.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="contracts-title">
+          <div class="section-header">
+            <h2 id="contracts-title">Contracts To Preserve</h2>
+          </div>
+          <div class="section-body two-column">
+            <div class="callout ok">
+              <strong>Runtime contract</strong>
+              <p>
+                Continue using <code>thisProgram: "/app/cnes"</code>, mounted <code>/runtime-data</code>, and
+                <code>callMain(["/work/input.cnes", "--json"])</code>. The workbench changes where contents come from, not how
+                CoNES is invoked.
+              </p>
+            </div>
+            <div class="callout ok">
+                <strong>Output contract</strong>
+              <p>
+                Structured results are primary. Raw stdout/stderr remain preserved and inspectable under Raw output, with stdout
+                labeled Output and stderr labeled Diagnostics.
+              </p>
+            </div>
+            <div class="callout warn">
+              <strong>Monaco contract</strong>
+              <p>
+                Monaco is a core part of this packet. Use it for the source editor, line numbers, selection behavior, and the first
+                IDE-quality editing surface. Diagnostics, completion, semantic highlighting, and language-server behavior remain
+                out of scope.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="verification-title">
+          <div class="section-header">
+            <h2 id="verification-title">Verification Plan</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Required Commands</h3>
+              <pre><code>npm run verify:runtime-metadata
+npm run verify:runtime-data
+npm run build
+npm run verify:browser</code></pre>
+            </article>
+            <article class="component">
+              <h3>Browser Smoke Additions</h3>
+              <p>
+                Add one workbench path: open the workbench, load or inject a known <code>.cnes</code> source, edit a value, run
+                from the editor buffer, and verify the structured result reflects the edited source.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Regression Cases</h3>
+              <p>
+                Keep the existing Runner cases for <code>examples/test.cnes</code>, <code>tests/test_units.cnes</code>,
+                <code>examples/HVAC_example.cnes</code>, invalid parser smoke, runtime prewarm, and Tools readiness.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Hosted Review</h3>
+              <p>
+                After local verification, push to <code>master</code>, wait for Vercel, and smoke
+                <code>https://cones-web-version.vercel.app/runner/</code>. Human verification remains the final acceptance source.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="implementation-status-title">
+          <div class="section-header">
+            <h2 id="implementation-status-title">Implementation Status</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Local Result</h3>
+              <p>
+                Packet 007 is implemented, deployed, and human accepted. The app now opens to the Monaco-backed
+                <code>Workbench</code> route as the primary experience.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Smoke Result</h3>
+              <p>
+                Browser smoke now opens Workbench, verifies Monaco is mounted, injects an edited source buffer with
+                <code>Q := 2 [kW]</code>, runs it, and verifies <code>T_surface</code> resolves to <code>60</code>.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Preserved Contracts</h3>
+              <p>
+                Runtime prewarm, raw stdout/stderr capture, structured results, Tools readiness, <code>runArgv</code>,
+                <code>thisProgram</code>, and the browser worker artifacts remain unchanged.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Open Review</h3>
+              <p>
+                Human verification accepted this packet. Follow-up work moves to manual lint diagnostics before debounced auto lint.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="risks-title">
+          <div class="section-header">
+            <h2 id="risks-title">Risks And Decisions</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Question</th>
+                  <th>Default Answer</th>
+                  <th>Review Trigger</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Should Workbench replace Runner as the first screen?</td>
+                  <td>Yes. Human review accepted Workbench as the primary experience.</td>
+                  <td>Completed in the focused IDE pass.</td>
+                </tr>
+                <tr>
+                  <td>Should Monaco ship in this packet?</td>
+                  <td>Yes. Monaco is required for the IDE Workbench MVP.</td>
+                  <td>If integration creates build or worker conflicts, fix the integration rather than falling back to textarea.</td>
+                </tr>
+                <tr>
+                  <td>Should edited source be persisted automatically?</td>
+                  <td>No. Keep explicit download/save behavior.</td>
+                  <td>A later project-files packet defines browser storage and workspace persistence.</td>
+                </tr>
+                <tr>
+                  <td>Should lint diagnostics be attached to the editor?</td>
+                  <td>Yes, but manual lint comes first.</td>
+                  <td>Packet 008A defines the diagnostic contract; Packet 008B adds debounced auto lint.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Packet owner: Scrum Lord. Packet status: human accepted and deployed. Last updated: May 24, 2026.</p>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,43 @@
+{
+  "name": "cones-web-version",
+  "private": true,
+  "version": "0.3.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "prebuild": "npm run generate:runtime-metadata",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "build:wasm": "./scripts/build-wasm.sh",
+    "generate:runtime-metadata": "node ./scripts/generate-runtime-metadata.mjs",
+    "verify:runtime-metadata": "node \"runner verification/verify-runtime-metadata.mjs\"",
+    "verify:runtime-data": "node \"runner verification/verify-runtime-data.mjs\"",
+    "verify:browser": "node \"runner verification/verify-browser-runner.mjs\""
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "@radix-ui/react-scroll-area": "^1.2.10",
+    "@radix-ui/react-separator": "^1.1.7",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-tabs": "^1.1.12",
+    "@radix-ui/react-tooltip": "^1.2.7",
+    "@tailwindcss/vite": "^4.1.7",
+    "@vitejs/plugin-react": "^5.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.511.0",
+    "monaco-editor": "^0.55.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwind-merge": "^3.3.0",
+    "tailwindcss": "^4.1.7",
+    "zod": "^3.25.28"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "@types/react": "^19.1.5",
+    "@types/react-dom": "^19.1.5",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}

@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 009: Product Shell And Naming Spec</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 009 Spec Sheet</p>
+        <h1>Product Shell And Naming</h1>
+        <p class="summary">
+          This packet defines the next product pass before implementation. The goal is to turn the current working IDE into a named,
+          focused operating web app without exposing internal planning, runtime tooling, or fake project-management concepts.
+        </p>
+        <div class="meta-row" aria-label="Packet status">
+          <span class="tag accent">Implementation in review</span>
+          <span class="tag accent">Human approved direction</span>
+          <span class="tag">Product naming</span>
+          <span class="tag">Rename active buffer</span>
+          <span class="tag">Default dark mode</span>
+          <span class="tag">Workbench first</span>
+          <span class="tag">Debug hidden by default</span>
+          <span class="tag">No runtime contract changes</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="decision-title">
+          <div class="section-header">
+            <h2 id="decision-title">Naming Decision</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Recommended Product Name</h3>
+              <p>
+                Use <strong>CoNES Studio</strong> as the public app name. It is specific enough to be branded, broad enough for IDE
+                behavior, and does not imply a backend service, cloud workspace, or multi-file project system that does not exist
+                yet.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Surface Name</h3>
+              <p>
+                Keep <strong>Workbench</strong> as the name of the main editing surface. The app is CoNES Studio; the primary screen
+                is the Workbench.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Names To Retire From Public UI</h3>
+              <p>
+                Retire <strong>Web Version</strong>, <strong>Runner</strong>, <strong>Workspace</strong>, <strong>Tools</strong>,
+                and <strong>Browser Workspace</strong> from the default product surface. These are implementation or planning terms.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Fallback Names</h3>
+              <p>
+                <strong>CoNES Lab</strong> is acceptable if the product should feel more experimental. <strong>CoNES IDE</strong> is
+                clear but less polished. The default recommendation remains CoNES Studio.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="product-title">
+          <div class="section-header">
+            <h2 id="product-title">Product Shape</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Public App</h3>
+              <p>
+                The public app is a local-first browser IDE for one active <code>.cnes</code> source buffer. It should open directly
+                to the editing, linting, running, and results experience.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Truthful File Model</h3>
+              <p>
+                The app supports one active source buffer: create a draft, open a <code>.cnes</code> file, edit it, save/download
+                it, rename it, lint it, run it, and export JSON. This is not project file management yet.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Not Yet A Project Workspace</h3>
+              <p>
+                Do not show file explorer, project, workspace, folder, package, or include-path language until multiple files,
+                browser project persistence, and include resolution are real.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Operating Principle</h3>
+              <p>
+                The product should make CoNES easier to author and inspect without hiding the validated computational engine or
+                pretending the browser has capabilities it does not have.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="default-ui-title">
+          <div class="section-header">
+            <h2 id="default-ui-title">Default UI</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Object</th>
+                  <th>Default Product Label</th>
+                  <th>Rule</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>App identity</td>
+                  <td><code>CoNES Studio</code></td>
+                  <td>Use this in visible product chrome, document title copy, and any app identity text.</td>
+                </tr>
+                <tr>
+                  <td>Main surface</td>
+                  <td><code>Workbench</code></td>
+                  <td>The Workbench is the editor-runner surface, not a route among several public dashboards.</td>
+                </tr>
+                <tr>
+                  <td>Active file</td>
+                  <td>current filename</td>
+                  <td>The filename remains the strongest local context and can be renamed inline, for example from <code>untitled.cnes</code> to <code>coil-study.cnes</code>.</td>
+                </tr>
+                <tr>
+                  <td>Source panel</td>
+                  <td><code>Source</code></td>
+                  <td>Keep compact and operational. Do not add explanatory subheadings.</td>
+                </tr>
+                <tr>
+                  <td>Results panel</td>
+                  <td><code>Results</code></td>
+                  <td>Structured solve output remains the primary result surface.</td>
+                </tr>
+                <tr>
+                  <td>Diagnostics panel</td>
+                  <td><code>Diagnostics</code></td>
+                  <td>Lint status and line-level diagnostics stay visible after runtime readiness.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="rename-title">
+          <div class="section-header">
+            <h2 id="rename-title">Ticket 009A: Rename Active Buffer</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Decision</h3>
+              <p>
+                Add lightweight filename editing for the one active buffer. This is not file management; it only names the current
+                source before Save, Run, Lint, and JSON export.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Interaction</h3>
+              <p>
+                The filename in the Workbench header becomes editable. Click the filename to edit, press <strong>Enter</strong> to
+                commit, press <strong>Escape</strong> to cancel, and blur should commit if the value is valid.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Validation</h3>
+              <p>
+                Reject empty names. If the user omits the extension, append <code>.cnes</code>. Keep the input compact and avoid a
+                modal or file-management drawer.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Propagation</h3>
+              <p>
+                The renamed filename drives the header, <code>.cnes</code> download name, JSON download basename, and worker
+                <code>fileName</code> metadata. Opening a file still adopts the uploaded filename. New draft resets to
+                <code>untitled.cnes</code>.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="dark-mode-title">
+          <div class="section-header">
+            <h2 id="dark-mode-title">Ticket 009B: Default Dark Mode</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Decision</h3>
+              <p>
+                Make the product default to dark mode. CoNES Studio should feel like an IDE by default, and Monaco already uses a
+                dark editor theme.
+              </p>
+            </article>
+            <article class="component">
+              <h3>No Public Theme Toggle Yet</h3>
+              <p>
+                Do not add a visible theme switch in this pass. Theme control can come later if users ask for it. This ticket only
+                establishes the default product presentation.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Implementation Target</h3>
+              <p>
+                Update global design tokens and app surfaces so the Workbench, Results, Diagnostics, buttons, borders, and empty
+                states read as one coherent dark IDE. Avoid heavy gradients, decorative effects, or one-note purple/blue treatment.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Verification</h3>
+              <p>
+                Check desktop and mobile widths for contrast, button readability, Monaco framing, Results legibility, Diagnostics
+                severity states, and runtime-ready gate visibility.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="controls-title">
+          <div class="section-header">
+            <h2 id="controls-title">Controls</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Visible Controls</h3>
+              <p>
+                After runtime readiness, show only <strong>New</strong>, <strong>Open</strong>, <strong>Save</strong>,
+                <strong>Lint</strong>, <strong>Run</strong>, and <strong>JSON</strong>, plus inline filename editing. These map to
+                the active buffer and result export.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Runtime Gate</h3>
+              <p>
+                Before the Web Worker is ready, hide operational buttons and show a compact runtime loading state. Do not show
+                disabled controls that imply the user can act before the runtime is usable.
+              </p>
+            </article>
+            <article class="component">
+              <h3>File Management Boundary</h3>
+              <p>
+                <strong>Open</strong> means import one local <code>.cnes</code> file into the active buffer. <strong>Save</strong>
+                means download that buffer. Neither should imply a managed project, folder, or cloud workspace.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Noise Rule</h3>
+              <p>
+                Remove or hide explanatory copy that describes how the website works. The user should be able to operate from labels,
+                state, and familiar IDE controls.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="debug-title">
+          <div class="section-header">
+            <h2 id="debug-title">Debug Surfaces</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Hard-Coded Flag</h3>
+              <p>
+                Keep a hard-coded debug flag, currently <code>showDebugSurfaces = false</code>. Do not add a public toggle until
+                there is a clear user-facing need for it.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Hidden By Default</h3>
+              <p>
+                Hide <strong>Workspace</strong>, <strong>Tools</strong>, <strong>Docs</strong>, raw stdout/stderr, raw lint output,
+                runtime metadata, worker contract text, and runtime timing internals when debug is off.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Available For Development</h3>
+              <p>
+                When the flag is enabled, internal routes and raw output can return for debugging, verification, and agent review.
+                The flag is for development posture, not a public product feature.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Verification Update</h3>
+              <p>
+                Browser verification must understand both product mode and debug mode. Product mode should not fail because internal
+                tooling is hidden.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="scope-title">
+          <div class="section-header">
+            <h2 id="scope-title">Implementation Scope</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Area</th>
+                  <th>Modify</th>
+                  <th>Do Not Modify</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>App shell</td>
+                  <td>Apply CoNES Studio identity and simplify default chrome.</td>
+                  <td>Do not add new navigation surfaces or a landing page.</td>
+                </tr>
+                <tr>
+                  <td>Routes</td>
+                  <td>Keep debug-only routes hidden by default.</td>
+                  <td>Do not delete debug route code unless a later cleanup packet approves it.</td>
+                </tr>
+                <tr>
+                  <td>Workbench</td>
+                  <td>Tighten labels, action grouping, inline filename editing, runtime gate, results, diagnostics language, and dark-mode presentation.</td>
+                  <td>Do not change solve, lint, Monaco, source state, or result contracts.</td>
+                </tr>
+                <tr>
+                  <td>File actions</td>
+                  <td>Keep one-buffer import/export and rename language honest.</td>
+                  <td>Do not introduce project, folder, or multi-file concepts yet.</td>
+                </tr>
+                <tr>
+                  <td>Theme</td>
+                  <td>Set dark mode as the default product presentation.</td>
+                  <td>Do not add a public theme toggle in this packet.</td>
+                </tr>
+                <tr>
+                  <td>Runtime</td>
+                  <td>No expected runtime changes.</td>
+                  <td>Do not alter worker messages, argv, WASM artifacts, manifests, or CoNES core.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="guardrails-title">
+          <div class="section-header">
+            <h2 id="guardrails-title">Guardrails</h2>
+          </div>
+          <div class="section-body two-column">
+            <div class="callout warn">
+              <strong>Approval received</strong>
+              <p>
+                This spec sheet was the checkpoint before code. The current implementation pass should now be reviewed against the
+                approved CoNES Studio, one-buffer, and dark IDE direction.
+              </p>
+            </div>
+            <div class="callout risk">
+              <strong>No fake workspace</strong>
+              <p>
+                Do not call the product a workspace or project manager until it supports real project behavior.
+              </p>
+            </div>
+            <div class="callout ok">
+              <strong>Keep the engine stable</strong>
+              <p>
+                Preserve <code>["/work/input.cnes", "--json"]</code> for Run and
+                <code>["/work/input.cnes", "--lint", "--json"]</code> for Lint.
+              </p>
+            </div>
+            <div class="callout info">
+              <strong>Human review target</strong>
+              <p>
+                The review question is whether CoNES Studio, one-buffer honesty, and hidden debug surfaces match the desired product
+                direction.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="acceptance-title">
+          <div class="section-header">
+            <h2 id="acceptance-title">Acceptance Criteria</h2>
+          </div>
+          <div class="section-body">
+            <ul class="checklist">
+              <li><span class="box" aria-hidden="true"></span><span>Public product name is approved or replaced.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Default UI opens as a focused IDE, not a dashboard or planning surface.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Workspace, Tools, Docs, raw output, and runtime internals remain hidden unless debug is enabled.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Open and Save describe one active <code>.cnes</code> buffer, not project file management.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>The active filename can be renamed inline and propagates to Save, JSON export, and worker file metadata.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>The default product theme is dark, coherent with Monaco, and readable on desktop and mobile.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Runtime-ready gate remains in place before operational controls appear.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Run, Lint, Results, Diagnostics, and JSON export continue to work.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>No CoNES C++ core, WASM artifact, runtime manifest, or worker contract changes are introduced.</span></li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Packet owner: Scrum Lord. Packet status: implementation in review after human approval. Last updated: May 25, 2026.</p>
+    </main>
+  </body>
+</html>

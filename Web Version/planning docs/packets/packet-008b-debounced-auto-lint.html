@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 008B: Debounced Auto Lint</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 008B</p>
+        <h1>Debounced Auto Lint</h1>
+        <p class="summary">
+          Packet 008B turns the reviewed Packet 008A manual lint contract into a quiet automatic feedback loop after 008A is
+          implemented and accepted. Auto lint runs after the user pauses, ignores stale results, and never blocks typing.
+        </p>
+        <div class="meta-row" aria-label="Packet status">
+          <span class="tag accent">Implemented locally</span>
+          <span class="tag accent">Reuses 008A path</span>
+          <span class="tag accent">Uses lintSource</span>
+          <span class="tag">Debounced</span>
+          <span class="tag">Line-level markers</span>
+          <span class="tag">Stale-safe</span>
+          <span class="tag">Browser smoke added</span>
+          <span class="tag">No solve coupling</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="position-title">
+          <div class="section-header">
+            <h2 id="position-title">Position</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Opinionated Decision</h3>
+              <p>
+                Auto lint is allowed only after Packet 008A's manual lint path is implemented, verified, and human accepted. The
+                auto loop must feel helpful and quiet: no linting on every keystroke, no blocking the editor, and no flashing stale
+                diagnostics while the user is still typing.
+              </p>
+            </article>
+            <article class="component">
+              <h3>User Outcome</h3>
+              <p>
+                A user edits CoNES source and receives diagnostics after a short pause, while still keeping explicit Run and Lint
+                controls available.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="dependency-title">
+          <div class="section-header">
+            <h2 id="dependency-title">Dependency</h2>
+          </div>
+          <div class="section-body">
+            <div class="callout warn">
+              <strong>Implemented after 008A path</strong>
+              <p>
+                Packet 008B consumes the same manual lint API, normalized diagnostics, line-level Monaco marker path, and smoke
+                coverage created for Packet 008A. It does not add a second diagnostic contract.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="contract-title">
+          <div class="section-header">
+            <h2 id="contract-title">Inherited Contract</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Manual API Only</h3>
+              <p>
+                Auto lint calls the same <code>client.lintSource({ fileName, contents, lastModified })</code> path created by
+                Packet 008A. It does not add a second worker mode, second diagnostics adapter, or UI-supplied argv.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Fixed Lint Arguments</h3>
+              <p>
+                The worker lint path remains fixed at <code>["/work/input.cnes", "--lint", "--json"]</code>. Solve remains fixed at
+                <code>["/work/input.cnes", "--json"]</code>.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Marker Precision</h3>
+              <p>
+                Auto lint uses the same line-level Monaco markers as 008A. It must not claim column accuracy or invent columns from
+                parser text.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Raw Output</h3>
+              <p>
+                Raw lint stdout/stderr remains inspectable through the existing raw output affordance. Automatic diagnostics are a
+                view over lint output, not a replacement for it.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="mechanics-title">
+          <div class="section-header">
+            <h2 id="mechanics-title">Mechanics</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Mechanic</th>
+                  <th>Required Behavior</th>
+                  <th>Why</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Debounce</td>
+                  <td>Run lint 800-1200ms after the latest edit.</td>
+                  <td>Prevents noisy linting while the user is mid-expression.</td>
+                </tr>
+                <tr>
+                  <td>Stale result guard</td>
+                  <td>Attach a source revision or request token to each lint request and ignore older responses.</td>
+                  <td>Prevents old diagnostics from overwriting newer source state.</td>
+                </tr>
+                <tr>
+                  <td>Runtime readiness</td>
+                  <td>Auto lint only when runtime prewarm is ready, Packet 008A lint is available, and source is non-empty.</td>
+                  <td>Prevents automatic work from competing with initial runtime loading.</td>
+                </tr>
+                <tr>
+                  <td>Manual override</td>
+                  <td>The Lint button remains available and runs immediately.</td>
+                  <td>Users need explicit control even when auto lint exists.</td>
+                </tr>
+                <tr>
+                  <td>Run separation</td>
+                  <td>Run does not trigger auto lint and auto lint does not mutate solve state.</td>
+                  <td>Solve and diagnostics are different workflows.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="state-title">
+          <div class="section-header">
+            <h2 id="state-title">State Model</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Lint State</h3>
+              <pre><code>type AutoLintState =
+  | "off"
+  | "waiting"
+  | "linting"
+  | "clean"
+  | "warnings"
+  | "errors"
+  | "stale"
+  | "failed";</code></pre>
+            </article>
+            <article class="component">
+              <h3>Source Revision</h3>
+              <p>
+                Every source edit increments a revision. Lint results apply only if their revision matches the current source
+                revision when the response returns.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="ui-title">
+          <div class="section-header">
+            <h2 id="ui-title">UI Rules</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Quiet By Default</h3>
+              <p>
+                Auto lint status should be small. Use compact labels such as Waiting, Linting, Clean, or 3 errors. Do not add a
+                second large status banner.
+              </p>
+            </article>
+            <article class="component">
+              <h3>No Flicker</h3>
+              <p>
+                Existing diagnostics can remain visible while a new lint request is waiting. Replace them only when the current
+                revision returns.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Typing Wins</h3>
+              <p>
+                If lint work makes Monaco feel slow, the implementation is wrong. Auto lint must yield to editing.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Failure Handling</h3>
+              <p>
+                If lint itself fails, show a small lint-failed state and preserve raw diagnostics. Do not block Run, clear Results,
+                or make a lint failure look like a failed solve.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="verification-title">
+          <div class="section-header">
+            <h2 id="verification-title">Verification</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Required Commands</h3>
+              <pre><code>npm run verify:runtime-metadata
+npm run verify:runtime-data
+npm run build
+npm run verify:browser</code></pre>
+            </article>
+            <article class="component">
+              <h3>Browser Smoke</h3>
+              <p>
+                Browser smoke now edits source rapidly, waits for debounce, verifies the latest clean source wins, then clicks Run
+                to confirm solve behavior remains independent. Parent in-app browser smoke passed for clean auto-lint staying clean
+                through Run. The scripted <code>verify:browser</code> command still needs Chrome DevTools listening on
+                <code>127.0.0.1:9223</code>.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Inherited 008A Cases</h3>
+              <p>
+                Keep the 008A valid lint, parser-invalid lint, missing include lint, line-level marker, raw output, and solve matrix
+                cases passing after auto lint is enabled.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="accept-title">
+          <div class="section-header">
+            <h2 id="accept-title">Acceptance Criteria</h2>
+          </div>
+          <div class="section-body">
+            <ul class="checklist">
+              <li><span class="box done" aria-hidden="true"></span><span>Auto lint waits for a pause instead of running per keystroke.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Auto lint uses the Packet 008A <code>lintSource</code> path and fixed <code>--lint --json</code> argv.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Stale lint responses cannot overwrite current diagnostics.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Markers remain line-level and never invent column precision.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Manual Lint remains available.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Monaco editing remains responsive by debouncing and avoiding lint while Run is active.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Run remains separate and passes build/runtime plus parent in-app browser checks; scripted browser smoke awaits a DevTools-enabled Chrome session.</span></li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Packet owner: Scrum Lord. Packet status: implemented locally with Packet 008A; runtime metadata/data/build and parent in-app browser smoke pass; scripted DevTools browser smoke remains pending. Last updated: May 25, 2026.</p>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,1690 @@
+{
+  "version": "2026-05-24",
+  "kind": "cones-materials",
+  "count": 240,
+  "totalBytes": 2163600,
+  "mountRoot": "/app/materials",
+  "integrity": "sha256",
+  "files": [
+    {
+      "name": "Ethylene_Pr.cnesbin",
+      "bytes": 13452,
+      "sha256": "b0a3322e41db2f789fc6314df7075c6b2a6fac34a15004ca643fb4c9dc07063f",
+      "url": "/runtime-data/materials/Ethylene_Pr.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_Pr.cnesbin"
+    },
+    {
+      "name": "Ethylene_Psat.cnesbin",
+      "bytes": 1620,
+      "sha256": "94226f71c7898c2a2c28b0d3fb0ba74d550aea8e136c17c8dc2901545d69dd93",
+      "url": "/runtime-data/materials/Ethylene_Psat.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_Psat.cnesbin"
+    },
+    {
+      "name": "Ethylene_T_ph.cnesbin",
+      "bytes": 13452,
+      "sha256": "6dbeecffd7a96de11e7a765de2638526cc480754bb2b6d50b2118e673b9b47d1",
+      "url": "/runtime-data/materials/Ethylene_T_ph.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_T_ph.cnesbin"
+    },
+    {
+      "name": "Ethylene_T_ps.cnesbin",
+      "bytes": 13452,
+      "sha256": "032a39b46200cb419417eac8ac7a8930a5dee83a10d4d2b142d663f2204177dc",
+      "url": "/runtime-data/materials/Ethylene_T_ps.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_T_ps.cnesbin"
+    },
+    {
+      "name": "Ethylene_Tsat.cnesbin",
+      "bytes": 1620,
+      "sha256": "48c0b5fe990e6d573bdd18a9f69c322763cdbd4cda4853a50df2801e87fcef2b",
+      "url": "/runtime-data/materials/Ethylene_Tsat.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_Tsat.cnesbin"
+    },
+    {
+      "name": "Ethylene_h.cnesbin",
+      "bytes": 13452,
+      "sha256": "98b9c465390333b0926fbb56fdcebae5bae58f17b2c15f164945247cc25ddf4c",
+      "url": "/runtime-data/materials/Ethylene_h.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_h.cnesbin"
+    },
+    {
+      "name": "Ethylene_hf.cnesbin",
+      "bytes": 1620,
+      "sha256": "2382b930b3bcd0036921a76dd803af4e7c79103aa92aa1b6f3e45a3304d31de0",
+      "url": "/runtime-data/materials/Ethylene_hf.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_hf.cnesbin"
+    },
+    {
+      "name": "Ethylene_hg.cnesbin",
+      "bytes": 1620,
+      "sha256": "04c9cf031c9a830bec796e5be76b6abbdaa1318277fd370201897e7062dd988b",
+      "url": "/runtime-data/materials/Ethylene_hg.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_hg.cnesbin"
+    },
+    {
+      "name": "Ethylene_k.cnesbin",
+      "bytes": 13452,
+      "sha256": "b0a3322e41db2f789fc6314df7075c6b2a6fac34a15004ca643fb4c9dc07063f",
+      "url": "/runtime-data/materials/Ethylene_k.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_k.cnesbin"
+    },
+    {
+      "name": "Ethylene_mu.cnesbin",
+      "bytes": 13452,
+      "sha256": "b0a3322e41db2f789fc6314df7075c6b2a6fac34a15004ca643fb4c9dc07063f",
+      "url": "/runtime-data/materials/Ethylene_mu.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_mu.cnesbin"
+    },
+    {
+      "name": "Ethylene_rho.cnesbin",
+      "bytes": 13452,
+      "sha256": "8709c58c425b46d2a556b4097a9b0f4cdbc0456ce9bd2f0009dc9baf4d544d82",
+      "url": "/runtime-data/materials/Ethylene_rho.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_rho.cnesbin"
+    },
+    {
+      "name": "Ethylene_s.cnesbin",
+      "bytes": 13452,
+      "sha256": "eced712b32a79f220279b2063110f70126cbf808428efe74e6864487ae2ecd1f",
+      "url": "/runtime-data/materials/Ethylene_s.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_s.cnesbin"
+    },
+    {
+      "name": "Ethylene_sf.cnesbin",
+      "bytes": 1620,
+      "sha256": "b0abb8aedfd2d4d6e5ddd4b30414acfc7c079b35657ec589e96c42ebd17369b2",
+      "url": "/runtime-data/materials/Ethylene_sf.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_sf.cnesbin"
+    },
+    {
+      "name": "Ethylene_sg.cnesbin",
+      "bytes": 1620,
+      "sha256": "4ca480c8baad8e5f97075d136dc895b85c49d98baf091dc10fc3fe9a201a6413",
+      "url": "/runtime-data/materials/Ethylene_sg.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_sg.cnesbin"
+    },
+    {
+      "name": "Ethylene_u.cnesbin",
+      "bytes": 13452,
+      "sha256": "2e9df409c1409b48ff1a53e7ded0fae01b27d95127e23d25ad2d08e9d6b251dd",
+      "url": "/runtime-data/materials/Ethylene_u.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_u.cnesbin"
+    },
+    {
+      "name": "Ethylene_v.cnesbin",
+      "bytes": 13452,
+      "sha256": "57d901ae00d420c8b8c2e883f34d7358743f5098a30726d8d333d07c42817894",
+      "url": "/runtime-data/materials/Ethylene_v.cnesbin",
+      "vfsPath": "/app/materials/Ethylene_v.cnesbin"
+    },
+    {
+      "name": "Isobutane_Pr.cnesbin",
+      "bytes": 13452,
+      "sha256": "dd22e28359cc3ad50bace44ea9a1e9c6f187d23717b39039de248abc06d916f6",
+      "url": "/runtime-data/materials/Isobutane_Pr.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_Pr.cnesbin"
+    },
+    {
+      "name": "Isobutane_Psat.cnesbin",
+      "bytes": 1620,
+      "sha256": "7f7721062d333f80bcdb5e5564e0757910d4872acbe18ef925d6d28d9ed3914f",
+      "url": "/runtime-data/materials/Isobutane_Psat.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_Psat.cnesbin"
+    },
+    {
+      "name": "Isobutane_T_ph.cnesbin",
+      "bytes": 13452,
+      "sha256": "74767f030340f89f4b3bfedc55810385c672f3767040b9050e664f772d496903",
+      "url": "/runtime-data/materials/Isobutane_T_ph.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_T_ph.cnesbin"
+    },
+    {
+      "name": "Isobutane_T_ps.cnesbin",
+      "bytes": 13452,
+      "sha256": "8bbe2454375707cacdc28e87d952beabc2b17ac5b8ec4613b305a818de7249ff",
+      "url": "/runtime-data/materials/Isobutane_T_ps.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_T_ps.cnesbin"
+    },
+    {
+      "name": "Isobutane_Tsat.cnesbin",
+      "bytes": 1620,
+      "sha256": "7cca47835250693a4f4304d99fd4489b2df778c6aa59c5082e1d6284253f43cf",
+      "url": "/runtime-data/materials/Isobutane_Tsat.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_Tsat.cnesbin"
+    },
+    {
+      "name": "Isobutane_h.cnesbin",
+      "bytes": 13452,
+      "sha256": "6219ce3b729be631ba1ada7018d500e3dffc47ae2251b511a48cbf2d55049c3b",
+      "url": "/runtime-data/materials/Isobutane_h.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_h.cnesbin"
+    },
+    {
+      "name": "Isobutane_hf.cnesbin",
+      "bytes": 1620,
+      "sha256": "9aa231b7126b93e3155926cd2aac24b2ac45935db14fc03e8e1f6d475e624760",
+      "url": "/runtime-data/materials/Isobutane_hf.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_hf.cnesbin"
+    },
+    {
+      "name": "Isobutane_hg.cnesbin",
+      "bytes": 1620,
+      "sha256": "c8fffbce3f50e088138a8123a01cb230260846b685d562c69a096a1b5abbd853",
+      "url": "/runtime-data/materials/Isobutane_hg.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_hg.cnesbin"
+    },
+    {
+      "name": "Isobutane_k.cnesbin",
+      "bytes": 13452,
+      "sha256": "5847236a347ca86619d3a73672a6cc7a85055b4b385d364f61436e95b83afcd7",
+      "url": "/runtime-data/materials/Isobutane_k.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_k.cnesbin"
+    },
+    {
+      "name": "Isobutane_mu.cnesbin",
+      "bytes": 13452,
+      "sha256": "e08d117e3aac0e171c444c499ae9f0c605526feb3207e4b2b89ce4a31d5d0ccc",
+      "url": "/runtime-data/materials/Isobutane_mu.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_mu.cnesbin"
+    },
+    {
+      "name": "Isobutane_rho.cnesbin",
+      "bytes": 13452,
+      "sha256": "271f49e36b0797793fec91101de93ce72443d77546deefaeb4305a6c196aab03",
+      "url": "/runtime-data/materials/Isobutane_rho.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_rho.cnesbin"
+    },
+    {
+      "name": "Isobutane_s.cnesbin",
+      "bytes": 13452,
+      "sha256": "caf44a7bc3c477801139b23a7bed540113c2c23d4a570d4a0313ea0d73fd59ed",
+      "url": "/runtime-data/materials/Isobutane_s.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_s.cnesbin"
+    },
+    {
+      "name": "Isobutane_sf.cnesbin",
+      "bytes": 1620,
+      "sha256": "abfe9be93b931bd660b159ba8b05070f4e4afba1d6ca1c674cc54fc2cdb3182f",
+      "url": "/runtime-data/materials/Isobutane_sf.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_sf.cnesbin"
+    },
+    {
+      "name": "Isobutane_sg.cnesbin",
+      "bytes": 1620,
+      "sha256": "46c849d16a909c41a17b463038ab0f663f54ac552806e32106ed8a7ff82423de",
+      "url": "/runtime-data/materials/Isobutane_sg.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_sg.cnesbin"
+    },
+    {
+      "name": "Isobutane_u.cnesbin",
+      "bytes": 13452,
+      "sha256": "3274c11b547610ac4311d52d5936c62b01c857d0249e4188d52fd727dd8e94f7",
+      "url": "/runtime-data/materials/Isobutane_u.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_u.cnesbin"
+    },
+    {
+      "name": "Isobutane_v.cnesbin",
+      "bytes": 13452,
+      "sha256": "12a36b2c2b57f3d7241f6b610922734615ca4a42f6326342832ddef3760229a5",
+      "url": "/runtime-data/materials/Isobutane_v.cnesbin",
+      "vfsPath": "/app/materials/Isobutane_v.cnesbin"
+    },
+    {
+      "name": "Methanol_Pr.cnesbin",
+      "bytes": 13452,
+      "sha256": "c577571d4b9fa84d72b366aca4d5fdfb66b9bd2d8b921c5cb16730e1de30a4b8",
+      "url": "/runtime-data/materials/Methanol_Pr.cnesbin",
+      "vfsPath": "/app/materials/Methanol_Pr.cnesbin"
+    },
+    {
+      "name": "Methanol_Psat.cnesbin",
+      "bytes": 1620,
+      "sha256": "cd6df24cb6499db799e787bd6e037e0d5ba7ad82220ec80bc5260f79e90387ea",
+      "url": "/runtime-data/materials/Methanol_Psat.cnesbin",
+      "vfsPath": "/app/materials/Methanol_Psat.cnesbin"
+    },
+    {
+      "name": "Methanol_T_ph.cnesbin",
+      "bytes": 13452,
+      "sha256": "086ba06614b0bb90bfcebb48c397cff3e5aeea72321502acd440b3b7645d3385",
+      "url": "/runtime-data/materials/Methanol_T_ph.cnesbin",
+      "vfsPath": "/app/materials/Methanol_T_ph.cnesbin"
+    },
+    {
+      "name": "Methanol_T_ps.cnesbin",
+      "bytes": 13452,
+      "sha256": "ecbdcceeb17fd480c53ed6e60283a8a1b0b1566e005390f41ae9ccda9a085fc1",
+      "url": "/runtime-data/materials/Methanol_T_ps.cnesbin",
+      "vfsPath": "/app/materials/Methanol_T_ps.cnesbin"
+    },
+    {
+      "name": "Methanol_Tsat.cnesbin",
+      "bytes": 1620,
+      "sha256": "3ee21825f05e80d086be711b780fe90caf4e1d18da4566b69a9dfd9b09145982",
+      "url": "/runtime-data/materials/Methanol_Tsat.cnesbin",
+      "vfsPath": "/app/materials/Methanol_Tsat.cnesbin"
+    },
+    {
+      "name": "Methanol_h.cnesbin",
+      "bytes": 13452,
+      "sha256": "197182a1f8bf376c5cf8a95bb6013b37d5a2e67fb866b3da42201b886e0c78a5",
+      "url": "/runtime-data/materials/Methanol_h.cnesbin",
+      "vfsPath": "/app/materials/Methanol_h.cnesbin"
+    },
+    {
+      "name": "Methanol_hf.cnesbin",
+      "bytes": 1620,
+      "sha256": "d7666e4e10511a0a0cb9fc73a7eec22dd2cf0248cad0dc14debd46871ef4774e",
+      "url": "/runtime-data/materials/Methanol_hf.cnesbin",
+      "vfsPath": "/app/materials/Methanol_hf.cnesbin"
+    },
+    {
+      "name": "Methanol_hg.cnesbin",
+      "bytes": 1620,
+      "sha256": "b1e5c0c1df72f834230a4f3403a16b2a34eb9cdd339a62a565b7d37327cddd34",
+      "url": "/runtime-data/materials/Methanol_hg.cnesbin",
+      "vfsPath": "/app/materials/Methanol_hg.cnesbin"
+    },
+    {
+      "name": "Methanol_k.cnesbin",
+      "bytes": 13452,
+      "sha256": "f90a025dde51c162e1849b8c1d0e7d422ac96e434cdcc63bed44017ebae5a7fc",
+      "url": "/runtime-data/materials/Methanol_k.cnesbin",
+      "vfsPath": "/app/materials/Methanol_k.cnesbin"
+    },
+    {
+      "name": "Methanol_mu.cnesbin",
+      "bytes": 13452,
+      "sha256": "4090ecb0de78e6b2f487bd1c186ca71a259aecf21fc1a3e01dceb2173f8a39d5",
+      "url": "/runtime-data/materials/Methanol_mu.cnesbin",
+      "vfsPath": "/app/materials/Methanol_mu.cnesbin"
+    },
+    {
+      "name": "Methanol_rho.cnesbin",
+      "bytes": 13452,
+      "sha256": "6008db1810d431a27652fcd28fa641c2a209ce782847828a8d34a5e766c1d54d",
+      "url": "/runtime-data/materials/Methanol_rho.cnesbin",
+      "vfsPath": "/app/materials/Methanol_rho.cnesbin"
+    },
+    {
+      "name": "Methanol_s.cnesbin",
+      "bytes": 13452,
+      "sha256": "3a0d1a346bfdaaff7c9c1762a90a3d993a0b6fae1e47cf10dd1158a3e648d2f9",
+      "url": "/runtime-data/materials/Methanol_s.cnesbin",
+      "vfsPath": "/app/materials/Methanol_s.cnesbin"
+    },
+    {
+      "name": "Methanol_sf.cnesbin",
+      "bytes": 1620,
+      "sha256": "12d3cc9c2c8718083eeec2f8306e6bac5c920a6222ca77f3946518d3240fe201",
+      "url": "/runtime-data/materials/Methanol_sf.cnesbin",
+      "vfsPath": "/app/materials/Methanol_sf.cnesbin"
+    },
+    {
+      "name": "Methanol_sg.cnesbin",
+      "bytes": 1620,
+      "sha256": "d04e5886870ab38586c17761f304cb31aa33e35c8bb884b4e87d131160e557e7",
+      "url": "/runtime-data/materials/Methanol_sg.cnesbin",
+      "vfsPath": "/app/materials/Methanol_sg.cnesbin"
+    },
+    {
+      "name": "Methanol_u.cnesbin",
+      "bytes": 13452,
+      "sha256": "1e17503d2532435d3b05d76133c6b1f507437f7037cd179f114c619df432d1ec",
+      "url": "/runtime-data/materials/Methanol_u.cnesbin",
+      "vfsPath": "/app/materials/Methanol_u.cnesbin"
+    },
+    {
+      "name": "Methanol_v.cnesbin",
+      "bytes": 13452,
+      "sha256": "5590c51efbd456154ef43413b5d778071343d0f4d643cfc7cac5a79aa8e12966",
+      "url": "/runtime-data/materials/Methanol_v.cnesbin",
+      "vfsPath": "/app/materials/Methanol_v.cnesbin"
+    },
+    {
+      "name": "R1234yf_Pr.cnesbin",
+      "bytes": 13452,
+      "sha256": "b6edb52c6bca35492dbd427cdcdd4d18a0cf071c03c8ec14691b7d23d5aebc10",
+      "url": "/runtime-data/materials/R1234yf_Pr.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_Pr.cnesbin"
+    },
+    {
+      "name": "R1234yf_Psat.cnesbin",
+      "bytes": 1620,
+      "sha256": "91f1df6ddb9f6d64b04314cbe2c95461abae5040d9a32bddaa5b694d7d84cfd1",
+      "url": "/runtime-data/materials/R1234yf_Psat.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_Psat.cnesbin"
+    },
+    {
+      "name": "R1234yf_T_ph.cnesbin",
+      "bytes": 13452,
+      "sha256": "760538fc69b3aa32d11c04464a0ced9f870ce07a12c845f296fff971ef469dfe",
+      "url": "/runtime-data/materials/R1234yf_T_ph.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_T_ph.cnesbin"
+    },
+    {
+      "name": "R1234yf_T_ps.cnesbin",
+      "bytes": 13452,
+      "sha256": "1d6ec47f140a341f0c6455486f14bb9b2812d80d02d1dbe5a285dc569a520515",
+      "url": "/runtime-data/materials/R1234yf_T_ps.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_T_ps.cnesbin"
+    },
+    {
+      "name": "R1234yf_Tsat.cnesbin",
+      "bytes": 1620,
+      "sha256": "05f459cae73690c3c4320142df06b900049538d7e8a7dddecbdc2654d04da75c",
+      "url": "/runtime-data/materials/R1234yf_Tsat.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_Tsat.cnesbin"
+    },
+    {
+      "name": "R1234yf_h.cnesbin",
+      "bytes": 13452,
+      "sha256": "93fe970c86222c1e58da6296c3979b00bce04564301fe46b1e1c2f6077e03492",
+      "url": "/runtime-data/materials/R1234yf_h.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_h.cnesbin"
+    },
+    {
+      "name": "R1234yf_hf.cnesbin",
+      "bytes": 1620,
+      "sha256": "985677b1fa4b90cc616c98182ff5b5f6dc309f2e82640968a33599ffe307b188",
+      "url": "/runtime-data/materials/R1234yf_hf.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_hf.cnesbin"
+    },
+    {
+      "name": "R1234yf_hg.cnesbin",
+      "bytes": 1620,
+      "sha256": "bbbbfa98b52c7bc7525ecc7889dd03755b953f007f85ed4c20c80ed738024509",
+      "url": "/runtime-data/materials/R1234yf_hg.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_hg.cnesbin"
+    },
+    {
+      "name": "R1234yf_k.cnesbin",
+      "bytes": 13452,
+      "sha256": "2a04a90af453b33dd5cccfe0b534ec26e732934c6cc90bbb5d87b2a17215f0fc",
+      "url": "/runtime-data/materials/R1234yf_k.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_k.cnesbin"
+    },
+    {
+      "name": "R1234yf_mu.cnesbin",
+      "bytes": 13452,
+      "sha256": "52aacbe245402b5d4adaf5e543505a0f33f91341930414228068fb0ab30f656c",
+      "url": "/runtime-data/materials/R1234yf_mu.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_mu.cnesbin"
+    },
+    {
+      "name": "R1234yf_rho.cnesbin",
+      "bytes": 13452,
+      "sha256": "886ba999791493d3e20021ca956ac61c6bac8bfdab4855f0fd6b86653a1d00a7",
+      "url": "/runtime-data/materials/R1234yf_rho.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_rho.cnesbin"
+    },
+    {
+      "name": "R1234yf_s.cnesbin",
+      "bytes": 13452,
+      "sha256": "db32c816f7ad290759e21a0b0f8e2fb090bccce81899f7755afe504907f3d7f5",
+      "url": "/runtime-data/materials/R1234yf_s.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_s.cnesbin"
+    },
+    {
+      "name": "R1234yf_sf.cnesbin",
+      "bytes": 1620,
+      "sha256": "6b45e64a48ad6a2c1236b86aff6835f43d7df56a0d6108225db9e63eabe493c4",
+      "url": "/runtime-data/materials/R1234yf_sf.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_sf.cnesbin"
+    },
+    {
+      "name": "R1234yf_sg.cnesbin",
+      "bytes": 1620,
+      "sha256": "549b295cd2d76c9d5afa5530d78c8be2d601e234ea57089eaec0a31dc693d70d",
+      "url": "/runtime-data/materials/R1234yf_sg.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_sg.cnesbin"
+    },
+    {
+      "name": "R1234yf_u.cnesbin",
+      "bytes": 13452,
+      "sha256": "ab0e8e2e153f9a6fde83e6e4ef775b50544e85c963f3500aed38d9b70f84ae3e",
+      "url": "/runtime-data/materials/R1234yf_u.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_u.cnesbin"
+    },
+    {
+      "name": "R1234yf_v.cnesbin",
+      "bytes": 13452,
+      "sha256": "2272303486806d523c1106aa9ac07fb6583e2745a6a6b6d183069f5e8f08f9e4",
+      "url": "/runtime-data/materials/R1234yf_v.cnesbin",
+      "vfsPath": "/app/materials/R1234yf_v.cnesbin"
+    },
+    {
+      "name": "R125_Pr.cnesbin",
+      "bytes": 13452,
+      "sha256": "e4d36fd9addc57b70d44186c389cb9b1849e274db4caad4cebb54e3177096b4f",
+      "url": "/runtime-data/materials/R125_Pr.cnesbin",
+      "vfsPath": "/app/materials/R125_Pr.cnesbin"
+    },
+    {
+      "name": "R125_Psat.cnesbin",
+      "bytes": 1620,
+      "sha256": "d232149f4e2f542cba085fee8046724681f99b06eef53df5d3afde7e506e260e",
+      "url": "/runtime-data/materials/R125_Psat.cnesbin",
+      "vfsPath": "/app/materials/R125_Psat.cnesbin"
+    },
+    {
+      "name": "R125_T_ph.cnesbin",
+      "bytes": 13452,
+      "sha256": "bc2287f1b2726ac8768ff673cb3af894b6d7faaa4776e81bf74f1a3d5194203c",
+      "url": "/runtime-data/materials/R125_T_ph.cnesbin",
+      "vfsPath": "/app/materials/R125_T_ph.cnesbin"
+    },
+    {
+      "name": "R125_T_ps.cnesbin",
+      "bytes": 13452,
+      "sha256": "7b61e81c06ceeb1c1f9e93f22f77240b3b6ccaad2cbc3939b088244cc8a8a95f",
+      "url": "/runtime-data/materials/R125_T_ps.cnesbin",
+      "vfsPath": "/app/materials/R125_T_ps.cnesbin"
+    },
+    {
+      "name": "R125_Tsat.cnesbin",
+      "bytes": 1620,
+      "sha256": "8b0dd2c73bdc72ff94d2e582201e1bb89c18bf918c8f80eb996ebfe891074038",
+      "url": "/runtime-data/materials/R125_Tsat.cnesbin",
+      "vfsPath": "/app/materials/R125_Tsat.cnesbin"
+    },
+    {
+      "name": "R125_h.cnesbin",
+      "bytes": 13452,
+      "sha256": "cd4ab5f77f76bd7eb3121f49594efa648a49dde823d7377032d37669e9c0e995",
+      "url": "/runtime-data/materials/R125_h.cnesbin",
+      "vfsPath": "/app/materials/R125_h.cnesbin"
+    },
+    {
+      "name": "R125_hf.cnesbin",
+      "bytes": 1620,
+      "sha256": "88aa9257b10f5f625847a0a6ee1fa888ca0563ed3201f99195277c2b7394c856",
+      "url": "/runtime-data/materials/R125_hf.cnesbin",
+      "vfsPath": "/app/materials/R125_hf.cnesbin"
+    },
+    {
+      "name": "R125_hg.cnesbin",
+      "bytes": 1620,
+      "sha256": "a711d19df1ee967cbb586dc094e38db6df2ce9c90e2f0204b65817d6bebae65f",
+      "url": "/runtime-data/materials/R125_hg.cnesbin",
+      "vfsPath": "/app/materials/R125_hg.cnesbin"
+    },
+    {
+      "name": "R125_k.cnesbin",
+      "bytes": 13452,
+      "sha256": "2d5c328895ea0082489b9d76e239c3bf236f19ce98a29c299a25904b90008ec9",
+      "url": "/runtime-data/materials/R125_k.cnesbin",
+      "vfsPath": "/app/materials/R125_k.cnesbin"
+    },
+    {
+      "name": "R125_mu.cnesbin",
+      "bytes": 13452,
+      "sha256": "d6cdbec8c0633046a8b6b8df7d7efccf0ca8f2bda0910d103fe80f4ab6bae839",
+      "url": "/runtime-data/materials/R125_mu.cnesbin",
+      "vfsPath": "/app/materials/R125_mu.cnesbin"
+    },
+    {
+      "name": "R125_rho.cnesbin",
+      "bytes": 13452,
+      "sha256": "05e876ce07dfa97c189f3bdc6c5eac5a87c96dd6a103654954e64c3e41141b7f",
+      "url": "/runtime-data/materials/R125_rho.cnesbin",
+      "vfsPath": "/app/materials/R125_rho.cnesbin"
+    },
+    {
+      "name": "R125_s.cnesbin",
+      "bytes": 13452,
+      "sha256": "d76ecfdf20bf5b7dc0e497e1d1f9abefa7b75e739deaa4533f3b1dfc38a5fb75",
+      "url": "/runtime-data/materials/R125_s.cnesbin",
+      "vfsPath": "/app/materials/R125_s.cnesbin"
+    },
+    {
+      "name": "R125_sf.cnesbin",
+      "bytes": 1620,
+      "sha256": "c8c774d4c364603c30f3c62dea4f3bc4dd21cedcfc9cdd4b7da410a13f696545",
+      "url": "/runtime-data/materials/R125_sf.cnesbin",
+      "vfsPath": "/app/materials/R125_sf.cnesbin"
+    },
+    {
+      "name": "R125_sg.cnesbin",
+      "bytes": 1620,
+      "sha256": "1bb05be2a9dc2b1544359e0e1017c798034aa80388872e1b16ae16be59836cfe",
+      "url": "/runtime-data/materials/R125_sg.cnesbin",
+      "vfsPath": "/app/materials/R125_sg.cnesbin"
+    },
+    {
+      "name": "R125_u.cnesbin",
+      "bytes": 13452,
+      "sha256": "7262adbf1ace5d1a981c1c181e4fef0fa3bd2fe63689e62a2198c1ebbc6a319c",
+      "url": "/runtime-data/materials/R125_u.cnesbin",
+      "vfsPath": "/app/materials/R125_u.cnesbin"
+    },
+    {
+      "name": "R125_v.cnesbin",
+      "bytes": 13452,
+      "sha256": "04c9ff8076db1c2cdbebd5d384eda1f3aa3055c163f749f5f226c82d027c40c1",
+      "url": "/runtime-data/materials/R125_v.cnesbin",
+      "vfsPath": "/app/materials/R125_v.cnesbin"
+    },
+    {
+      "name": "R12_Pr.cnesbin",
+      "bytes": 13452,
+      "sha256": "5e910a47fd9b421443fd471212afa961ae1c70ea370fee16625bc551cffef8e4",
+      "url": "/runtime-data/materials/R12_Pr.cnesbin",
+      "vfsPath": "/app/materials/R12_Pr.cnesbin"
+    },
+    {
+      "name": "R12_Psat.cnesbin",
+      "bytes": 1620,
+      "sha256": "13fd51259b2784b0b05d7979bdaca8bc6d3f7414962a7212534c3769035df47e",
+      "url": "/runtime-data/materials/R12_Psat.cnesbin",
+      "vfsPath": "/app/materials/R12_Psat.cnesbin"
+    },
+    {
+      "name": "R12_T_ph.cnesbin",
+      "bytes": 13452,
+      "sha256": "9d0e8c591960f853dd608267fe6a161f22a4ab0cae500d0ee9b00aa204d03b30",
+      "url": "/runtime-data/materials/R12_T_ph.cnesbin",
+      "vfsPath": "/app/materials/R12_T_ph.cnesbin"
+    },
+    {
+      "name": "R12_T_ps.cnesbin",
+      "bytes": 13452,
+      "sha256": "f48ab992ed975db474d5122f1b387fc083faadd6f080f5ba705d8fb37ae0faf3",
+      "url": "/runtime-data/materials/R12_T_ps.cnesbin",
+      "vfsPath": "/app/materials/R12_T_ps.cnesbin"
+    },
+    {
+      "name": "R12_Tsat.cnesbin",
+      "bytes": 1620,
+      "sha256": "47a4ace594de3a621af74245a89870ba40646a119ecc94e196e3df485b3ca702",
+      "url": "/runtime-data/materials/R12_Tsat.cnesbin",
+      "vfsPath": "/app/materials/R12_Tsat.cnesbin"
+    },
+    {
+      "name": "R12_h.cnesbin",
+      "bytes": 13452,
+      "sha256": "93fcb678f1bf9d1a632888702f37a7679d2fd182f3069380d607fae4037b67c8",
+      "url": "/runtime-data/materials/R12_h.cnesbin",
+      "vfsPath": "/app/materials/R12_h.cnesbin"
+    },
+    {
+      "name": "R12_hf.cnesbin",
+      "bytes": 1620,
+      "sha256": "4ce01e78746af070086c0759f54812524e8fed9ee2da225a6f4f538c71e5c218",
+      "url": "/runtime-data/materials/R12_hf.cnesbin",
+      "vfsPath": "/app/materials/R12_hf.cnesbin"
+    },
+    {
+      "name": "R12_hg.cnesbin",
+      "bytes": 1620,
+      "sha256": "5d4b334411905ef87eb72d31d76e1a876a9eedcafd74e2e78443ae256b3c8b9f",
+      "url": "/runtime-data/materials/R12_hg.cnesbin",
+      "vfsPath": "/app/materials/R12_hg.cnesbin"
+    },
+    {
+      "name": "R12_k.cnesbin",
+      "bytes": 13452,
+      "sha256": "14078ab7f4a7e1a6da53a1c501f14e07cac9a14dab3c2c4958b5af88f4477435",
+      "url": "/runtime-data/materials/R12_k.cnesbin",
+      "vfsPath": "/app/materials/R12_k.cnesbin"
+    },
+    {
+      "name": "R12_mu.cnesbin",
+      "bytes": 13452,
+      "sha256": "218275bc25c6e3050d0b8401e59b15eb9e55dc3b96e9220e0a5e36558f30863b",
+      "url": "/runtime-data/materials/R12_mu.cnesbin",
+      "vfsPath": "/app/materials/R12_mu.cnesbin"
+    },
+    {
+      "name": "R12_rho.cnesbin",
+      "bytes": 13452,
+      "sha256": "da5a47a3a2226700c46d288a92b4e622e28930b39dfe6ce58d701149c15a0622",
+      "url": "/runtime-data/materials/R12_rho.cnesbin",
+      "vfsPath": "/app/materials/R12_rho.cnesbin"
+    },
+    {
+      "name": "R12_s.cnesbin",
+      "bytes": 13452,
+      "sha256": "7f1d71f7e505bc8464ac2e421080b9a3ef4ce5bea7f4931c6b299796163ed505",
+      "url": "/runtime-data/materials/R12_s.cnesbin",
+      "vfsPath": "/app/materials/R12_s.cnesbin"
+    },
+    {
+      "name": "R12_sf.cnesbin",
+      "bytes": 1620,
+      "sha256": "5fe74c753d6fb097a6ddec94df19dc40432b11ec866b2834e04a9cf3854c685c",
+      "url": "/runtime-data/materials/R12_sf.cnesbin",
+      "vfsPath": "/app/materials/R12_sf.cnesbin"
+    },
+    {
+      "name": "R12_sg.cnesbin",
+      "bytes": 1620,
+      "sha256": "ec55b38ee03678e72406f763f469b3e3cf7e3fc2fc8f236a15fbecd1f6a0626f",
+      "url": "/runtime-data/materials/R12_sg.cnesbin",
+      "vfsPath": "/app/materials/R12_sg.cnesbin"
+    },
+    {
+      "name": "R12_u.cnesbin",
+      "bytes": 13452,
+      "sha256": "3d12bdd6a9a5b42172e45f5e44bf925dc90abe2b85e7e2c9038889ec34ffb951",
+      "url": "/runtime-data/materials/R12_u.cnesbin",
+      "vfsPath": "/app/materials/R12_u.cnesbin"
+    },
+    {
+      "name": "R12_v.cnesbin",
+      "bytes": 13452,
+      "sha256": "b1656fb073e5f55a893d76700f565aa064efd7407ba9216b51115b29ecc14ff8",
+      "url": "/runtime-data/materials/R12_v.cnesbin",
+      "vfsPath": "/app/materials/R12_v.cnesbin"
+    },
+    {
+      "name": "R134a_Pr.cnesbin",
+      "bytes": 13452,
+      "sha256": "6ca5b87d9957d1784c9b83643ef2c51a534ad3508f8d1283d500e8ba466b7979",
+      "url": "/runtime-data/materials/R134a_Pr.cnesbin",
+      "vfsPath": "/app/materials/R134a_Pr.cnesbin"
+    },
+    {
+      "name": "R134a_Psat.cnesbin",
+      "bytes": 1620,
+      "sha256": "05ea4672afd03a745a3dba2acfc2678fadfbd77590f2ad9cf72942789e4e3954",
+      "url": "/runtime-data/materials/R134a_Psat.cnesbin",
+      "vfsPath": "/app/materials/R134a_Psat.cnesbin"
+    },
+    {
+      "name": "R134a_T_ph.cnesbin",
+      "bytes": 13452,
+      "sha256": "bcb343c6f68b7c62968e4bb03ab51df41dce1cf51f5bbce01f2543ba49d02e0a",
+      "url": "/runtime-data/materials/R134a_T_ph.cnesbin",
+      "vfsPath": "/app/materials/R134a_T_ph.cnesbin"
+    },
+    {
+      "name": "R134a_T_ps.cnesbin",
+      "bytes": 13452,
+      "sha256": "82aed26a334d4a1ec119321010fdf3088b3a76e8cdcd644d8de9293503734224",
+      "url": "/runtime-data/materials/R134a_T_ps.cnesbin",
+      "vfsPath": "/app/materials/R134a_T_ps.cnesbin"
+    },
+    {
+      "name": "R134a_Tsat.cnesbin",
+      "bytes": 1620,
+      "sha256": "6b69ccb7be2d2e6cefa870dedb91ed239c8c4e57f510b57295f85eef389458f9",
+      "url": "/runtime-data/materials/R134a_Tsat.cnesbin",
+      "vfsPath": "/app/materials/R134a_Tsat.cnesbin"
+    },
+    {
+      "name": "R134a_h.cnesbin",
+      "bytes": 13452,
+      "sha256": "31ac229760fbb2aa9a4114f54a4e7ca6e752ea4e6c266364eb9f53627a647b73",
+      "url": "/runtime-data/materials/R134a_h.cnesbin",
+      "vfsPath": "/app/materials/R134a_h.cnesbin"
+    },
+    {
+      "name": "R134a_hf.cnesbin",
+      "bytes": 1620,
+      "sha256": "fd167edc290b403943c69809356689bcce175836fbd02112a2ed6cdc6a92a6ad",
+      "url": "/runtime-data/materials/R134a_hf.cnesbin",
+      "vfsPath": "/app/materials/R134a_hf.cnesbin"
+    },
+    {
+      "name": "R134a_hg.cnesbin",
+      "bytes": 1620,
+      "sha256": "e7c5e90fc0c87d25f231393137329042f769eb0d26d062456dfd77aae2700130",
+      "url": "/runtime-data/materials/R134a_hg.cnesbin",
+      "vfsPath": "/app/materials/R134a_hg.cnesbin"
+    },
+    {
+      "name": "R134a_k.cnesbin",
+      "bytes": 13452,
+      "sha256": "7b80ee5de93399a628c9516462280eb2b6090fba260bd9b4cd14f36c3aa18b63",
+      "url": "/runtime-data/materials/R134a_k.cnesbin",
+      "vfsPath": "/app/materials/R134a_k.cnesbin"
+    },
+    {
+      "name": "R134a_mu.cnesbin",
+      "bytes": 13452,
+      "sha256": "2bf7f3833945caa1730c63d1eb27b397e40e78e1507a7ed03b147d7d53061aa9",
+      "url": "/runtime-data/materials/R134a_mu.cnesbin",
+      "vfsPath": "/app/materials/R134a_mu.cnesbin"
+    },
+    {
+      "name": "R134a_rho.cnesbin",
+      "bytes": 13452,
+      "sha256": "dedf42e49cb0f4db2431a4e5f42dc7214bc84ace8dbfeaba28916c1a1a12fb36",
+      "url": "/runtime-data/materials/R134a_rho.cnesbin",
+      "vfsPath": "/app/materials/R134a_rho.cnesbin"
+    },
+    {
+      "name": "R134a_s.cnesbin",
+      "bytes": 13452,
+      "sha256": "38912b32539b542e97b30d5b8ff38fceb10ef0ba1e7bd5222a2f8d3e312f5fdc",
+      "url": "/runtime-data/materials/R134a_s.cnesbin",
+      "vfsPath": "/app/materials/R134a_s.cnesbin"
+    },
+    {
+      "name": "R134a_sf.cnesbin",
+      "bytes": 1620,
+      "sha256": "5d00a17a7e7fcf8f2ee06945218025ff95bfb9e5ef36149c9d78c6bd20b81dd0",
+      "url": "/runtime-data/materials/R134a_sf.cnesbin",
+      "vfsPath": "/app/materials/R134a_sf.cnesbin"
+    },
+    {
+      "name": "R134a_sg.cnesbin",
+      "bytes": 1620,
+      "sha256": "678e791975b80f54a3a421f16e1b47722decc7a733699822c6b5d50086776e24",
+      "url": "/runtime-data/materials/R134a_sg.cnesbin",
+      "vfsPath": "/app/materials/R134a_sg.cnesbin"
+    },
+    {
+      "name": "R134a_u.cnesbin",
+      "bytes": 13452,
+      "sha256": "47e0dfe3f16465d50c2ebf4aba6039c8524240241aaa0893b4e82ea7e5aee11e",
+      "url": "/runtime-data/materials/R134a_u.cnesbin",
+      "vfsPath": "/app/materials/R134a_u.cnesbin"
+    },
+    {
+      "name": "R134a_v.cnesbin",
+      "bytes": 13452,
+      "sha256": "7a6abe957b7153971331d8abf7405388036d42681c39a5521e03015f0f44453c",
+      "url": "/runtime-data/materials/R134a_v.cnesbin",
+      "vfsPath": "/app/materials/R134a_v.cnesbin"
+    },
+    {
+      "name": "R13_Pr.cnesbin",
+      "bytes": 13452,
+      "sha256": "9744163be14977ec09cf1a3113243f9fe9403def3af4d19104d7c9a89114cc78",
+      "url": "/runtime-data/materials/R13_Pr.cnesbin",
+      "vfsPath": "/app/materials/R13_Pr.cnesbin"
+    },
+    {
+      "name": "R13_Psat.cnesbin",
+      "bytes": 1620,
+      "sha256": "534c71a1627f01a0855569a9c0094d1659e9370528acb49f0a941de90af65b5d",
+      "url": "/runtime-data/materials/R13_Psat.cnesbin",
+      "vfsPath": "/app/materials/R13_Psat.cnesbin"
+    },
+    {
+      "name": "R13_T_ph.cnesbin",
+      "bytes": 13452,
+      "sha256": "861eb801715467bae983eece4ddf9c8fbb33c1cec7ed52e9387f38424c3b2278",
+      "url": "/runtime-data/materials/R13_T_ph.cnesbin",
+      "vfsPath": "/app/materials/R13_T_ph.cnesbin"
+    },
+    {
+      "name": "R13_T_ps.cnesbin",
+      "bytes": 13452,
+      "sha256": "abdfadfc2feaef7411456f16152ba383aef1c0b3d029f8619dff8b8a0d546f16",
+      "url": "/runtime-data/materials/R13_T_ps.cnesbin",
+      "vfsPath": "/app/materials/R13_T_ps.cnesbin"
+    },
+    {
+      "name": "R13_Tsat.cnesbin",
+      "bytes": 1620,
+      "sha256": "ec289c8775dabaf50d1c3443e7dcefe6c3fc71f833d76259510249a4e27545b8",
+      "url": "/runtime-data/materials/R13_Tsat.cnesbin",
+      "vfsPath": "/app/materials/R13_Tsat.cnesbin"
+    },
+    {
+      "name": "R13_h.cnesbin",
+      "bytes": 13452,
+      "sha256": "82591af25bed00145730d5ad9020771ae4aa0acf167b3dbfb67cfe31dc3fb7b9",
+      "url": "/runtime-data/materials/R13_h.cnesbin",
+      "vfsPath": "/app/materials/R13_h.cnesbin"
+    },
+    {
+      "name": "R13_hf.cnesbin",
+      "bytes": 1620,
+      "sha256": "6d9edaf217c1776c507f6532080cc28ba2877a0c295aec326ff4a10403c0a8d5",
+      "url": "/runtime-data/materials/R13_hf.cnesbin",
+      "vfsPath": "/app/materials/R13_hf.cnesbin"
+    },
+    {
+      "name": "R13_hg.cnesbin",
+      "bytes": 1620,
+      "sha256": "0311f9fd39d6a2185a218f4dd95de9b84568b94e034cc251e7c1531c86e43c75",
+      "url": "/runtime-data/materials/R13_hg.cnesbin",
+      "vfsPath": "/app/materials/R13_hg.cnesbin"
+    },
+    {
+      "name": "R13_k.cnesbin",
+      "bytes": 13452,
+      "sha256": "4ea4c7b458138b1ebec64ffb56c39bc359fafa5d0704aee5b0b5b5a5fd9f01f1",
+      "url": "/runtime-data/materials/R13_k.cnesbin",
+      "vfsPath": "/app/materials/R13_k.cnesbin"
+    },
+    {
+      "name": "R13_mu.cnesbin",
+      "bytes": 13452,
+      "sha256": "27a0731af852a38b4659f574a6155e8fe438e902547fa1cc2c4dbbd5153e82b3",
+      "url": "/runtime-data/materials/R13_mu.cnesbin",
+      "vfsPath": "/app/materials/R13_mu.cnesbin"
+    },
+    {
+      "name": "R13_rho.cnesbin",
+      "bytes": 13452,
+      "sha256": "b933b4a013dc900d3b8ac4578c9fc2050e37e3dc636104331237724850b2cf40",
+      "url": "/runtime-data/materials/R13_rho.cnesbin",
+      "vfsPath": "/app/materials/R13_rho.cnesbin"
+    },
+    {
+      "name": "R13_s.cnesbin",
+      "bytes": 13452,
+      "sha256": "cdaa2fee1dd5d1d704d0b38c909ad978e244b9f3bb54b6a110c4345d2bd442eb",
+      "url": "/runtime-data/materials/R13_s.cnesbin",
+      "vfsPath": "/app/materials/R13_s.cnesbin"
+    },
+    {
+      "name": "R13_sf.cnesbin",
+      "bytes": 1620,
+      "sha256": "1c80525292bf436f0e0efb2375eef39f47ca29337d5867e453dd5f456ffee687",
+      "url": "/runtime-data/materials/R13_sf.cnesbin",
+      "vfsPath": "/app/materials/R13_sf.cnesbin"
+    },
+    {
+      "name": "R13_sg.cnesbin",
+      "bytes": 1620,
+      "sha256": "5ff0afc8ffb5c3be5ec68a1a69d01d6c2327c3f43f5bc402c36fecc57d1a2cd0",
+      "url": "/runtime-data/materials/R13_sg.cnesbin",
+      "vfsPath": "/app/materials/R13_sg.cnesbin"
+    },
+    {
+      "name": "R13_u.cnesbin",
+      "bytes": 13452,
+      "sha256": "c7475d333fd59292ab01234fdbf9d46bc87045b1586c40f5c3ba96c67abfa7f6",
+      "url": "/runtime-data/materials/R13_u.cnesbin",
+      "vfsPath": "/app/materials/R13_u.cnesbin"
+    },
+    {
+      "name": "R13_v.cnesbin",
+      "bytes": 13452,
+      "sha256": "311d6dc76653133c5c43205d4271526c0d1636e623ad4ecc3cc753aeb4f889f6",
+      "url": "/runtime-data/materials/R13_v.cnesbin",
+      "vfsPath": "/app/materials/R13_v.cnesbin"
+    },
+    {
+      "name": "R143a_Pr.cnesbin",
+      "bytes": 13452,
+      "sha256": "22a87409a31c5af3650429e403cb1f0e4b050686669a9ff746886bdf35930c9b",
+      "url": "/runtime-data/materials/R143a_Pr.cnesbin",
+      "vfsPath": "/app/materials/R143a_Pr.cnesbin"
+    },
+    {
+      "name": "R143a_Psat.cnesbin",
+      "bytes": 1620,
+      "sha256": "b2defa7927b30282729a5c392e8df25a56559ebe4570782ca7157fde47817a07",
+      "url": "/runtime-data/materials/R143a_Psat.cnesbin",
+      "vfsPath": "/app/materials/R143a_Psat.cnesbin"
+    },
+    {
+      "name": "R143a_T_ph.cnesbin",
+      "bytes": 13452,
+      "sha256": "66fb8a84af30f1eb1a1889a4601ba82b6caff93d9168b268c8e1569e099f12d1",
+      "url": "/runtime-data/materials/R143a_T_ph.cnesbin",
+      "vfsPath": "/app/materials/R143a_T_ph.cnesbin"
+    },
+    {
+      "name": "R143a_T_ps.cnesbin",
+      "bytes": 13452,
+      "sha256": "d8547a2f153c1673f02d4340bf50ab6464181625a514991cb252f0b2a896adbd",
+      "url": "/runtime-data/materials/R143a_T_ps.cnesbin",
+      "vfsPath": "/app/materials/R143a_T_ps.cnesbin"
+    },
+    {
+      "name": "R143a_Tsat.cnesbin",
+      "bytes": 1620,
+      "sha256": "78ad9c25e3a89bb079c1e9be4dfd450670308cd065ece2f7c82c31dd13e0702c",
+      "url": "/runtime-data/materials/R143a_Tsat.cnesbin",
+      "vfsPath": "/app/materials/R143a_Tsat.cnesbin"
+    },
+    {
+      "name": "R143a_h.cnesbin",
+      "bytes": 13452,
+      "sha256": "4f1bda644c8dbca82b7319a0b8a597c2c4c8e691c8873fc79efde2507d5b7f4f",
+      "url": "/runtime-data/materials/R143a_h.cnesbin",
+      "vfsPath": "/app/materials/R143a_h.cnesbin"
+    },
+    {
+      "name": "R143a_hf.cnesbin",
+      "bytes": 1620,
+      "sha256": "5456774afdbb6f2ccf5d7b34b30fa1c5250dd11d04588f419a9bec8892430f07",
+      "url": "/runtime-data/materials/R143a_hf.cnesbin",
+      "vfsPath": "/app/materials/R143a_hf.cnesbin"
+    },
+    {
+      "name": "R143a_hg.cnesbin",
+      "bytes": 1620,
+      "sha256": "bc7512fd9b332301067b4050e2f35e6f36c1d6ff3912eeaddd92af0c2c11d604",
+      "url": "/runtime-data/materials/R143a_hg.cnesbin",
+      "vfsPath": "/app/materials/R143a_hg.cnesbin"
+    },
+    {
+      "name": "R143a_k.cnesbin",
+      "bytes": 13452,
+      "sha256": "a7073452c205c5e55163937a0dc9441f0d331f985fa36e58f9c480b32db2fd57",
+      "url": "/runtime-data/materials/R143a_k.cnesbin",
+      "vfsPath": "/app/materials/R143a_k.cnesbin"
+    },
+    {
+      "name": "R143a_mu.cnesbin",
+      "bytes": 13452,
+      "sha256": "27e2438cd1f562a2edba987adca249e501edd64edf4cd62ef9f8cfb08224a26a",
+      "url": "/runtime-data/materials/R143a_mu.cnesbin",
+      "vfsPath": "/app/materials/R143a_mu.cnesbin"
+    },
+    {
+      "name": "R143a_rho.cnesbin",
+      "bytes": 13452,
+      "sha256": "8201d4f52caf100d35b88f0d7b66640b8347f66662e5bdbe9c64b8d747cb20bc",
+      "url": "/runtime-data/materials/R143a_rho.cnesbin",
+      "vfsPath": "/app/materials/R143a_rho.cnesbin"
+    },
+    {
+      "name": "R143a_s.cnesbin",
+      "bytes": 13452,
+      "sha256": "bb969a354962d5d45e9ab44d3f194a11ed248e3bdaff9ad0ae01c225da73c087",
+      "url": "/runtime-data/materials/R143a_s.cnesbin",
+      "vfsPath": "/app/materials/R143a_s.cnesbin"
+    },
+    {
+      "name": "R143a_sf.cnesbin",
+      "bytes": 1620,
+      "sha256": "dfb2e29a58fa576b93980f4fdd7fd33b79135e679273b4cba5fbf2f06c6754ae",
+      "url": "/runtime-data/materials/R143a_sf.cnesbin",
+      "vfsPath": "/app/materials/R143a_sf.cnesbin"
+    },
+    {
+      "name": "R143a_sg.cnesbin",
+      "bytes": 1620,
+      "sha256": "7e8d268b7a81454ee1d01e4fc18846ec471e345940168604dde59053a3ae8e7e",
+      "url": "/runtime-data/materials/R143a_sg.cnesbin",
+      "vfsPath": "/app/materials/R143a_sg.cnesbin"
+    },
+    {
+      "name": "R143a_u.cnesbin",
+      "bytes": 13452,
+      "sha256": "f0883bb073eaba5ce0087ce601873a47a86a927304ab60cc84da9ebec391d022",
+      "url": "/runtime-data/materials/R143a_u.cnesbin",
+      "vfsPath": "/app/materials/R143a_u.cnesbin"
+    },
+    {
+      "name": "R143a_v.cnesbin",
+      "bytes": 13452,
+      "sha256": "3d3250999cabb29e95b52272a5d1f3d8e1691b97ee51914a2e56e1a63a84b2a2",
+      "url": "/runtime-data/materials/R143a_v.cnesbin",
+      "vfsPath": "/app/materials/R143a_v.cnesbin"
+    },
+    {
+      "name": "R14_Pr.cnesbin",
+      "bytes": 13452,
+      "sha256": "29d46bc41163ccd4ea722f896c41d153e9683252e1599541cd1af2ebd5ec8903",
+      "url": "/runtime-data/materials/R14_Pr.cnesbin",
+      "vfsPath": "/app/materials/R14_Pr.cnesbin"
+    },
+    {
+      "name": "R14_Psat.cnesbin",
+      "bytes": 1620,
+      "sha256": "47af3a75cbc9c9ad1cedd3dfaee75da1fcdb097a233101fc7343506681517cbc",
+      "url": "/runtime-data/materials/R14_Psat.cnesbin",
+      "vfsPath": "/app/materials/R14_Psat.cnesbin"
+    },
+    {
+      "name": "R14_T_ph.cnesbin",
+      "bytes": 13452,
+      "sha256": "24b2e765cc433f3e2cc947379163b97e06906e1730b383e56755614b4a1ae26e",
+      "url": "/runtime-data/materials/R14_T_ph.cnesbin",
+      "vfsPath": "/app/materials/R14_T_ph.cnesbin"
+    },
+    {
+      "name": "R14_T_ps.cnesbin",
+      "bytes": 13452,
+      "sha256": "58750d3e76cfe9d3878ea66ab041cfecb3859ed87d1c05422c5a721a0e88d2b7",
+      "url": "/runtime-data/materials/R14_T_ps.cnesbin",
+      "vfsPath": "/app/materials/R14_T_ps.cnesbin"
+    },
+    {
+      "name": "R14_Tsat.cnesbin",
+      "bytes": 1620,
+      "sha256": "755d41ad4b4a4afa36df9f987c4d5cf16c4074fb004f2803b31915351103bbbe",
+      "url": "/runtime-data/materials/R14_Tsat.cnesbin",
+      "vfsPath": "/app/materials/R14_Tsat.cnesbin"
+    },
+    {
+      "name": "R14_h.cnesbin",
+      "bytes": 13452,
+      "sha256": "df3b51b660334d0f8239e485188e09027e1f0b08d71b118cdbb53ccb7b66b870",
+      "url": "/runtime-data/materials/R14_h.cnesbin",
+      "vfsPath": "/app/materials/R14_h.cnesbin"
+    },
+    {
+      "name": "R14_hf.cnesbin",
+      "bytes": 1620,
+      "sha256": "85b890d1303b25abba2d4470c6ed8727c3965344c40ee91e9b3b7cbb116a5a63",
+      "url": "/runtime-data/materials/R14_hf.cnesbin",
+      "vfsPath": "/app/materials/R14_hf.cnesbin"
+    },
+    {
+      "name": "R14_hg.cnesbin",
+      "bytes": 1620,
+      "sha256": "b5009cd63537e51c125ee2f6d9bb05e2f66d855567901bd132d7c4f85091833a",
+      "url": "/runtime-data/materials/R14_hg.cnesbin",
+      "vfsPath": "/app/materials/R14_hg.cnesbin"
+    },
+    {
+      "name": "R14_k.cnesbin",
+      "bytes": 13452,
+      "sha256": "c67549f7575bb6cc823ae07aa374f3f0dc2402d559e45c7847cad8adec44ccb3",
+      "url": "/runtime-data/materials/R14_k.cnesbin",
+      "vfsPath": "/app/materials/R14_k.cnesbin"
+    },
+    {
+      "name": "R14_mu.cnesbin",
+      "bytes": 13452,
+      "sha256": "d9f7809465084a144855c660d49895de7af0e69e70fbf2dbda5a9b23e52c7636",
+      "url": "/runtime-data/materials/R14_mu.cnesbin",
+      "vfsPath": "/app/materials/R14_mu.cnesbin"
+    },
+    {
+      "name": "R14_rho.cnesbin",
+      "bytes": 13452,
+      "sha256": "b8ca10f78c6a8a3eb210c7fa01a586a89c748f58ae644a9c479a3f3d10fbb4f6",
+      "url": "/runtime-data/materials/R14_rho.cnesbin",
+      "vfsPath": "/app/materials/R14_rho.cnesbin"
+    },
+    {
+      "name": "R14_s.cnesbin",
+      "bytes": 13452,
+      "sha256": "e7fb0cd871ce629a79f7adc80ac81f880a4f73c37d34e10e15788bca25105d55",
+      "url": "/runtime-data/materials/R14_s.cnesbin",
+      "vfsPath": "/app/materials/R14_s.cnesbin"
+    },
+    {
+      "name": "R14_sf.cnesbin",
+      "bytes": 1620,
+      "sha256": "d0858968b07df298877cb585d6a3880b84c2634ce4f06846750b52ffcb7266cd",
+      "url": "/runtime-data/materials/R14_sf.cnesbin",
+      "vfsPath": "/app/materials/R14_sf.cnesbin"
+    },
+    {
+      "name": "R14_sg.cnesbin",
+      "bytes": 1620,
+      "sha256": "e54a9bb0965f7c964efbfbbb1cb5fcb28a8c6d25d3cf5396de819e8ca8adbb57",
+      "url": "/runtime-data/materials/R14_sg.cnesbin",
+      "vfsPath": "/app/materials/R14_sg.cnesbin"
+    },
+    {
+      "name": "R14_u.cnesbin",
+      "bytes": 13452,
+      "sha256": "b9e5e81e44fbae9d32b4a7f453cacda6aba32d3d8a991853f6f3302f57aad7d3",
+      "url": "/runtime-data/materials/R14_u.cnesbin",
+      "vfsPath": "/app/materials/R14_u.cnesbin"
+    },
+    {
+      "name": "R14_v.cnesbin",
+      "bytes": 13452,
+      "sha256": "fca4f2323b5d5abb5eaffaca539faaea4fbad9906159c0c20885be06884f6a62",
+      "url": "/runtime-data/materials/R14_v.cnesbin",
+      "vfsPath": "/app/materials/R14_v.cnesbin"
+    },
+    {
+      "name": "R21_Pr.cnesbin",
+      "bytes": 13452,
+      "sha256": "9b68f59191475e16352c4e1ee2b4dbce8578ba66a9335d36e2cb3e00848f5398",
+      "url": "/runtime-data/materials/R21_Pr.cnesbin",
+      "vfsPath": "/app/materials/R21_Pr.cnesbin"
+    },
+    {
+      "name": "R21_Psat.cnesbin",
+      "bytes": 1620,
+      "sha256": "afe62346b4222b5a27361bde5ae946c35e20885ab5d423b5a0419efd7c491a93",
+      "url": "/runtime-data/materials/R21_Psat.cnesbin",
+      "vfsPath": "/app/materials/R21_Psat.cnesbin"
+    },
+    {
+      "name": "R21_T_ph.cnesbin",
+      "bytes": 13452,
+      "sha256": "3e9ec7c1754889b26b9c93e59acd64df472a6ecce40757b013b9acd7e50a7a02",
+      "url": "/runtime-data/materials/R21_T_ph.cnesbin",
+      "vfsPath": "/app/materials/R21_T_ph.cnesbin"
+    },
+    {
+      "name": "R21_T_ps.cnesbin",
+      "bytes": 13452,
+      "sha256": "5b122292d7c78c4ed4bac78fb0e77a536a1e1923f5e460b7776df899a0335cf8",
+      "url": "/runtime-data/materials/R21_T_ps.cnesbin",
+      "vfsPath": "/app/materials/R21_T_ps.cnesbin"
+    },
+    {
+      "name": "R21_Tsat.cnesbin",
+      "bytes": 1620,
+      "sha256": "c777ebaaf2cad0a19d251c9f2e968ddaea4192915c30f89a597e7c85fba60068",
+      "url": "/runtime-data/materials/R21_Tsat.cnesbin",
+      "vfsPath": "/app/materials/R21_Tsat.cnesbin"
+    },
+    {
+      "name": "R21_h.cnesbin",
+      "bytes": 13452,
+      "sha256": "892904c7c7482df2b3fe35431965308a92035070f1468a6069bb515a78a0169f",
+      "url": "/runtime-data/materials/R21_h.cnesbin",
+      "vfsPath": "/app/materials/R21_h.cnesbin"
+    },
+    {
+      "name": "R21_hf.cnesbin",
+      "bytes": 1620,
+      "sha256": "5f29b4d1f377c0de988633597925f0a9b8a8d572b6292a7aa9b7a5d01530215a",
+      "url": "/runtime-data/materials/R21_hf.cnesbin",
+      "vfsPath": "/app/materials/R21_hf.cnesbin"
+    },
+    {
+      "name": "R21_hg.cnesbin",
+      "bytes": 1620,
+      "sha256": "5b24082678cba175b978b527546e6c2412c8255e4d32b662d9fb055fd270a3ca",
+      "url": "/runtime-data/materials/R21_hg.cnesbin",
+      "vfsPath": "/app/materials/R21_hg.cnesbin"
+    },
+    {
+      "name": "R21_k.cnesbin",
+      "bytes": 13452,
+      "sha256": "9b68f59191475e16352c4e1ee2b4dbce8578ba66a9335d36e2cb3e00848f5398",
+      "url": "/runtime-data/materials/R21_k.cnesbin",
+      "vfsPath": "/app/materials/R21_k.cnesbin"
+    },
+    {
+      "name": "R21_mu.cnesbin",
+      "bytes": 13452,
+      "sha256": "9b68f59191475e16352c4e1ee2b4dbce8578ba66a9335d36e2cb3e00848f5398",
+      "url": "/runtime-data/materials/R21_mu.cnesbin",
+      "vfsPath": "/app/materials/R21_mu.cnesbin"
+    },
+    {
+      "name": "R21_rho.cnesbin",
+      "bytes": 13452,
+      "sha256": "f31611fcfc887164b05a29cf9a4db04d8499108f45b385bbb74912bdbcc07f03",
+      "url": "/runtime-data/materials/R21_rho.cnesbin",
+      "vfsPath": "/app/materials/R21_rho.cnesbin"
+    },
+    {
+      "name": "R21_s.cnesbin",
+      "bytes": 13452,
+      "sha256": "fd24418fd1f5ba395d3b7022037726b28765ac093807be12e38f231701eb8412",
+      "url": "/runtime-data/materials/R21_s.cnesbin",
+      "vfsPath": "/app/materials/R21_s.cnesbin"
+    },
+    {
+      "name": "R21_sf.cnesbin",
+      "bytes": 1620,
+      "sha256": "8cc99b743e128f8fbe5a560822c2902f3fa3be0b1d6f6db8b23864605edf42e0",
+      "url": "/runtime-data/materials/R21_sf.cnesbin",
+      "vfsPath": "/app/materials/R21_sf.cnesbin"
+    },
+    {
+      "name": "R21_sg.cnesbin",
+      "bytes": 1620,
+      "sha256": "4b4ea7188e2b6c9eccc493fad2b3768e5b69bdfeeb1991980036829b1a6c13dc",
+      "url": "/runtime-data/materials/R21_sg.cnesbin",
+      "vfsPath": "/app/materials/R21_sg.cnesbin"
+    },
+    {
+      "name": "R21_u.cnesbin",
+      "bytes": 13452,
+      "sha256": "0ec03fdc4979429d80541079c659f82b1d9e1361116fc36eb704649baa992b57",
+      "url": "/runtime-data/materials/R21_u.cnesbin",
+      "vfsPath": "/app/materials/R21_u.cnesbin"
+    },
+    {
+      "name": "R21_v.cnesbin",
+      "bytes": 13452,
+      "sha256": "7d9c73bbb939a89cfc29c3a0befb10aaa4cd1bb7b79358bd2b22a34dc04d9ebb",
+      "url": "/runtime-data/materials/R21_v.cnesbin",
+      "vfsPath": "/app/materials/R21_v.cnesbin"
+    },
+    {
+      "name": "R22_Pr.cnesbin",
+      "bytes": 13452,
+      "sha256": "d335ea1db6ca773df8a5b67cf63d3b43f05881cb5be8f65f467cc723ec15d223",
+      "url": "/runtime-data/materials/R22_Pr.cnesbin",
+      "vfsPath": "/app/materials/R22_Pr.cnesbin"
+    },
+    {
+      "name": "R22_Psat.cnesbin",
+      "bytes": 1620,
+      "sha256": "3780e542e44694c4a07d32dc359089aeae0ba8fc4d30ad378ca3b7fc8f28c2fa",
+      "url": "/runtime-data/materials/R22_Psat.cnesbin",
+      "vfsPath": "/app/materials/R22_Psat.cnesbin"
+    },
+    {
+      "name": "R22_T_ph.cnesbin",
+      "bytes": 13452,
+      "sha256": "ba2ecd2f71ac8119aac4af504c43872a210c543ba83f3757fbf66507b4b737ea",
+      "url": "/runtime-data/materials/R22_T_ph.cnesbin",
+      "vfsPath": "/app/materials/R22_T_ph.cnesbin"
+    },
+    {
+      "name": "R22_T_ps.cnesbin",
+      "bytes": 13452,
+      "sha256": "a2ad043be51a3bb8dcd9cb13c0d54aefe77fff3b2819673eb94670ed0ed8d319",
+      "url": "/runtime-data/materials/R22_T_ps.cnesbin",
+      "vfsPath": "/app/materials/R22_T_ps.cnesbin"
+    },
+    {
+      "name": "R22_Tsat.cnesbin",
+      "bytes": 1620,
+      "sha256": "814e136e08b68696c7ee39ec7dd675ffba0b111d9564348b37518112336331ef",
+      "url": "/runtime-data/materials/R22_Tsat.cnesbin",
+      "vfsPath": "/app/materials/R22_Tsat.cnesbin"
+    },
+    {
+      "name": "R22_h.cnesbin",
+      "bytes": 13452,
+      "sha256": "e9538410d87dade9fb7032f7e1da49b07372239cb12064cce38438c47e504268",
+      "url": "/runtime-data/materials/R22_h.cnesbin",
+      "vfsPath": "/app/materials/R22_h.cnesbin"
+    },
+    {
+      "name": "R22_hf.cnesbin",
+      "bytes": 1620,
+      "sha256": "aeba9f653c7f93afa28b2eef74642df65e77c3a10a38100c3697503f8626b836",
+      "url": "/runtime-data/materials/R22_hf.cnesbin",
+      "vfsPath": "/app/materials/R22_hf.cnesbin"
+    },
+    {
+      "name": "R22_hg.cnesbin",
+      "bytes": 1620,
+      "sha256": "043e4afe14f5e97430f19e30058d943dcda1197ec9f609326326129acdfc0177",
+      "url": "/runtime-data/materials/R22_hg.cnesbin",
+      "vfsPath": "/app/materials/R22_hg.cnesbin"
+    },
+    {
+      "name": "R22_k.cnesbin",
+      "bytes": 13452,
+      "sha256": "3ad83852e0dab22f358234489b4f663e598a6d674aeb219b7f536287e45e9018",
+      "url": "/runtime-data/materials/R22_k.cnesbin",
+      "vfsPath": "/app/materials/R22_k.cnesbin"
+    },
+    {
+      "name": "R22_mu.cnesbin",
+      "bytes": 13452,
+      "sha256": "6ffe170a73ed17f06098d48c7ddc29a7926bdc4dd33cc2c774285680d251a4b3",
+      "url": "/runtime-data/materials/R22_mu.cnesbin",
+      "vfsPath": "/app/materials/R22_mu.cnesbin"
+    },
+    {
+      "name": "R22_rho.cnesbin",
+      "bytes": 13452,
+      "sha256": "af1651489dabc6c54ffb3661a6a69807aef7365b1ada3f555872bb8176ba4126",
+      "url": "/runtime-data/materials/R22_rho.cnesbin",
+      "vfsPath": "/app/materials/R22_rho.cnesbin"
+    },
+    {
+      "name": "R22_s.cnesbin",
+      "bytes": 13452,
+      "sha256": "6aed6760ea558a78c000f2c24c253f5556395979d48527fc230bdf5d6f81dc4a",
+      "url": "/runtime-data/materials/R22_s.cnesbin",
+      "vfsPath": "/app/materials/R22_s.cnesbin"
+    },
+    {
+      "name": "R22_sf.cnesbin",
+      "bytes": 1620,
+      "sha256": "ec18c5efda70340db40bcc2eeaff677a3b382d182fa6d1f8b8572c797071f654",
+      "url": "/runtime-data/materials/R22_sf.cnesbin",
+      "vfsPath": "/app/materials/R22_sf.cnesbin"
+    },
+    {
+      "name": "R22_sg.cnesbin",
+      "bytes": 1620,
+      "sha256": "de0f937920aef857ca62419429edaf4b49ed69c588c1e471001bd6e622ce3c35",
+      "url": "/runtime-data/materials/R22_sg.cnesbin",
+      "vfsPath": "/app/materials/R22_sg.cnesbin"
+    },
+    {
+      "name": "R22_u.cnesbin",
+      "bytes": 13452,
+      "sha256": "4820b25c4f68cd70bfc4e5a899f384c9bc43256e21f1d1f99f2a79a3a2282e7b",
+      "url": "/runtime-data/materials/R22_u.cnesbin",
+      "vfsPath": "/app/materials/R22_u.cnesbin"
+    },
+    {
+      "name": "R22_v.cnesbin",
+      "bytes": 13452,
+      "sha256": "31ad585795e0383bfd544610fd5517e8fe3bd14929a7c6b992073ea0f825a600",
+      "url": "/runtime-data/materials/R22_v.cnesbin",
+      "vfsPath": "/app/materials/R22_v.cnesbin"
+    },
+    {
+      "name": "R32_Pr.cnesbin",
+      "bytes": 13452,
+      "sha256": "d3caac4a9aa3f3579e2247b92cb820d32253d9d4919e6f7a31c50ba6ec3dc9ed",
+      "url": "/runtime-data/materials/R32_Pr.cnesbin",
+      "vfsPath": "/app/materials/R32_Pr.cnesbin"
+    },
+    {
+      "name": "R32_Psat.cnesbin",
+      "bytes": 1620,
+      "sha256": "3d2f6de10ebb18ecba9926e046e1eec4bd9578cbc87fc0affe31836a9c0c9d9f",
+      "url": "/runtime-data/materials/R32_Psat.cnesbin",
+      "vfsPath": "/app/materials/R32_Psat.cnesbin"
+    },
+    {
+      "name": "R32_T_ph.cnesbin",
+      "bytes": 13452,
+      "sha256": "c0daa18bb3262e418cb34296326b1edbd42a1efeef251a3cd239e1f2d914bd71",
+      "url": "/runtime-data/materials/R32_T_ph.cnesbin",
+      "vfsPath": "/app/materials/R32_T_ph.cnesbin"
+    },
+    {
+      "name": "R32_T_ps.cnesbin",
+      "bytes": 13452,
+      "sha256": "661b4320144837e62c8504317e7edfb17e2ba7c038767acd5a0083cd792273e4",
+      "url": "/runtime-data/materials/R32_T_ps.cnesbin",
+      "vfsPath": "/app/materials/R32_T_ps.cnesbin"
+    },
+    {
+      "name": "R32_Tsat.cnesbin",
+      "bytes": 1620,
+      "sha256": "aa6d90d2162826b218c53910c0035bdb3e510d08b45a6a30ed05099a5943999b",
+      "url": "/runtime-data/materials/R32_Tsat.cnesbin",
+      "vfsPath": "/app/materials/R32_Tsat.cnesbin"
+    },
+    {
+      "name": "R32_h.cnesbin",
+      "bytes": 13452,
+      "sha256": "92b5313180ceaba3b4eed0249fdf4ad65b6851872d2148bc64ae5ce5322d38c5",
+      "url": "/runtime-data/materials/R32_h.cnesbin",
+      "vfsPath": "/app/materials/R32_h.cnesbin"
+    },
+    {
+      "name": "R32_hf.cnesbin",
+      "bytes": 1620,
+      "sha256": "bc84274e654d3b7a25e66774d65611ca305df6612c22c93fed97c10641101eb7",
+      "url": "/runtime-data/materials/R32_hf.cnesbin",
+      "vfsPath": "/app/materials/R32_hf.cnesbin"
+    },
+    {
+      "name": "R32_hg.cnesbin",
+      "bytes": 1620,
+      "sha256": "9ddd71a8b5cbee76ecb7944cbd7fbc7178ed4c1ba353249dd1475f1cd2b0e9ce",
+      "url": "/runtime-data/materials/R32_hg.cnesbin",
+      "vfsPath": "/app/materials/R32_hg.cnesbin"
+    },
+    {
+      "name": "R32_k.cnesbin",
+      "bytes": 13452,
+      "sha256": "44544c01276859cd31ef06a3218a9fbc158e72920f0763a69baaa5e8445b56c1",
+      "url": "/runtime-data/materials/R32_k.cnesbin",
+      "vfsPath": "/app/materials/R32_k.cnesbin"
+    },
+    {
+      "name": "R32_mu.cnesbin",
+      "bytes": 13452,
+      "sha256": "008d6125d821af770de29a632d05b7481b494797494a693ac6aa89432057c85c",
+      "url": "/runtime-data/materials/R32_mu.cnesbin",
+      "vfsPath": "/app/materials/R32_mu.cnesbin"
+    },
+    {
+      "name": "R32_rho.cnesbin",
+      "bytes": 13452,
+      "sha256": "30d1004c7cab3437d493147534aa08280399e7660a0b7cfdc219abafa48aebbe",
+      "url": "/runtime-data/materials/R32_rho.cnesbin",
+      "vfsPath": "/app/materials/R32_rho.cnesbin"
+    },
+    {
+      "name": "R32_s.cnesbin",
+      "bytes": 13452,
+      "sha256": "86f284293c6ef26329b4bc0b9a690adcaddfa9cf39fef369f163f22613661750",
+      "url": "/runtime-data/materials/R32_s.cnesbin",
+      "vfsPath": "/app/materials/R32_s.cnesbin"
+    },
+    {
+      "name": "R32_sf.cnesbin",
+      "bytes": 1620,
+      "sha256": "c7e836e7451c91e30f7592716fd4e3a71b2c62d2448143781b03fefb80eca256",
+      "url": "/runtime-data/materials/R32_sf.cnesbin",
+      "vfsPath": "/app/materials/R32_sf.cnesbin"
+    },
+    {
+      "name": "R32_sg.cnesbin",
+      "bytes": 1620,
+      "sha256": "d976ba7304d5ee0b7316a4fb4c9341338f50139a42c3a3e275a0a87ac5538ada",
+      "url": "/runtime-data/materials/R32_sg.cnesbin",
+      "vfsPath": "/app/materials/R32_sg.cnesbin"
+    },
+    {
+      "name": "R32_u.cnesbin",
+      "bytes": 13452,
+      "sha256": "cb28f32a63f6998ce2300e9b056f994d2e2a8d46ffddc352d2c5b6c8ca91123b",
+      "url": "/runtime-data/materials/R32_u.cnesbin",
+      "vfsPath": "/app/materials/R32_u.cnesbin"
+    },
+    {
+      "name": "R32_v.cnesbin",
+      "bytes": 13452,
+      "sha256": "f53eb147bba13e3d594775052ded02a79bc0fb51b457cf09f187ad338b80d45d",
+      "url": "/runtime-data/materials/R32_v.cnesbin",
+      "vfsPath": "/app/materials/R32_v.cnesbin"
+    },
+    {
+      "name": "R410A_Pr.cnesbin",
+      "bytes": 13452,
+      "sha256": "04c2bf70c5243968b70054533ccb19f382d72c35c97e82c0da196af352ae096b",
+      "url": "/runtime-data/materials/R410A_Pr.cnesbin",
+      "vfsPath": "/app/materials/R410A_Pr.cnesbin"
+    },
+    {
+      "name": "R410A_Psat.cnesbin",
+      "bytes": 1620,
+      "sha256": "df5a5afad0f4c0d6864c4db46365b6ab02f7a6d38658741766b25960eaeaf1f4",
+      "url": "/runtime-data/materials/R410A_Psat.cnesbin",
+      "vfsPath": "/app/materials/R410A_Psat.cnesbin"
+    },
+    {
+      "name": "R410A_T_ph.cnesbin",
+      "bytes": 13452,
+      "sha256": "59be0cd582f37d45d4ebc945ac90e23e3ae989eca33ff1d56968cf2eaf18dfa6",
+      "url": "/runtime-data/materials/R410A_T_ph.cnesbin",
+      "vfsPath": "/app/materials/R410A_T_ph.cnesbin"
+    },
+    {
+      "name": "R410A_T_ps.cnesbin",
+      "bytes": 13452,
+      "sha256": "a4140e7596430aec06c778d71838c94e9087accea7323e7e727fb9096dbe5c7b",
+      "url": "/runtime-data/materials/R410A_T_ps.cnesbin",
+      "vfsPath": "/app/materials/R410A_T_ps.cnesbin"
+    },
+    {
+      "name": "R410A_Tsat.cnesbin",
+      "bytes": 1620,
+      "sha256": "806941a6af8d175dd838ccbfb0b8cfa4f0903fdac5cfa2c11f274a0fe0007f57",
+      "url": "/runtime-data/materials/R410A_Tsat.cnesbin",
+      "vfsPath": "/app/materials/R410A_Tsat.cnesbin"
+    },
+    {
+      "name": "R410A_h.cnesbin",
+      "bytes": 13452,
+      "sha256": "c2503b03101ac9062e8db3da33be08120bff099df0f5af1a379e478ff7aba8a0",
+      "url": "/runtime-data/materials/R410A_h.cnesbin",
+      "vfsPath": "/app/materials/R410A_h.cnesbin"
+    },
+    {
+      "name": "R410A_hf.cnesbin",
+      "bytes": 1620,
+      "sha256": "62c15931b53a7b101d335f5a55332ccee7549683ba701c16cd7aa7088c6aee98",
+      "url": "/runtime-data/materials/R410A_hf.cnesbin",
+      "vfsPath": "/app/materials/R410A_hf.cnesbin"
+    },
+    {
+      "name": "R410A_hg.cnesbin",
+      "bytes": 1620,
+      "sha256": "6837a19c34fba8be05a8c9419a64250eb13c63e88a2df5bbfcb337c5591b342e",
+      "url": "/runtime-data/materials/R410A_hg.cnesbin",
+      "vfsPath": "/app/materials/R410A_hg.cnesbin"
+    },
+    {
+      "name": "R410A_k.cnesbin",
+      "bytes": 13452,
+      "sha256": "1dff0eead0bef2842551a7df81b116cd551f14ebb03935bed867591021ce63b4",
+      "url": "/runtime-data/materials/R410A_k.cnesbin",
+      "vfsPath": "/app/materials/R410A_k.cnesbin"
+    },
+    {
+      "name": "R410A_mu.cnesbin",
+      "bytes": 13452,
+      "sha256": "829b9b8cb8f0b1316d331865a3623050e41720247e3bd8934ccaf4b235685ee0",
+      "url": "/runtime-data/materials/R410A_mu.cnesbin",
+      "vfsPath": "/app/materials/R410A_mu.cnesbin"
+    },
+    {
+      "name": "R410A_rho.cnesbin",
+      "bytes": 13452,
+      "sha256": "b592f3e20ef1240205297a0210276f8587539f89e9159397a49c8969b3ed6b7b",
+      "url": "/runtime-data/materials/R410A_rho.cnesbin",
+      "vfsPath": "/app/materials/R410A_rho.cnesbin"
+    },
+    {
+      "name": "R410A_s.cnesbin",
+      "bytes": 13452,
+      "sha256": "bb4512c4c846b7b489b68edcc9e0fde327d19eb5c90fbbeff43938d3264a1980",
+      "url": "/runtime-data/materials/R410A_s.cnesbin",
+      "vfsPath": "/app/materials/R410A_s.cnesbin"
+    },
+    {
+      "name": "R410A_sf.cnesbin",
+      "bytes": 1620,
+      "sha256": "33108e5e39e0ea87fdec8678232d40b490bd0013054a8b03cfddcef8cc558eef",
+      "url": "/runtime-data/materials/R410A_sf.cnesbin",
+      "vfsPath": "/app/materials/R410A_sf.cnesbin"
+    },
+    {
+      "name": "R410A_sg.cnesbin",
+      "bytes": 1620,
+      "sha256": "4931117402cd680337ecff4ea8e0de804a99775ccc14023056960557a9d459ac",
+      "url": "/runtime-data/materials/R410A_sg.cnesbin",
+      "vfsPath": "/app/materials/R410A_sg.cnesbin"
+    },
+    {
+      "name": "R410A_u.cnesbin",
+      "bytes": 13452,
+      "sha256": "45a34baae2472bd08d0b01ad90649db93fb2cf562d0032ded88a3161e3ad4244",
+      "url": "/runtime-data/materials/R410A_u.cnesbin",
+      "vfsPath": "/app/materials/R410A_u.cnesbin"
+    },
+    {
+      "name": "R410A_v.cnesbin",
+      "bytes": 13452,
+      "sha256": "7762d4aa019c90e83e439061d9c23351b905fe041c1d24650480620dd5b2955b",
+      "url": "/runtime-data/materials/R410A_v.cnesbin",
+      "vfsPath": "/app/materials/R410A_v.cnesbin"
+    },
+    {
+      "name": "Water_Pr.cnesbin",
+      "bytes": 13452,
+      "sha256": "b65e5f93af50556360bb91dfbe2c847c32d9ab12926f234d8d3df65241279b5d",
+      "url": "/runtime-data/materials/Water_Pr.cnesbin",
+      "vfsPath": "/app/materials/Water_Pr.cnesbin"
+    },
+    {
+      "name": "Water_Psat.cnesbin",
+      "bytes": 1620,
+      "sha256": "18ab9acc8acbdf826fa7723eb26c038661ea8013dca1f81ea179362224d30027",
+      "url": "/runtime-data/materials/Water_Psat.cnesbin",
+      "vfsPath": "/app/materials/Water_Psat.cnesbin"
+    },
+    {
+      "name": "Water_T_ph.cnesbin",
+      "bytes": 13452,
+      "sha256": "2a6ecf3ea5e0e3cb583163b45bf7376c1766bf2fe6169fe7e39958a017bb9e38",
+      "url": "/runtime-data/materials/Water_T_ph.cnesbin",
+      "vfsPath": "/app/materials/Water_T_ph.cnesbin"
+    },
+    {
+      "name": "Water_T_ps.cnesbin",
+      "bytes": 13452,
+      "sha256": "fa5d185fb889fcafe39a65d264169acec7fb66fdd9865b2c2cf59773ee120a1f",
+      "url": "/runtime-data/materials/Water_T_ps.cnesbin",
+      "vfsPath": "/app/materials/Water_T_ps.cnesbin"
+    },
+    {
+      "name": "Water_Tsat.cnesbin",
+      "bytes": 1620,
+      "sha256": "824387155b5190111bb654c1645b765a8f7a08c48ffd60fa7bcab843c643fe7c",
+      "url": "/runtime-data/materials/Water_Tsat.cnesbin",
+      "vfsPath": "/app/materials/Water_Tsat.cnesbin"
+    },
+    {
+      "name": "Water_h.cnesbin",
+      "bytes": 13452,
+      "sha256": "cdbefa8d3cc170a3bf108bb407c6dbb28472010481a8e807b774552abcd34434",
+      "url": "/runtime-data/materials/Water_h.cnesbin",
+      "vfsPath": "/app/materials/Water_h.cnesbin"
+    },
+    {
+      "name": "Water_hf.cnesbin",
+      "bytes": 1620,
+      "sha256": "722b1a87c089da9fb6806a5b4b1babb697152bf0403243d1f103092c4ed4bb53",
+      "url": "/runtime-data/materials/Water_hf.cnesbin",
+      "vfsPath": "/app/materials/Water_hf.cnesbin"
+    },
+    {
+      "name": "Water_hg.cnesbin",
+      "bytes": 1620,
+      "sha256": "aa324d09e4230d41ca260d7b00696bdd27cca6903f53922332b3f7e7bf3ee580",
+      "url": "/runtime-data/materials/Water_hg.cnesbin",
+      "vfsPath": "/app/materials/Water_hg.cnesbin"
+    },
+    {
+      "name": "Water_k.cnesbin",
+      "bytes": 13452,
+      "sha256": "2da087b9bab2696a1d6c3eebb74345eb44c663c507c9b78cc690fda1cc0825e2",
+      "url": "/runtime-data/materials/Water_k.cnesbin",
+      "vfsPath": "/app/materials/Water_k.cnesbin"
+    },
+    {
+      "name": "Water_mu.cnesbin",
+      "bytes": 13452,
+      "sha256": "875923e29daec901b58c11f1c04a3bd514244a57ec333b1d50b232a54220b581",
+      "url": "/runtime-data/materials/Water_mu.cnesbin",
+      "vfsPath": "/app/materials/Water_mu.cnesbin"
+    },
+    {
+      "name": "Water_rho.cnesbin",
+      "bytes": 13452,
+      "sha256": "9a2603966d3bda5c3595ad4959807dec2ce34f401e91c2e4f2069ecb43a1ab36",
+      "url": "/runtime-data/materials/Water_rho.cnesbin",
+      "vfsPath": "/app/materials/Water_rho.cnesbin"
+    },
+    {
+      "name": "Water_s.cnesbin",
+      "bytes": 13452,
+      "sha256": "e4784030e933eb9e9d728ff0033ba6c514b4b2c25ed4c8668423ccfd699e624d",
+      "url": "/runtime-data/materials/Water_s.cnesbin",
+      "vfsPath": "/app/materials/Water_s.cnesbin"
+    },
+    {
+      "name": "Water_sf.cnesbin",
+      "bytes": 1620,
+      "sha256": "f13f114930ea8d503eef0299ee364fe84927cd9567b237bbe27a445990b1e6ea",
+      "url": "/runtime-data/materials/Water_sf.cnesbin",
+      "vfsPath": "/app/materials/Water_sf.cnesbin"
+    },
+    {
+      "name": "Water_sg.cnesbin",
+      "bytes": 1620,
+      "sha256": "5aa2dc958b7f2efdf761b3cdefafa29f00002b9c3205f3e3f1a1bda8cf2ce69a",
+      "url": "/runtime-data/materials/Water_sg.cnesbin",
+      "vfsPath": "/app/materials/Water_sg.cnesbin"
+    },
+    {
+      "name": "Water_u.cnesbin",
+      "bytes": 13452,
+      "sha256": "8860b1aba54bd1685c5b512f619efebae90cb046834e1301213b05b50d72b8e9",
+      "url": "/runtime-data/materials/Water_u.cnesbin",
+      "vfsPath": "/app/materials/Water_u.cnesbin"
+    },
+    {
+      "name": "Water_v.cnesbin",
+      "bytes": 13452,
+      "sha256": "ad51d0bd29cd4e51a37bd57aae469fcfeade73d7a26383dd1625c0b1261a44cd",
+      "url": "/runtime-data/materials/Water_v.cnesbin",
+      "vfsPath": "/app/materials/Water_v.cnesbin"
+    }
+  ]
+}

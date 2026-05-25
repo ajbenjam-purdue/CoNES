@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 006C: In-App Docs Page</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 006C</p>
+        <h1>In-App Docs Page</h1>
+        <p class="summary">
+          Packet 006C replaces the Docs placeholder with current operating notes for the browser workspace: run workflow, runtime
+          facts, guardrails, and verification commands.
+        </p>
+        <div class="meta-row" aria-label="Packet status">
+          <span class="tag accent">Integrated locally</span>
+          <span class="tag">Current facts only</span>
+          <span class="tag">No worker calls</span>
+          <span class="tag">No runtime state changes</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="purpose-title">
+          <div class="section-header">
+            <h2 id="purpose-title">Purpose</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>User Outcome</h3>
+              <p>
+                A user has concise in-app reference for upload, prewarm, run, export, runtime facts, hosted review URL, and
+                verification commands.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Engineering Boundary</h3>
+              <p>
+                The docs page is static React content. It does not fetch manifests, inspect files, call the worker, or update app
+                state.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="runtime-title">
+          <div class="section-header">
+            <h2 id="runtime-title">Facts Captured</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Fact</th>
+                  <th>Current Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Execution</td>
+                  <td>Browser Worker only</td>
+                </tr>
+                <tr>
+                  <td>Worker path</td>
+                  <td><code>/runtime/cnes-worker.js</code></td>
+                </tr>
+                <tr>
+                  <td>Program</td>
+                  <td><code>thisProgram: "/app/cnes"</code></td>
+                </tr>
+                <tr>
+                  <td>Arguments</td>
+                  <td><code>callMain(["/work/input.cnes", "--json"])</code></td>
+                </tr>
+                <tr>
+                  <td>Review URL</td>
+                  <td><code>https://cones-web-version.vercel.app/runner/</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="implementation-title">
+          <div class="section-header">
+            <h2 id="implementation-title">Implementation</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Component</th>
+                  <th>Path</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Docs page</td>
+                  <td><code>src/features/docs/DocsPage.tsx</code></td>
+                  <td>Documents workflow, runtime facts, guardrails, expected verification commands, and public review URL.</td>
+                </tr>
+                <tr>
+                  <td>Feature export</td>
+                  <td><code>src/features/docs/index.ts</code></td>
+                  <td>Exposes the page for parent route integration.</td>
+                </tr>
+                <tr>
+                  <td>App route</td>
+                  <td><code>src/app/App.tsx</code></td>
+                  <td>Replaces the Docs placeholder with the in-app docs surface.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Packet owner: Scrum Lord. Packet status: integrated locally; human acceptance pending. Last updated: May 24, 2026.</p>
+    </main>
+  </body>
+</html>

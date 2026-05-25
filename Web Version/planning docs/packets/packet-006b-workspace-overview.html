@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 006B: Workspace Overview</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 006B</p>
+        <h1>Workspace Overview</h1>
+        <p class="summary">
+          Packet 006B adds a quiet IDE overview page that shows active lanes, guardrails, and the current workflow without turning
+          the app into a marketing page.
+        </p>
+        <div class="meta-row" aria-label="Packet status">
+          <span class="tag accent">Integrated locally</span>
+          <span class="tag">Operational UI surface</span>
+          <span class="tag">No runtime changes</span>
+          <span class="tag">No route shell redesign</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="purpose-title">
+          <div class="section-header">
+            <h2 id="purpose-title">Purpose</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>User Outcome</h3>
+              <p>
+                The user can see where Runner, Results, Editor, CLI, Linter, Docs, and runtime tooling stand without leaving the
+                app or reading planning docs.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Concept Guardrail</h3>
+              <p>
+                The surface reinforces local-first execution, static Vercel deployment, raw solver output, and no CoNES core
+                rewrite.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="implementation-title">
+          <div class="section-header">
+            <h2 id="implementation-title">Implementation</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Component</th>
+                  <th>Path</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Overview page</td>
+                  <td><code>src/features/workspace/WorkspaceOverview.tsx</code></td>
+                  <td>Renders compact lane rows, guardrails, runtime paths, and current workflow.</td>
+                </tr>
+                <tr>
+                  <td>Feature export</td>
+                  <td><code>src/features/workspace/index.ts</code></td>
+                  <td>Exposes the page for parent route integration.</td>
+                </tr>
+                <tr>
+                  <td>App route</td>
+                  <td><code>src/app/routes.ts</code> and <code>src/app/App.tsx</code></td>
+                  <td>Parent integration adds the Workspace route while leaving Runner as the first screen.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="status-title">
+          <div class="section-header">
+            <h2 id="status-title">Lane Status Model</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Lane</th>
+                  <th>Status</th>
+                  <th>Meaning</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Runner and Results</td>
+                  <td>Operational</td>
+                  <td>Current app can run uploaded files and display structured JSON-derived results.</td>
+                </tr>
+                <tr>
+                  <td>Editor and Docs</td>
+                  <td>Integrated</td>
+                  <td>First-pass surfaces are present and ready for human acceptance.</td>
+                </tr>
+                <tr>
+                  <td>CLI and Linter</td>
+                  <td>Reserved or deferred</td>
+                  <td>Do not expand these until output and authoring contracts settle.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Packet owner: Scrum Lord. Packet status: integrated locally; human acceptance pending. Last updated: May 24, 2026.</p>
+    </main>
+  </body>
+</html>

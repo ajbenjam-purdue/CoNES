@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CoNES Web Version Project Brief</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">CoNES Web Version</p>
+        <h1>Client-Side Application Brief</h1>
+        <p class="summary">
+          This document frames the first browser-based CoNES milestone: a static Vercel-deployed web app that accepts a local
+          <code>.cnes</code> upload, runs the existing CLI-shaped CoNES engine through WebAssembly, captures <code>--json</code>
+          output, and provides a downloadable result file.
+        </p>
+        <div class="meta-row" aria-label="Project constraints">
+          <span class="tag accent">All client-side</span>
+          <span class="tag accent">Gate 1 cleared</span>
+          <span class="tag accent">Gate 2 cleared</span>
+          <span class="tag accent">Packet 003 accepted</span>
+          <span class="tag accent">Packet 004 accepted</span>
+          <span class="tag accent">Packet 004B accepted</span>
+          <span class="tag accent">Packet 005 deployed</span>
+          <span class="tag accent">Packet 006A/B/C integrated</span>
+          <span class="tag accent">Vercel loop verified</span>
+          <span class="tag accent">Runtime data packaged</span>
+          <span class="tag">Vite + React</span>
+          <span class="tag">Tailwind v4 + shadcn/ui</span>
+          <span class="tag">Static Vercel deployment</span>
+          <span class="tag">No server queue</span>
+          <span class="tag">No C++ core refactor</span>
+          <span class="tag">JSON output first</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="status-title">
+          <div class="section-header">
+            <h2 id="status-title">Current Project Status</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Core Components Now In Place</h3>
+              <p>
+                The current core is the static Vite React app in <code>Web Version</code>, the accepted browser Worker runtime,
+                the tracked WASM artifacts under <code>public/runtime</code>, the tracked materials and library manifests under
+                <code>public/runtime-data</code>, and the Vercel deployment loop connected to GitHub.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Commit And Preview Loop</h3>
+              <p>
+                Work is committed locally, pushed to <code>https://github.com/Rmorr2001/cones-web-version.git</code>, and then
+                deployed automatically by Vercel from <code>master</code>. The direct human review URL is
+                <code>https://cones-web-version.vercel.app/runner/</code>.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Runtime Status</h3>
+              <p>
+                Packet 004 and Packet 004B are accepted after human verification. Runtime prewarm starts on app load before
+                operational controls appear. Packet 005 adds structured results, Packet 007 makes the Monaco-backed Workbench the
+                accepted primary experience, Packet 008A/B adds lint diagnostics, and Packet 009 is now shaping the public app as
+                CoNES Studio with debug surfaces hidden by default.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Deployment Caveat</h3>
+              <p>
+                Generated Vercel deployment URLs under <code>rmorr2001s-projects.vercel.app</code> may be protected by Vercel SSO.
+                Use the public alias for review unless account settings change intentionally.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="intent-title">
+          <div class="section-header">
+            <h2 id="intent-title">Intent</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Product Direction</h3>
+              <p>
+                CoNES Studio should feel like a browser IDE for CoNES while preserving the proven local runtime. The product should
+                make one active <code>.cnes</code> buffer easy to author, lint, run, inspect, rename, and export without pretending
+                to be a cloud workspace or project file manager.
+              </p>
+            </article>
+            <article class="component">
+              <h3>MVP Boundary</h3>
+              <p>
+                The current app should stay intentionally focused: open or draft one <code>.cnes</code> file in the Monaco
+                Workbench, rename the active buffer, lint it, run it, inspect structured results, and download source or JSON.
+                Raw output, runtime internals, Tools, Docs, and Workspace remain development/debug surfaces behind the hard-coded
+                flag. Autocomplete and real project workspaces remain later work.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="gate-one-title">
+          <div class="section-header">
+            <h2 id="gate-one-title">Gate Results</h2>
+          </div>
+          <div class="section-body">
+            <div class="callout ok">
+              <strong>WASM feasibility is proven for the current CLI-shaped program</strong>
+              <p>
+                Emscripten 5.0.7 was installed locally. The existing <code>CoNES/src/main.cpp</code> compiled to WebAssembly without
+                a C++ core refactor when built with the Eigen include path. Gate 1 proved the modular runtime in Node. Packet 002
+                then proved browser Worker execution in Chrome and passed human acceptance for upload, run, stdout/stderr, and JSON
+                download behavior.
+              </p>
+            </div>
+            <div class="content-grid three-column">
+              <article class="component">
+                <h3>Compile Result</h3>
+                <p>
+                  Generated <code>cnes-module.js</code> and <code>cnes-module.wasm</code> under
+                  <code>/private/tmp/cnes-wasm-probe</code>. The WASM binary was about <code>531K</code>.
+                </p>
+              </article>
+              <article class="component">
+                <h3>Runtime Result</h3>
+                <p>
+                  The wrapper created <code>/app/materials</code>, <code>/app/libs</code>, and <code>/work/input.cnes</code>, then
+                  invoked <code>callMain(["/work/input.cnes", "--json"])</code>.
+                </p>
+              </article>
+              <article class="component">
+                <h3>Behavior Result</h3>
+                <p>
+                  The probes returned valid JSON for unit, include, and material-dependent scripts, including
+                  <code>Power = 50 W</code>, <code>T_surface = 40 C</code>, and <code>COP_HP = 11.7950669027</code>.
+                </p>
+              </article>
+            </div>
+            <pre><code>env EM_CACHE=/private/tmp/emscripten-cache em++ -O2 -std=c++20 \
+  -I . -I /opt/homebrew/include/eigen3 \
+  src/main.cpp \
+  -o /private/tmp/cnes-wasm-probe/cnes-module.js \
+  -sMODULARIZE=1 \
+  -sEXPORT_NAME=createCoNESModule \
+  -sENVIRONMENT=worker,node \
+  -sINVOKE_RUN=0 \
+  -sEXPORTED_RUNTIME_METHODS=FS,callMain \
+  -sALLOW_MEMORY_GROWTH=1</code></pre>
+            <div class="callout warn">
+              <strong>Confirmed wrapper requirement</strong>
+              <p>
+                The runtime must set <code>thisProgram: "/app/cnes"</code> and create or mount <code>/app/materials</code> before
+                invoking <code>main</code>. If the materials directory is missing, CoNES attempts the Python substance-building
+                fallback and pollutes stdout.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="runtime-data-title">
+          <div class="section-header">
+            <h2 id="runtime-data-title">Runtime Data Status</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Packaged Assets</h3>
+              <p>
+                The existing binary material tables and standard library files have been copied into
+                <code>Web Version/public/runtime-data</code>. This makes runtime data a first-class static asset set for the browser
+                worker, not a later workaround.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Mount Contract</h3>
+              <p>
+                Manifests declare the browser URL and target virtual filesystem path for each asset. The worker should load
+                <code>/runtime-data/materials/manifest.json</code> and <code>/runtime-data/libs/manifest.json</code>, then write
+                every listed file before calling CoNES. Entries include <code>bytes</code> and <code>sha256</code> for integrity
+                checks.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="artifact-title">
+          <div class="section-header">
+            <h2 id="artifact-title">Runtime Artifact Contract</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Proof Location</h3>
+              <p>
+                The first successful modular WASM artifacts were generated under <code>/private/tmp/cnes-wasm-probe</code>. That
+                location is proof-only and should not be the browser runner's dependency.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Packet 002 Location</h3>
+              <p>
+                Packet 002 builds <code>cnes-module.js</code> and <code>cnes-module.wasm</code> into
+                <code>Web Version/public/runtime</code>, then loads them from the browser worker over HTTP. Packet 003 should keep
+                these paths stable while migrating the UI to Vite, React, Tailwind v4, and shadcn/ui.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="architecture-title">
+          <div class="section-header">
+            <h2 id="architecture-title">Target Architecture</h2>
+          </div>
+          <div class="section-body">
+            <div class="flow" aria-label="MVP execution flow">
+              <article class="flow-step">
+                <span>Step 1</span>
+                <p>User uploads an existing <code>.cnes</code> file.</p>
+              </article>
+              <article class="flow-step">
+                <span>Step 2</span>
+                <p>The browser writes the file into the WASM virtual filesystem.</p>
+              </article>
+              <article class="flow-step">
+                <span>Step 3</span>
+                <p>A Web Worker invokes the wrapped CLI with <code>input.cnes --json</code>.</p>
+              </article>
+              <article class="flow-step">
+                <span>Step 4</span>
+                <p>The worker captures stdout and returns JSON to the UI.</p>
+              </article>
+              <article class="flow-step">
+                <span>Step 5</span>
+                <p>The UI offers a downloadable JSON result file.</p>
+              </article>
+            </div>
+
+            <pre><code>Vercel static assets
+  -> browser UI
+  -> Web Worker
+  -> Emscripten-generated CoNES runtime
+  -> virtual filesystem
+  -> captured stdout JSON
+  -> downloadable result</code></pre>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="constraints-title">
+          <div class="section-header">
+            <h2 id="constraints-title">Known Constraints</h2>
+          </div>
+          <div class="section-body three-column">
+            <article class="component">
+              <h3>No Core Refactor</h3>
+              <p>
+                The C++ engine should be treated as an existing CLI-shaped program. The web experiment should wrap it rather than
+                extracting a new library API.
+              </p>
+            </article>
+            <article class="component">
+              <h3>No Server Runtime</h3>
+              <p>
+                Vercel should host static files only for the MVP. Solver execution happens in the user's browser, not in Railway,
+                Redis workers, or serverless functions.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Uploaded Input First</h3>
+              <p>
+                The first test should not depend on bundled example scripts. The user should choose an existing local
+                <code>.cnes</code> file.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="wasm-title">
+          <div class="section-header">
+            <h2 id="wasm-title">WASM Questions To Answer First</h2>
+          </div>
+          <div class="section-body">
+            <ol class="numbered-list">
+              <li>Can the current C++20 source compile with Emscripten without changing the core solver architecture?</li>
+              <li>Does Emscripten support the current use of <code>std::format</code> in the selected compiler/runtime configuration?</li>
+              <li>Can <code>std::filesystem</code> operations be mapped to the virtual filesystem cleanly enough for input files, includes, libs, and materials?</li>
+              <li>Can stdout be captured reliably when invoking the CLI-shaped entry point from JavaScript?</li>
+              <li>Does the runtime behave predictably when <code>materials/</code> is missing, bundled, or lazy-loaded?</li>
+              <li>How should uploaded scripts with <code>include</code> dependencies be handled in a single-file MVP?</li>
+            </ol>
+            <div class="callout warn">
+              <strong>Planning limit</strong>
+              <p>
+                Because the core cannot be refactored, the plan must accept some awkwardness around simulating files and arguments.
+                A clean library-style API can remain a future recommendation, but it is not part of the first implementation path.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="phases-title">
+          <div class="section-header">
+            <h2 id="phases-title">Roadmap</h2>
+          </div>
+          <div class="section-body">
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Phase 0: Compile Probe</h3>
+                <small>Complete</small>
+              </div>
+              <p>
+                Emscripten build and modular runtime probes succeeded. The next work should preserve this exact wrapper shape while
+                moving from Node-hosted proof into a browser worker.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Phase 1: Browser Runtime Spike</h3>
+                <small>Complete</small>
+              </div>
+              <p>
+                Packet 002 built a small browser page with a file input and Web Worker. It loads packaged runtime data into the
+                virtual filesystem, writes the uploaded file, invokes CoNES with <code>--json</code>, captures stdout/stderr, and
+                exposes a JSON download.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Phase 2: Vite React App Shell</h3>
+                <small>Complete</small>
+              </div>
+              <p>
+                Packet 003 packaged the accepted runner into Vite, React, TypeScript, Tailwind v4, and shadcn/ui. The shell opens
+                directly to the runner and establishes lanes for Workbench, Workspace, Editor, CLI, Linter, Tools, and Docs. Human
+                verification accepted file selection and execution from the React runner.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Phase 2A: Vercel Origin And Preview Loop</h3>
+                <small>Complete</small>
+              </div>
+              <p>
+                Packet 004A connected the repo to GitHub origin <code>Rmorr2001/cones-web-version</code>, configured Vercel with
+                <code>Web Version</code> as the root, and verified the public preview path at
+                <code>https://cones-web-version.vercel.app/runner/</code>.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Phase 3: Runtime Hardening</h3>
+                <small>Diagnostics and cache behavior</small>
+              </div>
+              <p>
+                Runtime metadata, stronger error reporting, fetch/cache policy, Tools runtime status, and negative-path
+                verification are accepted. Packet 004B moves runtime loading into app startup so Run can focus on solve work.
+                Packet 005 is deployed with structured results, Packet 006A/B/C are integrated locally, and Packet 007 adds the
+                accepted Monaco-backed Workbench route with Raw output kept secondary.
+              </p>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Phase 4: IDE And Tooling Layers</h3>
+                <small>Results, editor, lint, docs</small>
+              </div>
+              <p>
+                Add the structured results viewer, editor-backed authoring, Monaco Workbench, manual lint diagnostics, debounced
+                auto lint, multi-file project behavior, and docs surface before the Vercel release candidate.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="risks-title">
+          <div class="section-header">
+            <h2 id="risks-title">Risk Register</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Risk</th>
+                  <th>Why It Matters</th>
+                  <th>Early Test</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>C++20 support gaps</td>
+                  <td>The current CLI may rely on standard library features that are not smooth in the WASM toolchain.</td>
+                  <td>Run the compile probe before building interface code.</td>
+                </tr>
+                <tr>
+                  <td>Filesystem assumptions</td>
+                  <td>The CLI expects paths, executable-relative materials, and normal file reads.</td>
+                  <td>Mount uploaded files and static assets into the virtual filesystem.</td>
+                </tr>
+                <tr>
+                  <td>Single-file upload limits</td>
+                  <td>Scripts using <code>include</code> may fail if dependencies are not uploaded or pre-mounted.</td>
+                  <td>Document MVP limitations and add multi-file upload later.</td>
+                </tr>
+                <tr>
+                  <td>Runtime size</td>
+                  <td>The browser must download WASM glue, runtime code, and material data.</td>
+                  <td>Measure first-load size after the initial Emscripten build.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="definition-title">
+          <div class="section-header">
+            <h2 id="definition-title">Definition Of MVP Success</h2>
+          </div>
+          <div class="section-body two-column">
+            <div class="callout ok">
+              <strong>Functional success</strong>
+              <p>
+                A user can open the deployed page, upload a local <code>.cnes</code> file, run it entirely in-browser, see whether
+                execution succeeded, and download the captured <code>--json</code> output.
+              </p>
+            </div>
+            <div class="callout info">
+              <strong>Technical success</strong>
+              <p>
+                The team understands the remaining blockers for materials, includes, browser compatibility, and future IDE features
+                based on a working WASM execution path rather than speculation.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Planning artifact for local discussion. Last updated: May 25, 2026 after Packet 008A/B local implementation.</p>
+    </main>
+  </body>
+</html>

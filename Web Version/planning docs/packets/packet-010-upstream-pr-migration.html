@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 010: Upstream Pull Request Migration</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 010 Spec Sheet</p>
+        <h1>Upstream Pull Request Migration</h1>
+        <p class="summary">
+          Move CoNES Studio from the standalone web deployment repository into the original CoNES repository as an additive browser
+          workbench, then point Vercel at the corrected upstream source after the pull request is accepted.
+        </p>
+        <div class="meta-row" aria-label="Packet status">
+          <span class="tag accent">Approved for execution</span>
+          <span class="tag">Fork based</span>
+          <span class="tag">Additive PR</span>
+          <span class="tag">No C++ core rewrite</span>
+          <span class="tag">Client-only runtime</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="source-title">
+          <div class="section-header">
+            <h2 id="source-title">Source Repositories</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Upstream</h3>
+              <p>
+                The authoritative project is <code>ajbenjam-purdue/CoNES</code>. The pull request branch must be based on its
+                default branch so GitHub can review the web app as a normal addition.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Current Web Repo</h3>
+              <p>
+                <code>Rmorr2001/cones-web-version</code> remains the staging source for the web app until the upstream pull request
+                is accepted. Its unrelated history should not be merged directly into upstream.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="scope-title">
+          <div class="section-header">
+            <h2 id="scope-title">PR Scope</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Include</h3>
+              <p>
+                Include <code>Web Version/</code>, packaged runtime assets under <code>Web Version/public/runtime*</code>, and the
+                current planning docs so the browser workbench context travels with the implementation.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Exclude</h3>
+              <p>
+                Exclude <code>.vercel/</code>, <code>dist/</code>, <code>node_modules/</code>, root-level Vercel link files, and
+                unrelated local agent instructions.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Preserve</h3>
+              <p>
+                Preserve <code>.cnes</code>, <code>--json</code>, <code>--lint</code>, runtime-data manifests, raw solver output,
+                and the validated C++ solver core.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Do Not Change</h3>
+              <p>
+                Do not refactor <code>CoNES/src/main.cpp</code>, move solver contracts, add a backend solve API, or make Vercel the
+                source of runtime truth.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="vercel-title">
+          <div class="section-header">
+            <h2 id="vercel-title">Vercel Redirect</h2>
+          </div>
+          <div class="section-body">
+            <p>
+              After upstream acceptance, change the Vercel project Git source from <code>Rmorr2001/cones-web-version</code> to
+              <code>ajbenjam-purdue/CoNES</code> while keeping <code>Web Version</code> as the root directory, Vite as the framework,
+              <code>npm install</code> as install command, <code>npm run build</code> as build command, and <code>dist</code> as
+              output directory.
+            </p>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="acceptance-title">
+          <div class="section-header">
+            <h2 id="acceptance-title">Acceptance</h2>
+          </div>
+          <div class="section-body">
+            <ul class="checklist">
+              <li><span class="box" aria-hidden="true"></span><span>Pull request branch is based on <code>ajbenjam-purdue/CoNES</code>.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>PR includes only the browser workbench contribution and supporting docs.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Local web verification passes from inside <code>Web Version</code>.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>PR description states that the C++ solver core and CLI contracts are preserved.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Vercel source-repo swap waits until the PR is accepted.</span></li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

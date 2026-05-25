@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 004C: Runtime Isolation Bug Fix</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 004C</p>
+        <h1>Runtime Isolation Bug Fix</h1>
+        <p class="summary">
+          This packet designs the fix for a first-run and file-order-dependent runtime symptom observed after Packet 004B. The goal
+          is to keep the optimistic prewarm experience while restoring native CLI-style isolation for each solve.
+        </p>
+        <div class="meta-row" aria-label="Packet metadata">
+          <span class="tag accent">Bug design</span>
+          <span class="tag accent">State isolation</span>
+          <span class="tag">After Packet 004B</span>
+          <span class="tag">No solver refactor</span>
+          <span class="tag">No backend</span>
+          <span class="tag">Preserve prewarm UX</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="problem-title">
+          <div class="section-header">
+            <h2 id="problem-title">Problem Statement</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Symptom</h3>
+              <p>
+                After a fresh app start, <code>test.cnes</code> can fail on the first browser run while
+                <code>HVAC_example.cnes</code> succeeds. After at least one successful run, subsequent runs appear normal. The user
+                cannot tell from the UI whether this is a solver failure, runtime initialization failure, stale state, or file
+                handling issue.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Known Non-Symptom</h3>
+              <p>
+                <code>modularity_usage.cnes</code> fails natively with
+                <code>NewtonSolver: Failed to converge after 5 attempts.</code>. That case is a valid CoNES solver-level failure,
+                not evidence of browser runtime corruption.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Expected Behavior</h3>
+              <p>
+                A browser run should match a native CLI process run for the same input. A failed solve must not influence the next
+                solve, and the first solve after prewarm must not behave differently from later solves.
+              </p>
+            </article>
+            <article class="component">
+              <h3>User-Facing Clarity</h3>
+              <p>
+                The UI currently reports <code>JSON Parsed</code> even when parsed JSON contains
+                <code>"success": false</code>. The fix should distinguish valid solver failure JSON from successful solve JSON.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="source-title">
+          <div class="section-header">
+            <h2 id="source-title">Likely Source</h2>
+          </div>
+          <div class="section-body">
+            <div class="callout risk">
+              <strong>Current prewarm reuses one mutable Emscripten module across solves</strong>
+              <p>
+                Packet 004B changed the runtime from process-like execution to a long-lived browser Worker that keeps one
+                initialized CoNES module alive. That reduces run latency, but it also means C++ static state, virtual filesystem
+                state, global parser/solver state, stdout hooks, and Emscripten runtime state can survive between solves.
+              </p>
+            </div>
+            <pre><code>Current Packet 004B flow:
+App load
+  -> create one Worker
+  -> create one Emscripten CoNES module
+  -> mount /app/materials and /app/libs once
+  -> keep module alive
+
+Every run
+  -> overwrite /work/input.cnes
+  -> callMain(["/work/input.cnes", "--json"]) again on the same module
+  -> reuse the same module for later files</code></pre>
+            <div class="callout warn">
+              <strong>Native parity mismatch</strong>
+              <p>
+                Native CoNES execution is process-shaped: each CLI invocation starts from a fresh process. Repeated
+                <code>callMain()</code> inside one Emscripten module is not the same contract unless the C++ program is explicitly
+                designed and tested for reentrant in-process execution.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="technical-title">
+          <div class="section-header">
+            <h2 id="technical-title">Technical Explanation</h2>
+          </div>
+          <div class="section-body three-column">
+            <article class="component">
+              <h3>Mutable Module State</h3>
+              <p>
+                The Emscripten module owns memory, filesystem state, runtime hooks, and loaded program state. Calling
+                <code>callMain()</code> repeatedly can leave data behind even when <code>/work/input.cnes</code> is overwritten.
+              </p>
+            </article>
+            <article class="component">
+              <h3>CoNES Is CLI-Shaped</h3>
+              <p>
+                The approved web boundary says to wrap <code>CoNES/src/main.cpp</code>, not refactor the solver. Therefore the
+                browser wrapper should emulate a new process per solve as closely as possible.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Prewarm Still Matters</h3>
+              <p>
+                The expensive browser work is mostly fetching WASM and runtime-data. We can prewarm those bytes without reusing the
+                same mutable C++ module for every solve.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="design-title">
+          <div class="section-header">
+            <h2 id="design-title">Fix Design</h2>
+          </div>
+          <div class="section-body">
+            <div class="callout ok">
+              <strong>Prewarm bytes, isolate solves</strong>
+              <p>
+                Keep the optimistic startup behavior, but redefine prewarm as asset preparation rather than reusable solver-module
+                preparation. Each Run should create a fresh CoNES module, mount already-fetched runtime-data bytes, call
+                <code>main</code> once, return output, and discard the module.
+              </p>
+            </div>
+            <pre><code>Proposed Packet 004C flow:
+App load
+  -> Worker starts
+  -> import cnes-module.js factory
+  -> fetch cnes-module.wasm via browser cache / Emscripten locateFile
+  -> fetch manifests
+  -> fetch, verify, and store runtime-data bytes in Worker memory
+  -> Tools reports Runtime assets ready
+
+Every run
+  -> create a fresh Emscripten module instance
+  -> create /app and /work directories
+  -> mount cached runtime-data bytes into the fresh module FS
+  -> write uploaded file to /work/input.cnes
+  -> callMain(["/work/input.cnes", "--json"]) exactly once
+  -> return stdout/stderr/timings
+  -> release module reference</code></pre>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="implementation-title">
+          <div class="section-header">
+            <h2 id="implementation-title">Implementation Plan</h2>
+          </div>
+          <div class="section-body">
+            <article class="phase">
+              <div class="phase-title">
+                <h3>1. Rename Runtime State</h3>
+                <small>Make status honest</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box" aria-hidden="true"></span><span>Change user-facing copy from <code>Runtime ready</code> to <code>Runtime assets ready</code> if the module is no longer kept alive.</span></li>
+                <li><span class="box" aria-hidden="true"></span><span>Keep the existing <code>idle</code>, <code>preparing</code>, <code>ready</code>, and <code>failed</code> lifecycle unless a clearer name is needed.</span></li>
+              </ul>
+            </article>
+
+            <article class="phase">
+              <div class="phase-title">
+                <h3>2. Cache Verified Runtime Data</h3>
+                <small>Worker-owned bytes</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box" aria-hidden="true"></span><span>During prewarm, fetch manifests and every listed runtime-data file.</span></li>
+                <li><span class="box" aria-hidden="true"></span><span>Verify byte counts and sha256 during prewarm.</span></li>
+                <li><span class="box" aria-hidden="true"></span><span>Store immutable records such as <code>{ vfsPath, bytes }</code> in Worker memory.</span></li>
+              </ul>
+            </article>
+
+            <article class="phase">
+              <div class="phase-title">
+                <h3>3. Fresh Module Per Run</h3>
+                <small>Process-like execution</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box" aria-hidden="true"></span><span>On each run, call the Emscripten factory to create a fresh module instance.</span></li>
+                <li><span class="box" aria-hidden="true"></span><span>Mount cached runtime-data bytes into that fresh instance.</span></li>
+                <li><span class="box" aria-hidden="true"></span><span>Call <code>callMain(["/work/input.cnes", "--json"])</code> once, then drop the module reference.</span></li>
+              </ul>
+            </article>
+
+            <article class="phase">
+              <div class="phase-title">
+                <h3>4. Clarify Solver Failure JSON</h3>
+                <small>Readable state</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box" aria-hidden="true"></span><span>If stdout parses and <code>parsedJson.success === false</code>, show <code>Solver failed</code> instead of <code>JSON Parsed</code>.</span></li>
+                <li><span class="box" aria-hidden="true"></span><span>Surface <code>parsedJson.error</code> in the side panel without hiding stdout.</span></li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="verification-title">
+          <div class="section-header">
+            <h2 id="verification-title">Verification Matrix</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Case</th>
+                  <th>Expected Result</th>
+                  <th>Why It Matters</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Fresh page, first run <code>test.cnes</code></td>
+                  <td>Success, exit <code>0</code>, <code>T_surface = 40 C</code></td>
+                  <td>Directly covers the reported first-run symptom.</td>
+                </tr>
+                <tr>
+                  <td>Fresh page, first run <code>HVAC_example.cnes</code></td>
+                  <td>Success, exit <code>0</code>, <code>COP_HP = 11.7950669027</code></td>
+                  <td>Preserves current material-heavy success path.</td>
+                </tr>
+                <tr>
+                  <td><code>modularity_usage.cnes</code></td>
+                  <td>Solver failure JSON, exit <code>1</code>, UI says <code>Solver failed</code></td>
+                  <td>Confirms real solver failures are not confused with runtime failures.</td>
+                </tr>
+                <tr>
+                  <td>Failure followed by <code>test.cnes</code></td>
+                  <td>Second run succeeds</td>
+                  <td>Proves failure does not poison later solves.</td>
+                </tr>
+                <tr>
+                  <td><code>test.cnes</code> followed by <code>HVAC_example.cnes</code>, then <code>test.cnes</code></td>
+                  <td>All valid cases succeed</td>
+                  <td>Proves file-order independence.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="size-title">
+          <div class="section-header">
+            <h2 id="size-title">Payload Notes</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Current Build Size</h3>
+              <p>
+                Current <code>dist</code> is about <code>3.9M</code> on disk. Runtime assets are about <code>752K</code>, with
+                <code>cnes-module.wasm</code> around <code>650K</code> raw and roughly <code>247K</code> gzipped.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Runtime Data Size</h3>
+              <p>
+                Runtime data is about <code>2.13 MiB</code> actual bytes across <code>244</code> files. Materials account for
+                <code>240</code> small files and about <code>2.06 MiB</code>. Gzipped file-by-file size is about
+                <code>1.74 MiB</code>.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Implication</h3>
+              <p>
+                The total payload is acceptable for an MVP, but many small material requests make prewarm chatty. This packet does
+                not require bundling material files, but future work may package runtime-data into fewer static archives.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Do Not Optimize Prematurely</h3>
+              <p>
+                Fix correctness and state isolation before compressing or repacking runtime-data. A smaller corrupt runtime is not
+                a better runtime.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="agent-title">
+          <div class="section-header">
+            <h2 id="agent-title">Agent Directive</h2>
+          </div>
+          <div class="section-body">
+            <div class="callout warn">
+              <strong>Implementation boundary</strong>
+              <p>
+                Do not refactor CoNES C++ or change the JSON contract. The owned work is the browser wrapper, Worker lifecycle,
+                runtime-data caching strategy, UI labeling, and verification.
+              </p>
+            </div>
+            <ul class="component-list">
+              <li>Read this packet, Packet 004B, <code>public/runtime/cnes-worker.js</code>, <code>worker-client.ts</code>, and <code>runtime-prewarm.ts</code> before editing.</li>
+              <li>Preserve <code>thisProgram: "/app/cnes"</code>, <code>/runtime</code>, <code>/runtime-data</code>, and <code>callMain(["/work/input.cnes", "--json"])</code>.</li>
+              <li>Keep local-first static deployment. Do not introduce a backend, queue, server action, database, auth, Railway, or Redis.</li>
+              <li>Extend browser verification to cover first-run <code>test.cnes</code> after a fresh page load and failure-then-success ordering.</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Packet owner: Scrum Lord. Packet status: design ready for implementation. Last updated: May 24, 2026.</p>
+    </main>
+  </body>
+</html>

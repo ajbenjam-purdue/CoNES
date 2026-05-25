@@ -1,0 +1,17 @@
+{
+  "version": "2026-05-24",
+  "kind": "cones-libs",
+  "count": 1,
+  "totalBytes": 1276,
+  "mountRoot": "/app/libs",
+  "integrity": "sha256",
+  "files": [
+    {
+      "name": "heat_transfer_lib.cnes",
+      "bytes": 1276,
+      "sha256": "76a3e6b61b5bac222fee67de3dc6bede95e4e8e847095b9e089bcb785dce6120",
+      "url": "/runtime-data/libs/heat_transfer_lib.cnes",
+      "vfsPath": "/app/libs/heat_transfer_lib.cnes"
+    }
+  ]
+}

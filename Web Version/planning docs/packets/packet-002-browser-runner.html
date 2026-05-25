@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 002: Browser Runner Implementation</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 002</p>
+        <h1>Browser Runner Implementation</h1>
+        <p class="summary">
+          This packet moves the project from WASM feasibility into the first browser-visible implementation. The target is a minimal
+          static runner that first loads the packaged CoNES runtime data, then uploads one <code>.cnes</code> file, invokes the
+          proven modular CoNES WASM runtime inside a worker, displays captured JSON, and offers a downloadable result.
+        </p>
+        <div class="meta-row" aria-label="Packet metadata">
+          <span class="tag accent">Accepted by human review</span>
+          <span class="tag">Gate 1 passed in Node</span>
+          <span class="tag">Gate 2 passed in Chrome</span>
+          <span class="tag">Binary tables packaged</span>
+          <span class="tag">Implementation packet</span>
+          <span class="tag">No full IDE yet</span>
+          <span class="tag">Packet 003 next</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="context-title">
+          <div class="section-header">
+            <h2 id="context-title">Context</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>What Is Proven</h3>
+              <p>
+                The existing CLI-shaped CoNES source compiled to a modular Emscripten runtime. Node-hosted probes successfully ran
+                unit, include, and material-dependent scripts through <code>callMain()</code>. The existing material tables have now
+                been copied into a static runtime-data package for browser loading.
+              </p>
+            </article>
+            <article class="component">
+              <h3>What Is Not Proven</h3>
+              <p>
+                Gate 2 proves browser execution in Chrome automation, and the current runner has now passed human acceptance for
+                the intended Packet 002 behavior. What remains is productizing the proof inside the Vite/React application shell
+                without losing the raw stdout/stderr contract.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="build-artifacts-title">
+          <div class="section-header">
+            <h2 id="build-artifacts-title">WASM Build Artifacts</h2>
+          </div>
+          <div class="section-body">
+            <div class="callout warn">
+              <strong>Produced for browser runner integration</strong>
+              <p>
+                Packet 002 now produces the Emscripten artifacts into the Web Version static runtime folder so the worker can load
+                them over HTTP.
+              </p>
+            </div>
+            <pre><code>From Web Version/:
+./scripts/build-wasm.sh</code></pre>
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Expected Artifact</th>
+                  <th>Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>Web Version/public/runtime/cnes-module.js</code></td>
+                  <td>Emscripten factory imported by the browser worker.</td>
+                </tr>
+                <tr>
+                  <td><code>Web Version/public/runtime/cnes-module.wasm</code></td>
+                  <td>Solver binary fetched by the Emscripten factory through <code>locateFile</code>.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="runtime-data-title">
+          <div class="section-header">
+            <h2 id="runtime-data-title">Runtime Data Package</h2>
+          </div>
+          <div class="section-body">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Asset Set</th>
+                  <th>Static Path</th>
+                  <th>Virtual Mount</th>
+                  <th>Contents</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Materials</td>
+                  <td><code>Web Version/public/runtime-data/materials/</code></td>
+                  <td><code>/app/materials</code></td>
+                  <td>240 <code>.cnesbin</code> files plus <code>manifest.json</code>.</td>
+                </tr>
+                <tr>
+                  <td>Libraries</td>
+                  <td><code>Web Version/public/runtime-data/libs/</code></td>
+                  <td><code>/app/libs</code></td>
+                  <td>1 standard <code>.cnes</code> library plus <code>manifest.json</code>.</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="callout ok">
+              <strong>Packet 002 prerequisite resolved</strong>
+              <p>
+                The worker should use the manifests at <code>/runtime-data/materials/manifest.json</code> and
+                <code>/runtime-data/libs/manifest.json</code> to fetch static assets and write them to their declared
+                <code>vfsPath</code> values before invoking CoNES. Each fetched file should match the manifest's <code>bytes</code>
+                and <code>sha256</code> before it is mounted.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="goal-title">
+          <div class="section-header">
+            <h2 id="goal-title">Goal</h2>
+          </div>
+          <div class="section-body">
+            <div class="flow" aria-label="Packet 002 execution flow">
+              <article class="flow-step">
+                <span>Upload</span>
+                <p>User selects one local <code>.cnes</code> file.</p>
+              </article>
+              <article class="flow-step">
+                <span>Assets</span>
+                <p>Worker loads manifests and mounts runtime data.</p>
+              </article>
+              <article class="flow-step">
+                <span>Prepare</span>
+                <p>Worker writes upload to <code>/work/input.cnes</code>.</p>
+              </article>
+              <article class="flow-step">
+                <span>Run</span>
+                <p>Worker calls <code>callMain(["/work/input.cnes", "--json"])</code>.</p>
+              </article>
+              <article class="flow-step">
+                <span>Export</span>
+                <p>UI displays stdout JSON and downloads a JSON file.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="ownership-title">
+          <div class="section-header">
+            <h2 id="ownership-title">Workstreams</h2>
+          </div>
+          <div class="section-body">
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Worker Runtime</h3>
+                <small>Critical path</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Create a browser worker that imports the Emscripten factory.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Use <code>locateFile</code> so <code>.wasm</code> resolves from the intended runtime path.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Create the module with <code>thisProgram: "/app/cnes"</code> so CoNES resolves executable-relative assets under <code>/app</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Create <code>/app</code>, <code>/app/materials</code>, <code>/app/libs</code>, and <code>/work</code> before loading runtime data.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Fetch material and lib manifests, verify <code>bytes</code> and <code>sha256</code>, then write every listed file to its declared <code>vfsPath</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Capture stdout and stderr separately with worker responses.</span></li>
+              </ul>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Runner UI</h3>
+                <small>Keep it minimal</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Add one file input for <code>.cnes</code> files.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Add run, reset, status, stdout, stderr, and download regions.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Show JSON parse status without replacing raw stdout as the source of truth.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Avoid editor, autocomplete, project tree, accounts, server calls, or examples-first flow.</span></li>
+              </ul>
+            </article>
+            <article class="phase">
+              <div class="phase-title">
+                <h3>Runtime Assets</h3>
+                <small>Static only</small>
+              </div>
+              <ul class="checklist">
+                <li><span class="box done" aria-hidden="true"></span><span>Place generated <code>cnes-module.js</code> and <code>cnes-module.wasm</code> where the worker can fetch them over HTTP.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Use packaged static materials from <code>public/runtime-data/materials</code>, not an empty-directory workaround.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Use packaged static libraries from <code>public/runtime-data/libs</code>.</span></li>
+                <li><span class="box done" aria-hidden="true"></span><span>Verify the worker can fetch all manifest-listed files over HTTP before the solve starts.</span></li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="agent-pass-title">
+          <div class="section-header">
+            <h2 id="agent-pass-title">Completed Sub-Agent Pass</h2>
+          </div>
+          <div class="section-body">
+            <div class="callout ok">
+              <strong>Pass completed</strong>
+              <p>
+                Packet 002 used three bounded lanes: Runtime/Worker, Minimal Runner UI, and Verification. Their outputs were
+                integrated into <code>Web Version/public</code>, <code>Web Version/scripts</code>, and
+                <code>Web Version/runner verification</code>.
+              </p>
+            </div>
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Agent Lane</th>
+                  <th>Completed Scope</th>
+                  <th>Still Out Of Scope</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Runtime / Worker</td>
+                  <td>Built WASM into <code>public/runtime</code>, loaded the module in a Worker, set <code>thisProgram: "/app/cnes"</code>, configured <code>locateFile</code>, created the VFS, verified and mounted runtime-data manifests, and invoked <code>callMain()</code>.</td>
+                  <td>Visual UI polish, editor work, project trees, or changing CoNES C++ core behavior.</td>
+                </tr>
+                <tr>
+                  <td>Minimal Runner UI</td>
+                  <td>Implemented upload control, run/reset controls, status, stdout, stderr, JSON parse indicator, and JSON download.</td>
+                  <td>Autocomplete, lint UI, tabs, examples-first flow, accounts, or full IDE design.</td>
+                </tr>
+                <tr>
+                  <td>Verification</td>
+                  <td>Served over local HTTP, ran unit/include/material/failure smoke cases in Chrome automation, compared against native JSON expectations, and recorded human acceptance.</td>
+                  <td>Deployment hardening beyond local HTTP proof or optimizing material caching.</td>
+                </tr>
+              </tbody>
+            </table>
+            <pre><code>Critical path:
+build WASM into Web Version/public/runtime
+  -> serve Web Version over local HTTP
+  -> load browser Worker
+  -> load cnes-module.js / cnes-module.wasm
+  -> set thisProgram: "/app/cnes"
+  -> load and verify runtime-data manifests
+  -> write uploaded .cnes to /work/input.cnes
+  -> callMain(["/work/input.cnes", "--json"])
+  -> show stdout/stderr
+  -> download JSON</code></pre>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="contract-title">
+          <div class="section-header">
+            <h2 id="contract-title">Worker Contract</h2>
+          </div>
+          <div class="section-body">
+            <pre><code>Request:
+{
+  type: "run",
+  requestId: string,
+  file: {
+    name: string,
+    size: number,
+    lastModified: number,
+    bytes: ArrayBuffer
+  },
+  argv: ["/work/input.cnes", "--json"]
+}
+
+Success:
+{
+  type: "success",
+  requestId: string,
+  exitCode: 0,
+  stdout: string,
+  stderr: string,
+  parsedJson?: unknown,
+  timings: { wallMs: number }
+}
+
+Failure:
+{
+  type: "failure",
+  requestId: string,
+  exitCode: number | null,
+  stdout: string,
+  stderr: string,
+  error: { code: string, message: string },
+  timings?: { wallMs: number }
+}</code></pre>
+            <pre><code>Runtime asset manifest file entry:
+{
+  "name": "Water_h.cnesbin",
+  "bytes": 13452,
+  "sha256": "cdbefa8d3cc170a3bf108bb407c6dbb28472010481a8e807b774552abcd34434",
+  "url": "/runtime-data/materials/Water_h.cnesbin",
+  "vfsPath": "/app/materials/Water_h.cnesbin"
+}</code></pre>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="verification-title">
+          <div class="section-header">
+            <h2 id="verification-title">Verification</h2>
+          </div>
+          <div class="section-body">
+            <div class="callout ok">
+              <strong>Chrome automation passed</strong>
+              <p>
+                <code>verify-browser-runner.mjs</code> drove the runner through Chrome DevTools at
+                <code>http://127.0.0.1:4173/runner/</code>. It selected browser <code>File</code> objects, clicked Run, waited for
+                terminal UI state, and validated stdout JSON for unit, include, material, and invalid parser cases.
+              </p>
+            </div>
+            <pre><code>Local server:
+cd "/Users/rj/Documents/Benjamins Project/Web Version/public"
+python3 -m http.server 4173 --bind 127.0.0.1
+
+Chrome automation:
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+  --headless=new \
+  --disable-gpu \
+  --no-first-run \
+  --user-data-dir=/private/tmp/cones-chrome-cdp \
+  --remote-debugging-address=127.0.0.1 \
+  --remote-debugging-port=9223 \
+  about:blank
+
+node "/Users/rj/Documents/Benjamins Project/Web Version/runner verification/verify-browser-runner.mjs"</code></pre>
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Case</th>
+                  <th>Input</th>
+                  <th>Expected Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Unit smoke</td>
+                  <td><code>CoNES/tests/test_units.cnes</code></td>
+                  <td>Passed in Chrome: valid JSON with <code>success: true</code> and <code>Power = 50 W</code>.</td>
+                </tr>
+                <tr>
+                  <td>Include smoke</td>
+                  <td><code>CoNES/examples/test.cnes</code></td>
+                  <td>Passed in Chrome: valid JSON with <code>T_surface = 40 C</code> when <code>/app/libs/heat_transfer_lib.cnes</code> is mounted.</td>
+                </tr>
+                <tr>
+                  <td>Failure smoke</td>
+                  <td>A small invalid script such as <code>x :=</code></td>
+                  <td>Passed in Chrome: nonzero exit, structured JSON <code>success: false</code>, and stderr remains separately visible.</td>
+                </tr>
+                <tr>
+                  <td>Material smoke</td>
+                  <td><code>CoNES/examples/HVAC_example.cnes</code></td>
+                  <td>Passed in Chrome: valid JSON with <code>COP_HP = 11.7950669027</code> when material tables are mounted.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="done-title">
+          <div class="section-header">
+            <h2 id="done-title">Done Criteria</h2>
+          </div>
+          <div class="section-body">
+            <ul class="checklist">
+              <li><span class="box done" aria-hidden="true"></span><span>Runs over HTTP locally, not only from <code>file://</code>.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Material and lib manifests load over HTTP, pass <code>bytes</code>/<code>sha256</code> checks, and all listed files are written into the WASM filesystem.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>One uploaded <code>.cnes</code> file reaches the worker and executes with <code>--json</code>.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>stdout JSON and stderr are visible separately.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>User can download the JSON result after successful JSON stdout.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Implementation does not refactor the CoNES C++ core.</span></li>
+              <li><span class="box done" aria-hidden="true"></span><span>Human reviewer confirms native file picker and saved download behavior.</span></li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="next-title">
+          <div class="section-header">
+            <h2 id="next-title">Next Handoff</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Packet 003</h3>
+              <p>
+                The next packet should move this proven static runner into a Vite, React, Tailwind v4, and shadcn/ui application
+                shell. It should preserve <code>/runtime</code>, <code>/runtime-data</code>, <code>thisProgram: "/app/cnes"</code>,
+                and <code>callMain(["/work/input.cnes", "--json"])</code>.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Do Not Reopen</h3>
+              <p>
+                Packet 003 should not redesign the solver contract, introduce a backend, rewrite CoNES, or replace raw JSON as the
+                source of truth. The job is packaging and app-shell migration around a verified runtime.
+              </p>
+            </article>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">Packet owner: Scrum Lord. Packet status: accepted after Chrome automation and human review. Last updated: May 24, 2026.</p>
+    </main>
+  </body>
+</html>
