@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packet 012: Runtime Material Binaries Hotfix</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <main class="document-shell">
+      <header class="document-header">
+        <p class="eyebrow">Packet 012 Hotfix Spec</p>
+        <h1>Runtime Material Binaries</h1>
+        <p class="summary">
+          The upstream merge included the browser material manifest but omitted the referenced <code>.cnesbin</code> material
+          tables because upstream <code>.gitignore</code> ignored all <code>*.cnesbin</code> files. Restore the runtime package by
+          explicitly tracking the web runtime material binaries.
+        </p>
+        <div class="meta-row" aria-label="Packet status">
+          <span class="tag accent">Production hotfix</span>
+          <span class="tag">Missing runtime files</span>
+          <span class="tag">No solver changes</span>
+          <span class="tag">Manifest integrity preserved</span>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="section-block" aria-labelledby="scope-title">
+          <div class="section-header">
+            <h2 id="scope-title">Scope</h2>
+          </div>
+          <div class="section-body two-column">
+            <article class="component">
+              <h3>Modify</h3>
+              <p>
+                Update root <code>.gitignore</code> to allow <code>Web Version/public/runtime-data/materials/*.cnesbin</code>, then
+                add the 240 material binaries referenced by <code>materials/manifest.json</code>.
+              </p>
+            </article>
+            <article class="component">
+              <h3>Do Not Modify</h3>
+              <p>
+                Do not change CoNES C++ source, worker contracts, manifest hashes, CLI flags, Vercel root settings, or browser
+                runtime invocation.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="acceptance-title">
+          <div class="section-header">
+            <h2 id="acceptance-title">Acceptance</h2>
+          </div>
+          <div class="section-body">
+            <ul class="checklist">
+              <li><span class="box" aria-hidden="true"></span><span><code>npm run verify:runtime-data</code> passes in <code>Web Version</code>.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span><code>npm run build</code> passes in <code>Web Version</code>.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span><code>/runtime-data/materials/Ethylene_Pr.cnesbin</code> returns <code>200</code> after deployment.</span></li>
+              <li><span class="box" aria-hidden="true"></span><span>Public CoNES Studio runtime prewarm no longer fails on missing material files.</span></li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

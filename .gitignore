@@ -39,6 +39,7 @@ Eigen
 
 # Materials
 *.cnesbin
+!Web Version/public/runtime-data/materials/*.cnesbin
 
 # Python UI
 .venv
@@ -46,3 +47,4 @@ Eigen
 __pycache__
 .DS_Store
 cnes
+.vercel
