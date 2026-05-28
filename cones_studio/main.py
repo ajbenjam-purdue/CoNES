@@ -30,16 +30,11 @@ import tempfile
 from typing import Optional
 from editor import CodeEditor, UI_FONT, UI_FONT_SMALL, MONOSPACED_FONT
 from backend import CoNESBackend, parse_time, is_cnes
+from parametric_ui import ParametricPane
+from colors import * # Used for less terrible formatting
 
 ctk.set_appearance_mode("Dark")
-ctk.set_default_color_theme("blue")
-
-color_UI = "#0e639c"
-color_UI_hover = "#105380"
-
-color_status_OK = "#007acc"
-color_status_Success = "#16825d"
-color_status_Bad = "#a1260d"
+ctk.set_default_color_theme("dark-blue")
 
 class CoNESStudio(ctk.CTk):
     def __init__(self):
@@ -67,17 +62,6 @@ class CoNESStudio(ctk.CTk):
         # Toolbar
         self.toolbar = ctk.CTkFrame(self, height=35, corner_radius=0, fg_color="#2d2d2d", border_width=0)
         self.toolbar.grid(row=0, column=0, sticky="ew")
-        
-        # Buttons with 0 corner radius and flat styling
-        btn_opts = {
-            "width": 50, 
-            "height": 25, 
-            "corner_radius": 0, 
-            "font": UI_FONT,
-            "fg_color": "transparent",
-            "hover_color": "#3e3e3e",
-            "text_color": "#cccccc"
-        }
 
         self.btn_new = ctk.CTkButton(self.toolbar, text="New", command=self.new_file, **btn_opts)
         self.btn_new.pack(side="left")
@@ -126,7 +110,12 @@ class CoNESStudio(ctk.CTk):
         self.results_tabs.grid(row=0, column=1, sticky="nsew", padx=(1, 0))
         self.tab_solution = self.results_tabs.add("Solution")
         self.tab_residuals = self.results_tabs.add("Residuals")
-        
+        self.tab_parametric = self.results_tabs.add("Parametric Studies")
+
+        # Parametric runs pane
+        self.parametric_pane = ParametricPane(self.tab_parametric, self)
+        self.parametric_pane.pack(fill="both", expand=True)
+
         self._setup_solution_table()
         self.tree.bind("<<TreeviewSelect>>", self._on_table_select)
         self.tree_res.bind("<<TreeviewSelect>>", self._on_residual_select)
@@ -164,9 +153,6 @@ class CoNESStudio(ctk.CTk):
 
         line = self.tree_res.item(selected[0])["values"][3]
         self.editor.highlight_line(line)
-        # item = self.tree_res.item(selected[0])
-        # var_name = item['values'][0] # Variable name is first col
-        # self.editor.highlight_symbol(var_name)
 
     def _setup_solution_table(self):
         style = ttk.Style()

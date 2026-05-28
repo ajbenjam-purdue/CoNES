@@ -2,17 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 import customtkinter as ctk
 import re
-import sys
 from typing import Callable, Optional, Dict, Any
-
-MONOSPACED_TYPEFACE = "Consolas" if sys.platform.startswith('win32') else "Andale Mono"
-MONOSPACED_FONT = (MONOSPACED_TYPEFACE, 11)
-MONOSPACED_FONT_BOLD = (MONOSPACED_TYPEFACE, 11, "bold")
-MONOSPACED_FONT_SMALL = (MONOSPACED_TYPEFACE, 9)
-
-UI_TYPEFACE = "Segoe UI" if sys.platform.startswith('win32') else "SF Pro Light"
-UI_FONT = (UI_TYPEFACE, 11)
-UI_FONT_SMALL = (UI_TYPEFACE, 9)
+from colors import *
 
 class CodeEditor(ctk.CTkFrame):
     def __init__(self, master, metadata=None, **kwargs):
