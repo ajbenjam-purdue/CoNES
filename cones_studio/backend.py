@@ -20,6 +20,11 @@ def parse_time(solver_ms):
 class CoNESBackend:
     def __init__(self, executable_path=DEFAULT_EXECUTABLE):
         self.exe = os.path.abspath(executable_path)
+        
+    def version(self):# -> None|str:
+        result = subprocess.run([self.exe, "--version"], capture_output=True, text=True, check=False)
+        if result.returncode == 0: return result.stdout.strip()
+        return None
 
     def solve(self, file_path, cwd=None):
         """Runs the solver on a file and returns the JSON result."""

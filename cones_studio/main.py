@@ -40,12 +40,13 @@ class CoNESStudio(ctk.CTk):
     def __init__(self):
         super().__init__()
         
-        self.title("CoNES Studio")
+        self.backend = CoNESBackend()
+        result = self.backend.version()
+        self.title(f"CoNES Studio ({result})")
         self.geometry("1100x750")
         self.configure(fg_color="#1e1e1e")
         
         # Backend & File State
-        self.backend = CoNESBackend()
         self.temp_dir = os.path.join(tempfile.gettempdir(), "cones_studio")
         os.makedirs(self.temp_dir, exist_ok=True)
         self.shadow_path = os.path.join(self.temp_dir, "shadow_solve.cnes")
