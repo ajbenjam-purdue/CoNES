@@ -1,5 +1,12 @@
 ## CoNES Changelog
-CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.1.7`.
+CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.1.8`.
+
+### Version 0.1.8
+  - Internal rework of python interface
+    - System now uses a virtual environment for package management
+    - Significant code was abstracted to provide a more uniform and clean API experience
+  - Bug fixes
+    - Corrected a unit descrepancy resulting in `k-` and `M-` prefixes for energy/force not being registered
 
 ### Version 0.1.7
   - Added a variety of 1D, SS methods from Bergman et. Al, Fundamentals of Heat and Mass Transfer (7th ed.); more of the tables will be brought into the libraries for ease of use over time

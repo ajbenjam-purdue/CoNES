@@ -1,26 +1,6 @@
-# courtesy of https://stackoverflow.com/questions/46419607/how-to-automatically-install-required-packages-from-a-python-script-as-necessary
-import importlib.metadata, subprocess, sys, socket
-
-# Get required packages
-required  = {'customtkinter','CoolProp'}
-installed = {pkg.metadata['Name'] for pkg in importlib.metadata.distributions()}
-missing   = required - installed
-
-def is_connected():
-    try:
-        # Attempt to connect to Google's public DNS
-        socket.create_connection(("8.8.8.8", 53), timeout=4)
-        return True
-    except OSError:
-        return False
-
-# Install if needed
-if missing:
-    try:
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', *missing])
-    except Exception as e:
-        if is_connected(): raise TimeoutError("Connection timed out when attempting to install packages: "+str(list(missing))+". The local machine does not seem to be able to connect to Google's DNS server, please check your network and try again.")
-        raise TimeoutError("Connection timed out when attempting to install packages: "+str(list(missing))+". Exception: "+str(e))
+# Modified from src: https://stackoverflow.com/questions/46419607/how-to-automatically-install-required-packages-from-a-python-script-as-necessary
+from bootstrap import ensure_dependencies
+ensure_dependencies({'customtkinter', 'CoolProp'})
 
 import customtkinter as ctk
 from tkinter import ttk, filedialog

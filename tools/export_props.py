@@ -4,16 +4,11 @@ subs = ["Water", "R12", "R13", "R14", "R21", "R22", "R32", "R1234yf", "R125", "R
 count = 40
 
 # courtesy of https://stackoverflow.com/questions/46419607/how-to-automatically-install-required-packages-from-a-python-script-as-necessary
-import importlib.metadata, subprocess, sys
-
-# Get required package
-required  = {'CoolProp'}
-installed = {pkg.metadata['Name'] for pkg in importlib.metadata.distributions()}
-missing   = required - installed
-
-# Install if needed
-if missing:
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', *missing])
+import sys, os
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(script_dir, '..', 'cones_studio'))
+from bootstrap import ensure_dependencies
+ensure_dependencies({'CoolProp', 'numpy'})
 
 import CoolProp.CoolProp as CP
 import numpy as np

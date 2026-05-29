@@ -57,6 +57,11 @@ private:
         register_unit("C", Unit::Celsius(), "Celsius [Temperature]");
         
         // SI Prefixes & Common variations
+        register_unit("kJ", Unit::Joule() * 1000.0, "Kilojoule");
+        register_unit("MJ", Unit::Joule() * 1e6, "Megajoule");
+        register_unit("GJ", Unit::Joule() * 1e9, "Gigajoule");
+        register_unit("kN", Unit::Newton() * 1000.0, "Kilonewton");
+        register_unit("MN", Unit::Newton() * 1e6, "Meganewton");
         register_unit("kW", Unit::Watt() * 1000.0, "Kilowatt");
         register_unit("MW", Unit::Watt() * 1e6, "Megawatt");
         register_unit("km", Unit::Meter() * 1000.0, "Kilometer");

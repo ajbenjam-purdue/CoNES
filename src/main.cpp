@@ -4,6 +4,7 @@
 #include "core/property_functions.hpp"
 #include "core/tabulated_substance.hpp"
 #include "core/version.hpp"
+#include "core/python_manager.hpp"
 #include <iostream>
 #include <cstdlib>
 #include <fstream>
@@ -253,46 +254,22 @@ void lint_out(bool lint_mode, bool json_out, const System& system, const TimeCon
 }
 
 // Build the substances library using the Python interpreter on PATH
-int build_substances()
+int build_substances(const std::filesystem::path& exe_path)
 {
-    // Should be platform agnostic
-    int result = (win ? 
-        std::system("python3 --version > NUL 2>&1") : 
-        std::system("python3 --version > /dev/null 2>&1")
-    );
-    
-    // Not installed
-    if (result != 0) {
-        std::cout << "Python is not installed or not in PATH." << std::endl;
-        return 1;
-    }
-
-    // Attempt
-    std::cout << "Python is installed, attempting to build substance binary tables..." << std::endl;
-    std::system("python3 tools/export_props.py"); // I think this is a pretty poor way to do this...
-    // TODO: Error checking for CoolProp not installed
-    return 0;
+    PythonManager py(exe_path);
+    return py.run_script("tools/export_props.py");
 }
 
 // Open CoNES studio via the Python interpreter on PATH
-int open_ide(std::string py_interp_path = "python3", std::string cnes_file_path = "")
+int open_ide(const std::filesystem::path& exe_path, std::string py_interp_path = "python3", std::string cnes_file_path = "")
 {
-    // Should be platform agnostic
-    int result = (win ? 
-        std::system(std::string(py_interp_path + " --version > NUL 2>&1").c_str()) : 
-        std::system(std::string(py_interp_path + " --version > /dev/null 2>&1").c_str())
-    );
+    PythonManager py(exe_path, py_interp_path);
+    std::cout << ">>> CoNES: Launching CoNES Studio..." << std::endl;
     
-    // Not installed
-    if (result != 0) {
-        if (py_interp_path == "python3") std::cerr << "Python is not installed or not in PATH." << std::endl;
-        else std::cerr << "An invalid interpreter path (" << py_interp_path << ") was passed." << std::endl;
-        return 1;
-    }
-
-    // Attempt to open
-    std::system(std::string(py_interp_path + " cones_studio/main.py" + (cnes_file_path.empty() ? "" : " ") + cnes_file_path).c_str());
-    return 0;
+    std::vector<std::string> args;
+    if (!cnes_file_path.empty()) args.push_back(cnes_file_path);
+    
+    return py.run_script("cones_studio/main.py", args);
 }
 
 int main(int argc, char *argv[])
@@ -352,7 +329,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        build_substances();
+        build_substances(argv[0]);
     }
 
     // Register Built-in Functions (Math & Property)
@@ -380,7 +357,7 @@ int main(int argc, char *argv[])
         }
         if (flag == "--build-substances")
         {
-            build_substances();
+            build_substances(argv[0]);
             return 0;
         }
         if (flag == "--IDE")
@@ -400,7 +377,7 @@ int main(int argc, char *argv[])
                     // std::cout << "python interpreter identified: " << py_interpreter_path;
                 }
             }
-            open_ide(py_interpreter_path, cnes_file_path);
+            open_ide(argv[0], py_interpreter_path, cnes_file_path);
             return 0;
         }
         if (flag == "-v")
