@@ -1,5 +1,23 @@
 ## CoNES Changelog
-CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.1.6`.
+CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.1.7`.
+
+### Version 0.1.7
+  - Added a variety of 1D, SS methods from Bergman et. Al, Fundamentals of Heat and Mass Transfer (7th ed.); more of the tables will be brought into the libraries for ease of use over time
+    - Heat rates for: `plane wall`, `cylindrical wall`, and `spherical wall`
+    - Heat fluxes for: `plane wall` and `spherical wall`
+    - Thermal resistances for: `plane wall`, `cylindrical wall`, and `spherical wall`
+  - Unit system revamped
+    - Implemented a recursive descent unit parser to interface with potential user strings (like `W/m*K`)
+    - Implemented a new typed system for tracking units, obseleted the older string-based system
+    - Implemented a unit registry and a unit checking system to provide better API access and .cnes interface
+      - Added a specific error message for an unidentified unit being lexed/parsed in a .cnes file
+    - Added direct API support for new base units: `Mols, Watts`
+    - Added new customary/standard units: `ft` (foot), `in` (inch), `mile`, `lbm` (pound-mass), `slg` (slug), `lbf` (pound-force), `psia` (pounds/sq-in, absolute), `psig` (pounds/sq-in, relative to `1 atm`), `atm` (atmosphere), `BTU` (British thermal units), `cal` (calorie), `hp` (horsepower), `F` (Fahrenheit), `R` (Rankine)
+    - Reworked the STP constants to just be in Pascals/Celcius to allow users to more easily cast into the desired units
+  - Bug fixes
+    - Corrected an unescaped quotation mark in the json output for certain error messages, which would occaisonally cause malformed json outputs
+    - Fixed an issue where the parser would give up trying to assign a unit if the unit was not SI-base
+  - Improved documentation
 
 ### Version 0.1.6
   - Added a slew of common thermodynamic cycle implementations in examples; in total, the following now are represented:

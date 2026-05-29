@@ -101,11 +101,6 @@ namespace cones
             if (!name.empty())
                 v.unit_name = name;
         }
-        void set_unit(int index, const std::string &name)
-        {
-            variables_.at(index).unit = Unit::from_string(name);
-            variables_.at(index).unit_name = name;
-        }
 
         /**
          * @brief Suggests a ballpark guess based on units if the value is still at its default (1.0, or scaled 1.0).

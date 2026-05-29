@@ -6,6 +6,8 @@
 #include <cmath>
 #include <vector>
 #include <sstream>
+#include <algorithm>
+#include <stdexcept>
 
 namespace cones
 {
@@ -44,6 +46,10 @@ namespace cones
                 new_dims[i] += other.dims[i];
             return {scale * other.scale, new_dims, 0.0}; // TODO: Review impact of offsets
         }
+        Unit operator*(double scalar) const
+        {
+            return {scale * scalar, dims, offset};
+        }
         Unit operator/(const Unit &other) const
         {
             std::vector<int> new_dims = dims;
@@ -54,35 +60,51 @@ namespace cones
         Unit pow(double p) const
         {
             std::vector<int> new_dims = dims;
-            for (int &d : new_dims)
-                d = static_cast<int>(d * p);
+            for (size_t i = 0; i < dims.size(); ++i)
+                new_dims[i] = static_cast<int>(std::round(dims[i] * p));
             return {std::pow(scale, p), new_dims, offset};
         }
 
         // Member method
         std::string to_string() const
         {
-            if (is_dimensionless())
-                return "";
+            if (is_dimensionless()) return "";
 
-            // Energy check: M*L^2/T^2
-            if (dims == std::vector<int>{1, 2, -2, 0, 0})
+            if (dims == std::vector<int>{1, 2, -2, 0, 0}) // Energy
+            {
+                if (std::abs(scale - 1e3) < 1e-5)
+                    return "kJ";
+                if (std::abs(scale - 1e6) < 1e-5)
+                    return "MJ";
+                if (std::abs(scale - 1e9) < 1e-5)
+                    return "GJ";
                 return "J";
-            if (dims == std::vector<int>{1, 1, -2, 0, 0})
+            }
+            if (dims == std::vector<int>{1, 1, -2, 0, 0}) // Force
+            {
+                if (std::abs(scale - 1e3) < 1e-5)
+                    return "kN";
+                if (std::abs(scale - 1e6) < 1e-5)
+                    return "MN";
                 return "N";
-            if (dims == std::vector<int>{0, 2, -2, 0, 0})
+            }
+            if (dims == std::vector<int>{0, 2, -2, 0, 0}) // Entropy
             {
                 return (std::abs(scale - 1000.0) < 1e-5) ? "kJ/kg" : "J/kg";
             }
-            if (dims == std::vector<int>{0, 2, -2, -1, 0})
+            if (dims == std::vector<int>{0, 2, -2, -1, 0}) // Enthalpy
             {
                 return (std::abs(scale - 1000.0) < 1e-5) ? "kJ/kg*K" : "J/kg*K";
             }
-            if (dims == std::vector<int>{1, 2, -3, 0, 0})
+            if (dims == std::vector<int>{1, 2, -3, 0, 0}) // Power
             {
-                return (std::abs(scale - 1000.0) < 1e-5) ? "kW" : "W";
+                if (std::abs(scale - 1e3) < 1e-5)
+                    return "kW";
+                if (std::abs(scale - 1e6) < 1e-5)
+                    return "MW";
+                return "W";
             }
-            if (dims == std::vector<int>{1, -1, -2, 0, 0})
+            if (dims == std::vector<int>{1, -1, -2, 0, 0}) // Pressure
             {
                 if (std::abs(scale - 1e6) < 1e-5)
                     return "MPa";
@@ -94,7 +116,7 @@ namespace cones
                     return "mbar";
                 return "Pa";
             }
-            if (dims == std::vector<int>{0, 1, -1, 0, 0})
+            if (dims == std::vector<int>{0, 1, -1, 0, 0}) // Speed
             {
                 if (std::abs(scale - 0.01) < 1e-5)
                     return "cm/s";
@@ -102,16 +124,16 @@ namespace cones
                     return "mm/s";
                 return "m/s";
             }
-            if (dims == std::vector<int>{0, 1, -2, 0, 0})
+            if (dims == std::vector<int>{0, 1, -2, 0, 0}) // Acceleration
             {
                 if (std::abs(scale - 9.81) < 1e-5)
                     return "G";
                 return "m/s^2";
             }
-            if (dims == std::vector<int>{0, 0, 0, 1, 0})
+            if (dims == std::vector<int>{0, 0, 0, 1, 0}) // Temperature
                 return offset > 200 ? "C" : "K";
 
-            if (dims == std::vector<int>{0, 0, 1, 0, 0})
+            if (dims == std::vector<int>{0, 0, 1, 0, 0}) // Time
             {
                 if (std::abs(scale - 60.0) < 1e-5)
                     return "min";
@@ -123,11 +145,11 @@ namespace cones
                     return "us";
             }
 
-            if (dims == std::vector<int>{1, 0, -1, 0, 0})
+            if (dims == std::vector<int>{1, 0, -1, 0, 0}) // Mass flow
             {
                 return (std::abs(scale - 1.0 / 3600.0) < 1e-8) ? "kg/hr" : "kg/s";
             }
-            if (dims == std::vector<int>{0, 1, 0, 0, 0})
+            if (dims == std::vector<int>{0, 1, 0, 0, 0}) // Distance
             {
                 if (std::abs(scale - 1000.0) < 1e-5)
                     return "km";
@@ -135,6 +157,7 @@ namespace cones
                     return "cm";
                 if (std::abs(scale - 0.001) < 1e-5)
                     return "mm";
+                return "m";
             }
 
             static const std::vector<std::string> names = {"kg", "m", "s", "K", "mol"};
@@ -165,80 +188,8 @@ namespace cones
         static Unit Newton() { return {1.0, {1, 1, -2, 0, 0}}; }
         static Unit Joule() { return {1.0, {1, 2, -2, 0, 0}}; }
         static Unit Pascal() { return {1.0, {1, -1, -2, 0, 0}}; }
-
-        // Inference
-        static Unit from_string(const std::string &s)
-        {
-            if (s == "m")
-                return Meter();
-            if (s == "s")
-                return Second();
-            if (s == "kg")
-                return Kilogram();
-            if (s == "K")
-                return Kelvin();
-            if (s == "C")
-                return Celsius();
-            if (s == "N")
-                return Newton();
-            if (s == "J")
-                return Joule();
-            if (s == "Pa")
-                return Pascal();
-            if (s == "W")
-                return {1.0, {1, 2, -3, 0, 0}};
-            if (s == "kW")
-                return {1000.0, {1, 2, -3, 0, 0}};
-            if (s == "mol")
-                return {1.0, {0, 0, 0, 0, 1}};
-            if (s == "km")
-                return {1000.0, {0, 1, 0, 0, 0}};
-            if (s == "mm")
-                return {0.001, {0, 1, 0, 0, 0}};
-            if (s == "cm")
-                return {0.01, {0, 1, 0, 0, 0}};
-            if (s == "ms")
-                return {0.001, {0, 0, 1, 0, 0}};
-            if (s == "us")
-                return {0.000001, {0, 0, 1, 0, 0}};
-            if (s == "min")
-                return {60, {0, 0, 1, 0, 0}};
-            if (s == "hr")
-                return {3600, {0, 0, 1, 0, 0}};
-            if (s == "kPa")
-                return {1000.0, {1, -1, -2, 0, 0}};
-            if (s == "MPa")
-                return {1e6, {1, -1, -2, 0, 0}};
-            if (s == "bar" || s == "Bar")
-                return {1e5, {1, -1, -2, 0, 0}};
-            if (s == "mbar" || s == "mBar")
-                return {100, {1, -1, -2, 0, 0}};
-            if (s == "J/kg*K")
-                return {1.0, {0, 2, -2, -1, 0}};
-            if (s == "kJ/kg*K")
-                return {1000.0, {0, 2, -2, -1, 0}};
-            if (s == "J/kg")
-                return {1.0, {0, 2, -2, 0, 0}};
-            if (s == "kJ/kg")
-                return {1000.0, {0, 2, -2, 0, 0}};
-            if (s == "kg/s")
-                return Kilogram() / Second();
-            if (s == "kg/hr")
-                return Kilogram() / Unit(3600.0, {0, 0, 1, 0, 0});
-            if (s == "m/s")
-                return Meter() / Second();
-            if (s == "cm/s")
-                return {0.01, {0, 1, -1, 0, 0}};
-            if (s == "mm/s")
-                return {0.001, {0, 1, -1, 0, 0}};
-            if (s == "m/s^2")
-                return Meter() / (Second() * Second());
-            if (s == "G")
-                return {9.81, {0, 1, -2, 0, 0}};
-
-            // None found
-            return Dimensionless();
-        }
+        static Unit Watt() { return {1.0, {1, 2, -3, 0, 0}}; }
+        static Unit Mol() { return {1.0, {0, 0, 0, 0, 1}}; }
     };
 
 } // namespace cones
@@ -246,7 +197,7 @@ namespace cones
 namespace std
 {
     // Equivalent to u.to_string()
-    std::string to_string(const cones::Unit &u)
+    inline std::string to_string(const cones::Unit &u)
     {
         return u.to_string();
     }

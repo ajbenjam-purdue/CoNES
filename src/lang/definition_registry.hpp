@@ -31,6 +31,7 @@ struct FunctionDef {
     std::vector<FunctionAssign> body_assignments;
     NodePtr return_node;
     Unit return_unit;
+    std::string return_unit_name;
 };
 
 class DefinitionRegistry {

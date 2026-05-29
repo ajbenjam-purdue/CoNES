@@ -3,6 +3,7 @@
 
 #include "lexer.hpp"
 #include "../core/system.hpp"
+#include "../core/unit_parser.hpp"
 #include <vector>
 #include <stdexcept>
 #include <string>
@@ -114,11 +115,24 @@ private:
                     if (match(TokenType::RETURN)) {
                         def.return_node = expression();
                         if (match(TokenType::LBRACKET)) {
+                            Token bracket = previous();
                             std::string uname = "";
                             while(!check(TokenType::RBRACKET) && !is_at_end()) uname += advance().lexeme;
                             consume(TokenType::RBRACKET, "Expect ].");
-                            def.return_unit = Unit::from_string(uname);
-                        } else def.return_unit = Unit::Dimensionless();
+                            try {
+                                def.return_unit = parse_unit(uname);
+                                def.return_unit_name = uname;
+                            } catch (const std::exception& e) {
+                                throw error(bracket, e.what());
+                            }
+                        } else {
+                            def.return_unit = def.return_node->get_unit(system_.registry());
+                            if (auto cast = std::dynamic_pointer_cast<UnitCastNode>(def.return_node)) {
+                                def.return_unit_name = cast->get_unit_name();
+                            } else {
+                                def.return_unit_name = def.return_unit.to_string();
+                            }
+                        }
                     }
                     
                     // Contents
@@ -285,6 +299,11 @@ private:
         tokens_.insert(tokens_.begin() + current_, expanded.begin(), expanded.end());
     }
 
+    Unit parse_unit(const std::string& name) {
+        if (name.empty()) return Unit::Dimensionless();
+        UnitParser unit_parser(system_.unit_registry());
+        return unit_parser.parse(name);
+    }
     // Associate something with something else
     void definition_statement() {
         Token name = consume(TokenType::IDENTIFIER, "Expect name.");
@@ -297,14 +316,20 @@ private:
             consume(TokenType::COLON_EQUALS, "Expect :=.");
             if (attr.lexeme == "unit") { // Unit
                 std::string unit_val = "";
+                Token start_token = peek();
                 if (match(TokenType::LBRACKET)) {
+                    start_token = previous();
                     while (!check(TokenType::RBRACKET) && !is_at_end()) unit_val += advance().lexeme;
                     consume(TokenType::RBRACKET, "Expect ].");
                 } else unit_val = consume(TokenType::IDENTIFIER, "Expect unit.").lexeme;
                 
-                Unit u = Unit::from_string(unit_val);
-                reg.set_unit(idx, u, unit_val);
-                reg.suggest_guess(idx, u);
+                try {
+                    Unit u = parse_unit(unit_val);
+                    reg.set_unit(idx, u, unit_val);
+                    reg.suggest_guess(idx, u);
+                } catch (const std::exception& e) {
+                    throw error(start_token, e.what());
+                }
             } else { // Guess, Lower, or Upper bound
                 NodePtr rhs = expression();
                 double val = evaluate_to_double(rhs);
@@ -332,7 +357,13 @@ private:
                 NodePtr rhs = expression();
                 if (reg.get_variable(idx).unit.is_dimensionless()) {
                     Unit u = rhs->get_unit(reg);
-                    if (!u.is_dimensionless()) reg.set_unit(idx, u, u.to_string());
+                    std::string u_name = u.to_string();
+                    if (auto cast = std::dynamic_pointer_cast<UnitCastNode>(rhs)) {
+                        u_name = cast->get_unit_name();
+                    } else if (auto func = std::dynamic_pointer_cast<UserFunctionNode>(rhs)) {
+                        u_name = func->get_unit_name();
+                    }
+                    if (!u.is_dimensionless()) reg.set_unit(idx, u, u_name);
                 }
                 DualNumber res = evaluate_dual(rhs); // static, NO dynamic assignments
                 reg.set_value(idx, res.val, true);
@@ -355,7 +386,13 @@ private:
             auto& var_info = system_.registry().get_variable(system_.registry().get_index(var_node->to_string()));
             if (var_info.unit.is_dimensionless()) { // In the event there is no assigned unit, try to assume one AND guess an initial val
                 Unit inherited = rhs->get_unit(system_.registry());
-                system_.registry().set_unit(var_info.index, inherited, inherited.to_string());
+                std::string u_name = inherited.to_string();
+                if (auto cast = std::dynamic_pointer_cast<UnitCastNode>(rhs)) {
+                    u_name = cast->get_unit_name();
+                } else if (auto func = std::dynamic_pointer_cast<UserFunctionNode>(rhs)) {
+                    u_name = func->get_unit_name();
+                }
+                system_.registry().set_unit(var_info.index, inherited, u_name);
                 system_.registry().suggest_guess(var_info.index, inherited);
             }
         }
@@ -398,10 +435,15 @@ private:
     NodePtr primary() {
         NodePtr node = primary_base();
         if (match(TokenType::LBRACKET)) {
+            Token bracket = previous();
             std::string unit_name = "";
             while (!check(TokenType::RBRACKET) && !is_at_end()) unit_name += advance().lexeme;
             consume(TokenType::RBRACKET, "Expect ].");
-            node = std::make_shared<UnitCastNode>(node, node->get_unit(system_.registry()), Unit::from_string(unit_name));
+            try {
+                node = std::make_shared<UnitCastNode>(node, node->get_unit(system_.registry()), parse_unit(unit_name), unit_name);
+            } catch (const std::exception& e) {
+                throw error(bracket, e.what());
+            }
         }
         return node;
     }
@@ -459,7 +501,10 @@ private:
                 system_.registry().set_value(idx, constant->value, true);
                 system_.registry().set_fixed(idx, true);
                 system_.registry().set_reserved(idx, true);
-                if (!constant->unit.empty()) system_.registry().set_unit(idx, constant->unit);
+                if (!constant->unit.empty()) {
+                    Unit u = parse_unit(constant->unit);
+                    system_.registry().set_unit(idx, u, constant->unit);
+                }
             }
             if (substance) { system_.registry().set_fixed(idx, true); system_.registry().set_reserved(idx, true); }
             auto node = std::make_shared<VariableNode>(idx, name.lexeme);

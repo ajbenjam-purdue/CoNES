@@ -55,16 +55,20 @@ struct dataColumn
     }
 };
 
+struct TimeContainer
+{
+    double t_lexer = 0, t_parser = 0, t_solver = 0;
+};
+
 // True if the file exists and is of the correct ending
 bool is_cnes(std::string path)
 {
     return std::filesystem::exists(path) && path.ends_with(".cnes");
 }
 
-// Print the help output message. Is there a better way to do this?
+// Print the help output message.
 void print_help()
 {
-
     std::cout << Version::full() << " (Coupled Nonlinear Equation Solver)\n"
               << "Usage: cnes [input_file.cnes] [options]\n\n"
               << "Options:\n\n"
@@ -91,8 +95,11 @@ void print_help()
 }
 
 // Print the raw json string including metadata, variables, and solution metrics like solve time
-void print_json_output(const System &system, const SolverReport &report, double t_lexer, double t_parser, double t_solver)
+void print_json_output(const System &system, const SolverReport &report, const TimeContainer &timeContainer)
 {
+    // Timing
+    const auto& [t_lexer, t_parser, t_solver] = timeContainer;
+
     // Metadata
     std::cout << "{\n";
     std::cout << "  \"version\": \"" << Version::full() << "\",\n";
@@ -101,7 +108,7 @@ void print_json_output(const System &system, const SolverReport &report, double 
     // An error exists, provide it
     if (!report.error_msg.empty())
     {
-        std::cout << "  \"error\": \"" << report.error_msg << "\",\n";
+        std::cout << "  \"error\": " << std::quoted(report.error_msg) << ",\n";
     }
 
     // Print all the variables
@@ -120,9 +127,9 @@ void print_json_output(const System &system, const SolverReport &report, double 
         first = false;
         double display_val = (v.value / v.unit.scale) - v.unit.offset;
         std::cout << "    {\n";
-        std::cout << "      \"name\": \"" << v.name << "\",\n";
+        std::cout << "      \"name\": " << std::quoted(v.name) << ",\n";
         std::cout << "      \"value\": " << std::fixed << std::setprecision(10) << display_val << ",\n";
-        std::cout << "      \"unit\": \"" << (v.unit_name.empty() ? "" : v.unit_name) << "\",\n";
+        std::cout << "      \"unit\": " << std::quoted(v.unit_name.empty() ? "" : v.unit_name) << ",\n";
         std::cout << "      \"line\": " << v.line << ",\n";
         std::cout << "      \"is_fixed\": " << (v.is_fixed ? "true" : "false") << "\n";
         std::cout << "    }";
@@ -131,12 +138,14 @@ void print_json_output(const System &system, const SolverReport &report, double 
 
     // Residuals
     std::cout << "  \"residuals\": [\n";
+    double residuals_total = 0;
     for (size_t i = 0; i < system.get_equation_count(); ++i)
     {
         if (i > 0) std::cout << ",\n";
         double res_val = 0.0;
         if (report.residuals.size() > (int)i) {
             res_val = report.residuals(i);
+            residuals_total += std::abs(res_val);
         }
         std::cout << "    {\n";
         std::cout << "      \"id\": " << i << ",\n";
@@ -152,6 +161,7 @@ void print_json_output(const System &system, const SolverReport &report, double 
     std::cout << "    \"lexer_ms\": " << t_lexer << ",\n";
     std::cout << "    \"parser_ms\": " << t_parser << ",\n";
     std::cout << "    \"solver_ms\": " << t_solver << ",\n";
+    std::cout << "    \"total_residuals\": " << residuals_total << ",\n";
     std::cout << "    \"iterations\": " << report.iterations << "\n";
     std::cout << "  }\n";
     std::cout << "}\n";
@@ -222,6 +232,23 @@ void print_metadata(System system)
     {
         auto sub = system.substance_manager().get(s_names[i]);
         std::cout << sub->name() << ":" << sub->summary() << (i < s_names.size() - 1 ? "|" : "");
+    }
+}
+
+void lint_out(bool lint_mode, bool json_out, const System& system, const TimeContainer& performance)
+{
+    if (lint_mode)
+    {
+        if (json_out)
+        {
+            SolverReport report;
+            report.success = true;
+            print_json_output(system, report, performance);
+        }
+        else
+        {
+            std::cout << "Linting successful." << std::endl;
+        }
     }
 }
 
@@ -478,38 +505,28 @@ int main(int argc, char *argv[])
         parser.parse(); // Analyze the tokens
         auto time_parser = std::chrono::high_resolution_clock::now();
 
+        // Package timing data
+        double d_lexer = std::chrono::duration<double, std::milli>(time_lexer - start_time).count();
+        double d_parser = std::chrono::duration<double, std::milli>(time_parser - time_lexer).count();
+        TimeContainer performance(d_lexer, d_parser, 0);
+
         // For strict LSP mode, just output the results so far
-        if (lint_mode)
-        {
-            if (json_out)
-            {
-                SolverReport report;
-                report.success = true;
-                print_json_output(system, report,
-                                  std::chrono::duration<double, std::milli>(time_lexer - start_time).count(),
-                                  std::chrono::duration<double, std::milli>(time_parser - time_lexer).count(),
-                                  0);
-            }
-            else
-            {
-                std::cout << "Linting successful: " << input_path << std::endl;
-            }
-            return 0;
-        }
+        lint_out(lint_mode, json_out, system, performance);
+        if (lint_mode) return 0;
 
         // Otherwise, solve system and yield the results
         NewtonSolver solver(tol_override, max_iter_override, verbose);
         SolverReport report = solver.solve(system);
 
+        // Get total duration and yield the duration
         auto end_time = std::chrono::high_resolution_clock::now(); // Total time & durations
-        double d_lexer = std::chrono::duration<double, std::milli>(time_lexer - start_time).count();
-        double d_parser = std::chrono::duration<double, std::milli>(time_parser - time_lexer).count();
         double d_solver = std::chrono::duration<double, std::milli>(end_time - time_parser).count();
+        performance.t_solver = d_solver;
 
         // For json output, yield the results via json
         if (json_out)
         {
-            print_json_output(system, report, d_lexer, d_parser, d_solver);
+            print_json_output(system, report, performance);
             return 0;
         }
 
@@ -560,7 +577,7 @@ int main(int argc, char *argv[])
             SolverReport report;
             report.success = false;
             report.error_msg = "System error: Out of memory. The script may be too large or contains circular dependencies.";
-            print_json_output(system, report, 0, 0, 0);
+            print_json_output(system, report, TimeContainer());
         }
         else
         {
@@ -575,7 +592,7 @@ int main(int argc, char *argv[])
             SolverReport report;
             report.success = false;
             report.error_msg = e.what();
-            print_json_output(system, report, 0, 0, 0);
+            print_json_output(system, report, TimeContainer());
         }
         else
         {

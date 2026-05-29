@@ -33,9 +33,10 @@ namespace cones
         NodePtr child_;
         Unit from_unit_;
         Unit to_unit_;
+        std::string unit_name_;
     public:
-        UnitCastNode(NodePtr c, Unit from, Unit to) 
-            : child_(std::move(c)), from_unit_(from), to_unit_(to) {}
+        UnitCastNode(NodePtr c, Unit from, Unit to, std::string name = "") 
+            : child_(std::move(c)), from_unit_(from), to_unit_(to), unit_name_(std::move(name)) {}
 
         DualNumber evaluate(const std::vector<DualNumber>& v, const VariableRegistry& reg, const std::unordered_map<std::string, DualNumber>* ls = nullptr) const override {
             DualNumber val = child_->evaluate(v, reg, ls);
@@ -47,8 +48,9 @@ namespace cones
             return val;
         }
 
-        std::string to_string() const override { return child_->to_string() + " [" + to_unit_.to_string() + "]"; }
+        std::string to_string() const override { return child_->to_string() + " [" + (unit_name_.empty() ? to_unit_.to_string() : unit_name_) + "]"; }
         Unit get_unit(const VariableRegistry&) const override { return to_unit_; }
+        std::string get_unit_name() const { return unit_name_; }
     };
 
     struct NodeArg { std::string name; NodePtr node; };
@@ -76,6 +78,7 @@ namespace cones
         DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry& reg, const std::unordered_map<std::string, DualNumber>* ls = nullptr) const override;
         std::string to_string() const override { return def_->name + "(...)"; }
         Unit get_unit(const VariableRegistry&) const override { return def_->return_unit; }
+        std::string get_unit_name() const { return def_->return_unit_name; }
     };
 
     class ConstantNode : public Node {

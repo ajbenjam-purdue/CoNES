@@ -67,14 +67,11 @@ public:
         register_constant("CONST_PI", 3.141592653589793, "", "Dimensionless ratio of a circle's circumference to its diameter");
         register_constant("CONST_E", 2.718281828459045, "", "Euler's number, also referred to as Napier's constant");
         register_constant("CONST_SIGMA", 0.00000005670374419, "W/m^2*K^4", "Stefan-Boltzmann Constant");
+        register_constant("CONST_SOLAR", 1368.0, "W/m^2", "Solar energy flux that strikes the outer edge of Earth's atmosphere on a surface perpendicular to the Sun's rays");
         
         // Standard Temperature and Pressure Reference
-        register_constant("STD_PRESS_PA", 101325, "Pa", "Pressure in Pascals at ST&P");
-        register_constant("STD_PRESS_KPA", 101.325, "kPa", "Pressure in Kilopascals at ST&P");
-        register_constant("STD_PRESS_MPA", 0.101325, "MPa", "Pressure in Megapascals at ST&P");
-        register_constant("STD_PRESS_BAR", 1.01325, "Bar", "Pressure in Pascals at ST&P");
-        register_constant("STD_TEMP_K", 273.15, "K", "Temperature in Kelvin at ST&P");
-        register_constant("STD_TEMP_C", 0.0, "C", "Temperature in Celsius at ST&P");
+        register_constant("STP_PRESS", 101325, "Pa", "Pressure in Pascals at ST&P");
+        register_constant("STP_TEMP", 0.0, "C", "Temperature in Celsius at ST&P");
     }
 };
 

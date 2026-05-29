@@ -6,6 +6,7 @@
 #include "function_registry.hpp"
 #include "substance_manager.hpp"
 #include "constant_registry.hpp"
+#include "unit_registry.hpp"
 #include "../lang/definition_registry.hpp"
 #include <Eigen/Dense>
 #include <vector>
@@ -24,6 +25,7 @@ namespace cones
         FunctionRegistry function_registry_;
         SubstanceManager substance_manager_;
         ConstantRegistry constant_registry_;
+        UnitRegistry unit_registry_;
         DefinitionRegistry definition_registry_;
 
     public:
@@ -48,6 +50,8 @@ namespace cones
         FunctionRegistry &function_registry() { return function_registry_; }
         SubstanceManager &substance_manager() { return substance_manager_; }
         ConstantRegistry &constant_registry() { return constant_registry_; }
+        UnitRegistry &unit_registry() { return unit_registry_; }
+        const UnitRegistry &unit_registry() const { return unit_registry_; }
         DefinitionRegistry &definition_registry() { return definition_registry_; }
         const DefinitionRegistry &definition_registry() const { return definition_registry_; }
 
