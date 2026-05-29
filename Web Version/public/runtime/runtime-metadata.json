@@ -13,37 +13,37 @@
     {
       "label": "cnes-worker.js",
       "path": "/runtime/cnes-worker.js",
-      "bytes": 12624,
-      "sha256": "9f96a0237dbd325e6c285d7964ddac28b2e856a2414db107f2dd5eca547a1d43"
+      "bytes": 12971,
+      "sha256": "a9ed649c534575394262d30974e52eae5dd1c67bd67855959362ff932c4d91c2"
     },
     {
       "label": "cnes-module.js",
       "path": "/runtime/cnes-module.js",
-      "bytes": 77265,
-      "sha256": "7fd9e736e626021a01266fb22894d18e76ef1932c1496070dd736912a3756550"
+      "bytes": 77224,
+      "sha256": "365634491b685a7dd7f01de3372a3bece8347f401eb3924c0a0f311408126070"
     },
     {
       "label": "cnes-module.wasm",
       "path": "/runtime/cnes-module.wasm",
-      "bytes": 665587,
-      "sha256": "1505a46aa0b0a4ba509a8c6091b038a6f67fd2b0f36a222c4e5630e1ad3091a5"
+      "bytes": 730990,
+      "sha256": "bccd2e0a7809271ff03b21a45b460d1041584493c645abf35a5b56b6cd2821fc"
     }
   ],
   "artifactSummary": {
     "worker": {
       "path": "/runtime/cnes-worker.js",
-      "bytes": 12624,
-      "sha256": "9f96a0237dbd325e6c285d7964ddac28b2e856a2414db107f2dd5eca547a1d43"
+      "bytes": 12971,
+      "sha256": "a9ed649c534575394262d30974e52eae5dd1c67bd67855959362ff932c4d91c2"
     },
     "moduleJs": {
       "path": "/runtime/cnes-module.js",
-      "bytes": 77265,
-      "sha256": "7fd9e736e626021a01266fb22894d18e76ef1932c1496070dd736912a3756550"
+      "bytes": 77224,
+      "sha256": "365634491b685a7dd7f01de3372a3bece8347f401eb3924c0a0f311408126070"
     },
     "moduleWasm": {
       "path": "/runtime/cnes-module.wasm",
-      "bytes": 665587,
-      "sha256": "1505a46aa0b0a4ba509a8c6091b038a6f67fd2b0f36a222c4e5630e1ad3091a5"
+      "bytes": 730990,
+      "sha256": "bccd2e0a7809271ff03b21a45b460d1041584493c645abf35a5b56b6cd2821fc"
     }
   },
   "manifests": [
@@ -68,19 +68,19 @@
     {
       "label": "libs",
       "path": "/runtime-data/libs/manifest.json",
-      "bytes": 428,
-      "sha256": "3b2e3070692215af08803cb844d280ce3725f96a504b01fbc46300d5346eac9c",
+      "bytes": 907,
+      "sha256": "ab7d7a02642e17a1c4e0e6a5b6180816b2142ed9271e9cbf45c5981f3154c8e5",
       "kind": "cones-libs",
       "mountRoot": "/app/libs",
       "integrity": "sha256",
-      "count": 1,
-      "totalBytes": 1276,
-      "manifestSha256": "3b2e3070692215af08803cb844d280ce3725f96a504b01fbc46300d5346eac9c",
+      "count": 3,
+      "totalBytes": 7147,
+      "manifestSha256": "ab7d7a02642e17a1c4e0e6a5b6180816b2142ed9271e9cbf45c5981f3154c8e5",
       "perFileSha256": {
         "exists": true,
         "complete": true,
-        "filesWithSha256": 1,
-        "fileCount": 1
+        "filesWithSha256": 3,
+        "fileCount": 3
       }
     }
   ],
@@ -106,19 +106,19 @@
     "libs": {
       "label": "libs",
       "path": "/runtime-data/libs/manifest.json",
-      "bytes": 428,
-      "sha256": "3b2e3070692215af08803cb844d280ce3725f96a504b01fbc46300d5346eac9c",
+      "bytes": 907,
+      "sha256": "ab7d7a02642e17a1c4e0e6a5b6180816b2142ed9271e9cbf45c5981f3154c8e5",
       "kind": "cones-libs",
       "mountRoot": "/app/libs",
       "integrity": "sha256",
-      "count": 1,
-      "totalBytes": 1276,
-      "manifestSha256": "3b2e3070692215af08803cb844d280ce3725f96a504b01fbc46300d5346eac9c",
+      "count": 3,
+      "totalBytes": 7147,
+      "manifestSha256": "ab7d7a02642e17a1c4e0e6a5b6180816b2142ed9271e9cbf45c5981f3154c8e5",
       "perFileSha256": {
         "exists": true,
         "complete": true,
-        "filesWithSha256": 1,
-        "fileCount": 1
+        "filesWithSha256": 3,
+        "fileCount": 3
       }
     }
   },

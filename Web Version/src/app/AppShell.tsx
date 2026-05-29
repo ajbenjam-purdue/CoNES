@@ -1,8 +1,10 @@
 import { Cpu } from "lucide-react";
+import { useEffect, useState } from "react";
 import { showDebugSurfaces } from "@/app/debug-flags";
 import { appRoutes, type AppRouteId } from "@/app/routes";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { subscribeRuntimePrewarm, getRuntimePrewarmState, type RuntimePrewarmState } from "@/features/runtime/runtime-prewarm";
 import { cn } from "@/lib/utils";
 
 type AppShellProps = {
@@ -12,8 +14,15 @@ type AppShellProps = {
 };
 
 export function AppShell({ activeRoute, onRouteChange, children }: AppShellProps) {
+  const [runtimeState, setRuntimeState] = useState<RuntimePrewarmState>(getRuntimePrewarmState());
   const visibleRoutes = appRoutes.filter((route) => showDebugSurfaces || !route.debugOnly);
   const showSidebar = showDebugSurfaces || visibleRoutes.length > 1;
+
+  useEffect(() => {
+    return subscribeRuntimePrewarm((nextState) => {
+      setRuntimeState(nextState);
+    });
+  }, []);
 
   return (
     <TooltipProvider delayDuration={250}>
@@ -27,7 +36,9 @@ export function AppShell({ activeRoute, onRouteChange, children }: AppShellProps
                     <Cpu aria-hidden="true" />
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">CoNES Studio</p>
+                    <p className="truncate text-sm font-semibold">
+                      {runtimeState.version ? `${runtimeState.version} Web` : "CoNES Studio"}
+                    </p>
                   </div>
                 </div>
 

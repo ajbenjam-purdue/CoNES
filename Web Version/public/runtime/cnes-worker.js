@@ -75,6 +75,7 @@ async function prewarmRuntime(request) {
     return {
       type: "prewarm-ready",
       requestId: request.requestId,
+      version: runtime.version,
       timings: runtime.prewarmTimings,
     };
   } catch (error) {
@@ -193,9 +194,23 @@ async function createRuntime(requestId) {
   prewarmTimings.wallMs = elapsedSince(startedAt);
 
   postStatus(requestId, "runtime-ready");
+
+  // Capture tool version
+  const versionStdoutLines = [];
+  activeStdoutLines = versionStdoutLines;
+  try {
+    callMain(module, ["--version"]);
+  } catch (e) {
+    // Ignore version call errors
+  } finally {
+    activeStdoutLines = null;
+  }
+  const version = versionStdoutLines.join("\n").trim();
+
   return {
     module,
     prewarmTimings,
+    version,
     ready: true,
   };
 }

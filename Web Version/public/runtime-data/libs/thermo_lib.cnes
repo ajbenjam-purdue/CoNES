@@ -1,0 +1,119 @@
+// CoNES Thermodynamic Process Library
+// 
+
+
+// Open System: Isentropic Processes (constant s)
+// -----------------------------------------------------
+
+routine Isentropic_Compressor(Fluid, T_in, P_in, P_out, T_out, s_in, h_in, h_out, W_dot_c, m_dot)
+    s_in = Entropy(Fluid, T=T_in, P=P_in)
+    h_in = Enthalpy(Fluid, T=T_in, P=P_in)
+    h_out = Enthalpy(Fluid, s=s_in, P=P_out)
+    W_dot_c = (h_out - h_in) * m_dot
+    T_out = Temperature(Fluid, h=h_out)
+end routine
+
+routine Isentropic_Turbine(Fluid, T_in, P_in, P_out, T_out, s_in, h_in, h_out, W_dot_t, m_dot)
+    s_in = Entropy(Fluid, T=T_in, P=P_in)
+    h_in = Enthalpy(Fluid, T=T_in, P=P_in)
+    h_out = Enthalpy(Fluid, s=s_in, P=P_out)
+    W_dot_t = (h_in - h_out) * m_dot
+    T_out = Temperature(Fluid, h=h_out)
+end routine
+
+
+// Closed System: Isentropic Processes (constant s)
+// -----------------------------------------------------
+
+routine Closed_Isentropic_Compression(Fluid, T_in, P_in, v_in, v_out, P_out, T_out, s_in, u_in, u_out, W_c, m)
+    v_in = SpecificVolume(Fluid, T=T_in, P=P_in)
+    s_in = Entropy(Fluid, T=T_in, P=P_in)
+    u_in = InternalEnergy(Fluid, T=T_in, P=P_in)
+    // CoNES will solve for T_out and P_out using v_out and s_in
+    v_out = SpecificVolume(Fluid, T=T_out, P=P_out)
+    s_in = Entropy(Fluid, T=T_out, P=P_out)
+    u_out = InternalEnergy(Fluid, T=T_out, P=P_out)
+    W_c = (u_out - u_in) * m
+end routine
+
+routine Closed_Isentropic_Expansion(Fluid, T_in, P_in, v_in, v_out, P_out, T_out, s_in, u_in, u_out, W_t, m)
+    v_in = SpecificVolume(Fluid, T=T_in, P=P_in)
+    s_in = Entropy(Fluid, T=T_in, P=P_in)
+    u_in = InternalEnergy(Fluid, T=T_in, P=P_in)
+    v_out = SpecificVolume(Fluid, T=T_out, P=P_out)
+    s_in = Entropy(Fluid, T=T_out, P=P_out)
+    u_out = InternalEnergy(Fluid, T=T_out, P=P_out)
+    W_t = (u_in - u_out) * m
+end routine
+
+
+// Closed System: Isochoric Processes (constant v)
+// -----------------------------------------------------
+
+routine Closed_Isochoric_Heat_Addition(Fluid, T_in, P_in, v, P_out, T_out, u_in, u_out, Q_in, m)
+    v = SpecificVolume(Fluid, T=T_in, P=P_in)
+    u_in = InternalEnergy(Fluid, T=T_in, P=P_in)
+    v = SpecificVolume(Fluid, T=T_out, P=P_out)
+    u_out = InternalEnergy(Fluid, T=T_out, P=P_out)
+    Q_in = (u_out - u_in) * m
+end routine
+
+routine Closed_Isochoric_Heat_Rejection(Fluid, T_in, P_in, v, P_out, T_out, u_in, u_out, Q_out, m)
+    v = SpecificVolume(Fluid, T=T_in, P=P_in)
+    u_in = InternalEnergy(Fluid, T=T_in, P=P_in)
+    v = SpecificVolume(Fluid, T=T_out, P=P_out)
+    u_out = InternalEnergy(Fluid, T=T_out, P=P_out)
+    Q_out = (u_in - u_out) * m
+end routine
+
+
+// Open System: Isobaric Processes (constant P)
+// -----------------------------------------------------
+
+routine Isobaric_Heat_Addition(Fluid, T_in, P, T_out, h_in, h_out, Q_dot_in, m_dot)
+    h_in = Enthalpy(Fluid, T=T_in, P=P)
+    h_out = Enthalpy(Fluid, T=T_out, P=P)
+    Q_dot_in = (h_out - h_in) * m_dot
+end routine
+
+routine Isobaric_Heat_Rejection(Fluid, T_in, P, T_out, h_in, h_out, Q_dot_out, m_dot)
+    h_in = Enthalpy(Fluid, T=T_in, P=P)
+    h_out = Enthalpy(Fluid, T=T_out, P=P)
+    Q_dot_out = (h_in - h_out) * m_dot
+end routine
+
+
+// Either: Isenthalpic Processes (constant h)
+// -----------------------------------------------------
+
+routine Isenthalpic_Expansion(Fluid, T_in, P_in, P_out, T_out, h_in, h_out)
+    h_in = Enthalpy(Fluid, T=T_in, P=P_in)
+    h_out = h_in
+    T_out = Temperature(Fluid, h=h_out, P=P_out)
+end routine
+
+
+// Closed System: Isothermal Processes (constant T)
+// -----------------------------------------------------
+
+routine Closed_Isothermal_Compression(Fluid, T, P_in, v_in, P_out, v_out, s_in, s_out, u_in, u_out, W_c, Q_out, m)
+    v_in = SpecificVolume(Fluid, T=T, P=P_in)
+    s_in = Entropy(Fluid, T=T, P=P_in)
+    u_in = InternalEnergy(Fluid, T=T, P=P_in)
+    v_out = SpecificVolume(Fluid, T=T, P=P_out)
+    s_out = Entropy(Fluid, T=T, P=P_out)
+    u_out = InternalEnergy(Fluid, T=T, P=P_out)
+    Q_out = T * (s_in - s_out) * m
+    W_c = Q_out - (u_in - u_out) * m
+end routine
+
+routine Closed_Isothermal_Expansion(Fluid, T, P_in, v_in, P_out, v_out, s_in, s_out, u_in, u_out, W_t, Q_in, m)
+    v_in = SpecificVolume(Fluid, T=T, P=P_in)
+    s_in = Entropy(Fluid, T=T, P=P_in)
+    u_in = InternalEnergy(Fluid, T=T, P=P_in)
+    v_out = SpecificVolume(Fluid, T=T, P=P_out)
+    s_out = Entropy(Fluid, T=T, P=P_out)
+    u_out = InternalEnergy(Fluid, T=T, P=P_out)
+    Q_in = T * (s_out - s_in) * m
+    W_t = Q_in - (u_out - u_in) * m
+end routine

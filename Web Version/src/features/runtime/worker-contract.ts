@@ -65,6 +65,7 @@ export const workerResultSchema = z.object({
 export const workerPrewarmResultSchema = z.object({
   type: z.union([z.literal("prewarm-ready"), z.literal("prewarm-failure")]),
   requestId: z.string(),
+  version: z.string().optional(),
   timings: workerTimingsSchema.optional(),
   error: workerDiagnosticSchema.optional(),
 });

@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WEB_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PROJECT_ROOT="$(cd "${WEB_ROOT}/.." && pwd)"
-CONES_ROOT="${PROJECT_ROOT}/CoNES"
+CONES_ROOT="${PROJECT_ROOT}"
 OUT_DIR="${WEB_ROOT}/public/runtime"
 
 EM_CACHE="${EM_CACHE:-/private/tmp/emscripten-cache}"

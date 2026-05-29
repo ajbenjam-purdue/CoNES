@@ -5,6 +5,7 @@ import type { WorkerDiagnosticCode, WorkerTimings } from "@/features/runtime/wor
 export type RuntimePrewarmState = {
   status: "idle" | "preparing" | "ready" | "failed";
   label: string;
+  version?: string;
   phase?: string;
   errorCode?: WorkerDiagnosticCode | string;
   errorMessage?: string;
@@ -64,6 +65,7 @@ export function startRuntimePrewarm() {
       setRuntimePrewarmState({
         status: "ready",
         label: "Runtime ready",
+        version: result.version,
         phase: "runtime-ready",
         timings: result.timings,
       });
