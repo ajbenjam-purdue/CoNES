@@ -22,7 +22,7 @@ class CoNESBackend:
         self.exe = os.path.abspath(executable_path)
         
     def version(self):# -> None|str:
-        result = subprocess.run([self.exe, "--version"], capture_output=True, text=True, check=False)
+        result = subprocess.run([self.exe, "--version"], capture_output=True, text=True, check=False, close_fds=True)
         if result.returncode == 0: return result.stdout.strip()
         return None
 
@@ -33,7 +33,8 @@ class CoNESBackend:
                                      capture_output=True, 
                                      text=True, 
                                      check=False,
-                                     cwd=cwd)
+                                     cwd=cwd,
+                                     close_fds=True)
             if not result.stdout.strip():
                 return {"success": False, "error": result.stderr or "No output from solver."}
             return json.loads(result.stdout)
@@ -47,7 +48,8 @@ class CoNESBackend:
                                      capture_output=True, 
                                      text=True, 
                                      check=False,
-                                     cwd=cwd)
+                                     cwd=cwd,
+                                     close_fds=True)
             if not result.stdout: return {"substances": {}, "functions": {}, "constants": {}}
             
             parts = result.stdout.split("|||")
@@ -108,7 +110,8 @@ class CoNESBackend:
                                      capture_output=True, 
                                      text=True, 
                                      check=False,
-                                     cwd=cwd)
+                                     cwd=cwd,
+                                     close_fds=True)
             
             if not result.stdout.strip():
                 # If solver crashed, return stderr as the error

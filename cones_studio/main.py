@@ -318,11 +318,13 @@ class CoNESStudio(ctk.CTk):
         for var in result.get("residuals", []):
             self.tree_res.insert("", "end", values=(var["id"], var["expression"], f"{var['value']:.5g}", var["line"]))
         
+        perf = result.get("performance", {})
         if solved:
-            perf = result.get("performance", {})
-            self.status_bar.configure(text=f"  Solved ({parse_time(perf.get('solver_ms', 0))})", fg_color=color_status_Success)
+            self.status_bar.configure(text=f"  {'Success' if result.get('success') else 'Diverged'} ({parse_time(perf.get('solver_ms', 0))}, {perf.get('iterations', 0)} total iterations, {perf.get('total_residuals', 1):.4g} total residuals)")
+            if result.get('success'): self.status_bar.configure(fg_color=color_status_Success)
+            else: self.status_bar.configure(fg_color=color_status_Diverged) # This lowkey will never happen BUT its future-proofed!
         else:
-            self.status_bar.configure(text=f"  Error: {result.get('error')[:100]}", fg_color=color_status_Bad)
+            self.status_bar.configure(text=f"  Error: {result.get('error')[:100]} ({parse_time(perf.get('solver_ms', 0))}, {perf.get('iterations', 0)} total iterations, {perf.get('total_residuals', 1):.4g} total residuals)", fg_color=color_status_Bad)
 
 if __name__ == "__main__":
     
