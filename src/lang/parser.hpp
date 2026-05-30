@@ -429,7 +429,7 @@ private:
     }
     NodePtr power() {
         NodePtr node = primary();
-        if (match(TokenType::CARET)) node = std::make_shared<PowNode>(node, evaluate_to_double(expression()));
+        if (match(TokenType::CARET)) node = std::make_shared<PowNode>(node, evaluate_to_double(unary()));
         return node;
     }
     NodePtr primary() {

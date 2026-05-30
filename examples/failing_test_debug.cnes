@@ -1,0 +1,7 @@
+x + y + z = 3
+y ^ 2 + 5 = x
+z + x = sqrt(y)
+
+y.guess := 1.7
+x.guess := 7.9
+z.guess := -6.6

@@ -31,6 +31,19 @@ namespace cones
                     return false;
             return true;
         }
+        bool requires_positivity() const { // Returns true if the unit has to be +ive (Temperature, Pressure, Density, Specific Volume, Viscosity)
+            // Temperature [0,0,0,1,0]
+            if (dims == std::vector<int>{0, 0, 0, 1, 0}) return true;
+            // Pressure [1,-1,-2,0,0]
+            if (dims == std::vector<int>{1, -1, -2, 0, 0}) return true;
+            // Density [1,-3,0,0,0]
+            if (dims == std::vector<int>{1, -3, 0, 0, 0}) return true;
+            // Specific Volume [-1,3,0,0,0]
+            if (dims == std::vector<int>{-1, 3, 0, 0, 0}) return true;
+            // Viscosity [1,-1,-1,0,0]
+            if (dims == std::vector<int>{1, -1, -1, 0, 0}) return true;
+            return false;
+        }
         bool compatible(const Unit &other) const { return dims == other.dims; } // Are this unit and the other compatible (e.g. for addition/similar)?
 
         // Returns the BASE unit in SI representation (1 scale, 0 offset, same dims)

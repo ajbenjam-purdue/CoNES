@@ -8,11 +8,16 @@
 
 namespace cones
 {
-
+    // Structs for holding both a type (e.g. Enthalpy) AND a value (num/row)
     struct PropertyArg
     {
         PropertyType type;
         DualNumber value;
+    };
+    struct PropertyArgRow
+    {
+        PropertyType type;
+        DualRow value;
     };
 
     /**
@@ -30,6 +35,7 @@ namespace cones
          * Given n inputs, returns the target property.
          */
         virtual DualNumber evaluate(PropertyType target, const std::vector<PropertyArg> &inputs) const = 0;
+        virtual DualRow evaluate(PropertyType target, const std::vector<PropertyArgRow> &inputs) const = 0;
     };
 
 } // namespace cones

@@ -4,6 +4,7 @@
 #include "dual_number.hpp"
 #include "function_registry.hpp"
 #include "unit.hpp"
+#include "variable_registry.hpp"
 #include "../lang/definition_registry.hpp"
 #include <memory>
 #include <vector>
@@ -18,29 +19,35 @@ namespace cones
     class Node
     {
         int line_ = -1;
+
     public:
         virtual ~Node() = default;
         void set_line(int l) { line_ = l; }
         int get_line() const { return line_; }
-        virtual DualNumber evaluate(const std::vector<DualNumber> &values, const VariableRegistry& reg, const std::unordered_map<std::string, DualNumber>* local_scope = nullptr) const = 0;
+        virtual DualNumber evaluate(const std::vector<DualNumber> &values, const VariableRegistry &reg, const std::unordered_map<std::string, DualNumber> *local_scope = nullptr) const = 0;
+        virtual DualRow evaluate_row(const std::vector<DualRow> &values, const VariableRegistry &reg, const std::unordered_map<std::string, DualRow> *local_scope = nullptr) const = 0;
         virtual std::string to_string() const = 0;
-        virtual Unit get_unit(const VariableRegistry& reg) const = 0;
+        virtual Unit get_unit(const VariableRegistry &reg) const = 0;
     };
 
     using NodePtr = std::shared_ptr<Node>;
 
-    class UnitCastNode : public Node {
+    class UnitCastNode : public Node
+    {
         NodePtr child_;
         Unit from_unit_;
         Unit to_unit_;
         std::string unit_name_;
+
     public:
-        UnitCastNode(NodePtr c, Unit from, Unit to, std::string name = "") 
+        UnitCastNode(NodePtr c, Unit from, Unit to, std::string name = "")
             : child_(std::move(c)), from_unit_(from), to_unit_(to), unit_name_(std::move(name)) {}
 
-        DualNumber evaluate(const std::vector<DualNumber>& v, const VariableRegistry& reg, const std::unordered_map<std::string, DualNumber>* ls = nullptr) const override {
+        DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualNumber> *ls = nullptr) const override
+        {
             DualNumber val = child_->evaluate(v, reg, ls);
-            if (from_unit_.is_dimensionless()) {
+            if (from_unit_.is_dimensionless())
+            {
                 double si_val = (val.val + to_unit_.offset) * to_unit_.scale;
                 double si_der = val.der * to_unit_.scale;
                 return {si_val, si_der};
@@ -48,158 +55,327 @@ namespace cones
             return val;
         }
 
+        DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualRow> *ls = nullptr) const override
+        {
+            DualRow val = child_->evaluate_row(v, reg, ls);
+            if (from_unit_.is_dimensionless())
+            {
+                double si_val = (val.val + to_unit_.offset) * to_unit_.scale;
+                Eigen::VectorXd si_der = val.der * to_unit_.scale;
+                return {si_val, si_der};
+            }
+            return val;
+        }
+
         std::string to_string() const override { return child_->to_string() + " [" + (unit_name_.empty() ? to_unit_.to_string() : unit_name_) + "]"; }
-        Unit get_unit(const VariableRegistry&) const override { return to_unit_; }
+        Unit get_unit(const VariableRegistry &) const override { return to_unit_; }
         std::string get_unit_name() const { return unit_name_; }
     };
 
-    struct NodeArg { std::string name; NodePtr node; };
+    struct NodeArg
+    {
+        std::string name;
+        NodePtr node;
+    };
 
     class CustomFunctionNode : public Node
     {
         std::shared_ptr<IFunction> func_;
         std::vector<NodeArg> args_;
+
     public:
         CustomFunctionNode(std::shared_ptr<IFunction> f, std::vector<NodeArg> a) : func_(f), args_(a) {}
-        DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry& reg, const std::unordered_map<std::string, DualNumber>* ls = nullptr) const override;
+        DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualNumber> *ls = nullptr) const override;
+        DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualRow> *ls = nullptr) const override;
         std::string to_string() const override { return func_->name() + "(...)"; }
-        Unit get_unit(const VariableRegistry& reg) const override {
+        Unit get_unit(const VariableRegistry &reg) const override
+        {
             std::vector<Unit> units;
-            for (const auto& arg : args_) units.push_back(arg.node->get_unit(reg));
+            for (const auto &arg : args_)
+                units.push_back(arg.node->get_unit(reg));
             return func_->get_unit(units);
         }
     };
 
-    class UserFunctionNode : public Node {
-        const FunctionDef* def_;
+    class UserFunctionNode : public Node
+    {
+        const FunctionDef *def_;
         std::vector<NodePtr> arg_nodes_;
+
     public:
-        UserFunctionNode(const FunctionDef* d, std::vector<NodePtr> a) : def_(d), arg_nodes_(std::move(a)) {}
-        DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry& reg, const std::unordered_map<std::string, DualNumber>* ls = nullptr) const override;
+        UserFunctionNode(const FunctionDef *d, std::vector<NodePtr> a) : def_(d), arg_nodes_(std::move(a)) {}
+        DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualNumber> *ls = nullptr) const override;
+        DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualRow> *ls = nullptr) const override;
         std::string to_string() const override { return def_->name + "(...)"; }
-        Unit get_unit(const VariableRegistry&) const override { return def_->return_unit; }
+        Unit get_unit(const VariableRegistry &) const override { return def_->return_unit; }
         std::string get_unit_name() const { return def_->return_unit_name; }
     };
 
-    class ConstantNode : public Node {
+    class ConstantNode : public Node
+    {
         double v_;
+
     public:
         explicit ConstantNode(double v) : v_(v) {}
-        DualNumber evaluate(const std::vector<DualNumber>&, const VariableRegistry&, const std::unordered_map<std::string, DualNumber>*) const override { return {v_, 0.0}; }
+        DualNumber evaluate(const std::vector<DualNumber> &, const VariableRegistry &, const std::unordered_map<std::string, DualNumber> *) const override { return {v_, 0.0}; }
+        DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &, const std::unordered_map<std::string, DualRow> *) const override
+        {
+            return {v_, (int)(v.empty() ? 0 : v[0].der.size())};
+        }
         std::string to_string() const override { return std::to_string(v_); }
-        Unit get_unit(const VariableRegistry&) const override { return Unit::Dimensionless(); }
+        Unit get_unit(const VariableRegistry &) const override { return Unit::Dimensionless(); }
     };
 
-    class LocalVariableNode : public Node {
+    class LocalVariableNode : public Node
+    {
         std::string name_;
+
     public:
         explicit LocalVariableNode(std::string n) : name_(std::move(n)) {}
-        DualNumber evaluate(const std::vector<DualNumber>&, const VariableRegistry&, const std::unordered_map<std::string, DualNumber>* ls) const override {
-            if (ls) {
+        DualNumber evaluate(const std::vector<DualNumber> &, const VariableRegistry &, const std::unordered_map<std::string, DualNumber> *ls) const override
+        {
+            if (ls)
+            {
                 auto it = ls->find(name_);
-                if (it != ls->end()) return it->second;
+                if (it != ls->end())
+                    return it->second;
             }
             return {0.0, 0.0};
         }
+        DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &, const std::unordered_map<std::string, DualRow> *ls) const override
+        {
+            if (ls)
+            {
+                auto it = ls->find(name_);
+                if (it != ls->end())
+                    return it->second;
+            }
+            return {0.0, (int)(v.empty() ? 0 : v[0].der.size())};
+        }
         std::string to_string() const override { return name_; }
-        Unit get_unit(const VariableRegistry&) const override { return Unit::Dimensionless(); }
+        Unit get_unit(const VariableRegistry &) const override { return Unit::Dimensionless(); }
     };
 
-    class VariableNode : public Node {
-        int idx_; std::string n_;
+    class VariableNode : public Node
+    {
+        int idx_;
+        std::string n_;
+
     public:
         VariableNode(int i, std::string n) : idx_(i), n_(n) {}
-        DualNumber evaluate(const std::vector<DualNumber>& v, const VariableRegistry& reg, const std::unordered_map<std::string, DualNumber>* ls = nullptr) const override;
+        DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualNumber> *ls = nullptr) const override;
+        DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualRow> *ls = nullptr) const override;
         std::string to_string() const override { return n_; }
-        Unit get_unit(const VariableRegistry& reg) const override;
+        Unit get_unit(const VariableRegistry &reg) const override;
     };
 
-    class UnaryNode : public Node { protected: NodePtr c_; public: explicit UnaryNode(NodePtr c) : c_(c) {} };
-    class BinaryNode : public Node { protected: NodePtr l_, r_; public: BinaryNode(NodePtr l, NodePtr r) : l_(l), r_(r) {} };
+    class UnaryNode : public Node
+    {
+    protected:
+        NodePtr c_;
 
-    class AddNode : public BinaryNode { public: using BinaryNode::BinaryNode; 
-        DualNumber evaluate(const std::vector<DualNumber>& v, const VariableRegistry& r, const std::unordered_map<std::string, DualNumber>* ls = nullptr) const override { return l_->evaluate(v,r,ls) + r_->evaluate(v,r,ls); }
+    public:
+        explicit UnaryNode(NodePtr c) : c_(c) {}
+    };
+    class BinaryNode : public Node
+    {
+    protected:
+        NodePtr l_, r_;
+
+    public:
+        BinaryNode(NodePtr l, NodePtr r) : l_(l), r_(r) {}
+    };
+
+    class AddNode : public BinaryNode
+    {
+    public:
+        using BinaryNode::BinaryNode;
+        DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry &r, const std::unordered_map<std::string, DualNumber> *ls = nullptr) const override { return l_->evaluate(v, r, ls) + r_->evaluate(v, r, ls); }
+        DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &r, const std::unordered_map<std::string, DualRow> *ls = nullptr) const override { return l_->evaluate_row(v, r, ls) + r_->evaluate_row(v, r, ls); }
         std::string to_string() const override { return "(" + l_->to_string() + "+" + r_->to_string() + ")"; }
-        Unit get_unit(const VariableRegistry& reg) const override;
+        Unit get_unit(const VariableRegistry &reg) const override;
     };
-    class SubNode : public BinaryNode { public: using BinaryNode::BinaryNode; 
-        DualNumber evaluate(const std::vector<DualNumber>& v, const VariableRegistry& r, const std::unordered_map<std::string, DualNumber>* ls = nullptr) const override { return l_->evaluate(v,r,ls) - r_->evaluate(v,r,ls); }
+    class SubNode : public BinaryNode
+    {
+    public:
+        using BinaryNode::BinaryNode;
+        DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry &r, const std::unordered_map<std::string, DualNumber> *ls = nullptr) const override { return l_->evaluate(v, r, ls) - r_->evaluate(v, r, ls); }
+        DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &r, const std::unordered_map<std::string, DualRow> *ls = nullptr) const override { return l_->evaluate_row(v, r, ls) - r_->evaluate_row(v, r, ls); }
         std::string to_string() const override { return "(" + l_->to_string() + "-" + r_->to_string() + ")"; }
-        Unit get_unit(const VariableRegistry& reg) const override;
+        Unit get_unit(const VariableRegistry &reg) const override;
     };
-    class MulNode : public BinaryNode { public: using BinaryNode::BinaryNode; 
-        DualNumber evaluate(const std::vector<DualNumber>& v, const VariableRegistry& r, const std::unordered_map<std::string, DualNumber>* ls = nullptr) const override { return l_->evaluate(v,r,ls) * r_->evaluate(v,r,ls); }
+    class MulNode : public BinaryNode
+    {
+    public:
+        using BinaryNode::BinaryNode;
+        DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry &r, const std::unordered_map<std::string, DualNumber> *ls = nullptr) const override { return l_->evaluate(v, r, ls) * r_->evaluate(v, r, ls); }
+        DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &r, const std::unordered_map<std::string, DualRow> *ls = nullptr) const override { return l_->evaluate_row(v, r, ls) * r_->evaluate_row(v, r, ls); }
         std::string to_string() const override { return "(" + l_->to_string() + "*" + r_->to_string() + ")"; }
-        Unit get_unit(const VariableRegistry& reg) const override;
+        Unit get_unit(const VariableRegistry &reg) const override;
     };
-    class DivNode : public BinaryNode { public: using BinaryNode::BinaryNode; 
-        DualNumber evaluate(const std::vector<DualNumber>& v, const VariableRegistry& r, const std::unordered_map<std::string, DualNumber>* ls = nullptr) const override { return l_->evaluate(v,r,ls) / r_->evaluate(v,r,ls); }
+    class DivNode : public BinaryNode
+    {
+    public:
+        using BinaryNode::BinaryNode;
+        DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry &r, const std::unordered_map<std::string, DualNumber> *ls = nullptr) const override { return l_->evaluate(v, r, ls) / r_->evaluate(v, r, ls); }
+        DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &r, const std::unordered_map<std::string, DualRow> *ls = nullptr) const override { return l_->evaluate_row(v, r, ls) / r_->evaluate_row(v, r, ls); }
         std::string to_string() const override { return "(" + l_->to_string() + "/" + r_->to_string() + ")"; }
-        Unit get_unit(const VariableRegistry& reg) const override;
+        Unit get_unit(const VariableRegistry &reg) const override;
     };
-    class PowNode : public Node { NodePtr b_; double e_; public: PowNode(NodePtr b, double e) : b_(b), e_(e) {}
-        DualNumber evaluate(const std::vector<DualNumber>& v, const VariableRegistry& r, const std::unordered_map<std::string, DualNumber>* ls = nullptr) const override { return pow(b_->evaluate(v,r,ls), e_); }
+    class PowNode : public Node
+    {
+        NodePtr b_;
+        double e_;
+
+    public:
+        PowNode(NodePtr b, double e) : b_(b), e_(e) {}
+        DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry &r, const std::unordered_map<std::string, DualNumber> *ls = nullptr) const override { return pow(b_->evaluate(v, r, ls), e_); }
+        DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &r, const std::unordered_map<std::string, DualRow> *ls = nullptr) const override { return pow(b_->evaluate_row(v, r, ls), e_); }
         std::string to_string() const override { return "pow(" + b_->to_string() + "," + std::to_string(e_) + ")"; }
-        Unit get_unit(const VariableRegistry& reg) const override;
+        Unit get_unit(const VariableRegistry &reg) const override;
     };
-    class NegNode : public UnaryNode { public: using UnaryNode::UnaryNode;
-        DualNumber evaluate(const std::vector<DualNumber>& v, const VariableRegistry& r, const std::unordered_map<std::string, DualNumber>* ls = nullptr) const override { return -c_->evaluate(v,r,ls); }
+    class NegNode : public UnaryNode
+    {
+    public:
+        using UnaryNode::UnaryNode;
+        DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry &r, const std::unordered_map<std::string, DualNumber> *ls = nullptr) const override { return -c_->evaluate(v, r, ls); }
+        DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &r, const std::unordered_map<std::string, DualRow> *ls = nullptr) const override { return -c_->evaluate_row(v, r, ls); }
         std::string to_string() const override { return "(-" + c_->to_string() + ")"; }
-        Unit get_unit(const VariableRegistry& reg) const override;
+        Unit get_unit(const VariableRegistry &reg) const override;
     };
 
-} // namespace cones
+    // Evaluate a variable node and yield a DN
+    inline DualNumber VariableNode::evaluate(const std::vector<DualNumber> &v, const VariableRegistry &, const std::unordered_map<std::string, DualNumber> *ls) const
+    {
 
-#include "variable_registry.hpp"
-
-namespace cones {
-    inline DualNumber VariableNode::evaluate(const std::vector<DualNumber>& v, const VariableRegistry&, const std::unordered_map<std::string, DualNumber>* ls) const { 
-        if (ls) {
+        // First try to find the node in the registry, and return its result
+        if (ls)
+        {
             auto it = ls->find(n_);
-            if (it != ls->end()) return it->second;
+            if (it != ls->end())
+                return it->second;
         }
+
+        // Otherwise return the actual DN's value
         return v[idx_];
     }
-    inline Unit VariableNode::get_unit(const VariableRegistry& reg) const { return reg.get_variable(idx_).unit.to_si(); }
-    inline Unit AddNode::get_unit(const VariableRegistry& reg) const { return l_->get_unit(reg); }
-    inline Unit SubNode::get_unit(const VariableRegistry& reg) const { return l_->get_unit(reg); }
-    inline Unit MulNode::get_unit(const VariableRegistry& reg) const { return l_->get_unit(reg) * r_->get_unit(reg); }
-    inline Unit DivNode::get_unit(const VariableRegistry& reg) const { return l_->get_unit(reg) / r_->get_unit(reg); }
-    inline Unit PowNode::get_unit(const VariableRegistry& reg) const { return b_->get_unit(reg).pow(e_); }
-    inline Unit NegNode::get_unit(const VariableRegistry& reg) const { return c_->get_unit(reg); }
 
-    inline DualNumber CustomFunctionNode::evaluate(const std::vector<DualNumber> &v, const VariableRegistry& reg, const std::unordered_map<std::string, DualNumber>* ls) const {
+    // Clone of DualNumber method
+    inline DualRow VariableNode::evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &, const std::unordered_map<std::string, DualRow> *ls) const
+    {
+
+        // First try to find the node in the registry, and return its result
+        if (ls)
+        {
+            auto it = ls->find(n_);
+            if (it != ls->end())
+                return it->second;
+        }
+
+        // Otherwise return the actual DN's value
+        return v[idx_];
+    }
+    inline Unit VariableNode::get_unit(const VariableRegistry &reg) const { return reg.get_variable(idx_).unit.to_si(); }
+    inline Unit AddNode::get_unit(const VariableRegistry &reg) const { return l_->get_unit(reg); }
+    inline Unit SubNode::get_unit(const VariableRegistry &reg) const { return l_->get_unit(reg); }
+    inline Unit MulNode::get_unit(const VariableRegistry &reg) const { return l_->get_unit(reg) * r_->get_unit(reg); }
+    inline Unit DivNode::get_unit(const VariableRegistry &reg) const { return l_->get_unit(reg) / r_->get_unit(reg); }
+    inline Unit PowNode::get_unit(const VariableRegistry &reg) const { return b_->get_unit(reg).pow(e_); }
+    inline Unit NegNode::get_unit(const VariableRegistry &reg) const { return c_->get_unit(reg); }
+
+    // Evaluate a custom function and provide a dualnumber as output
+    inline DualNumber CustomFunctionNode::evaluate(const std::vector<DualNumber> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualNumber> *ls) const
+    {
         std::vector<FuncArg> eval_args;
-        for (const auto &arg : args_) {
+
+        // Bind and repack function's args
+        for (const auto &arg : args_)
+        {
             std::string effective_name = arg.name;
-            if (effective_name.empty()) {
-                if (auto vnode = std::dynamic_pointer_cast<VariableNode>(arg.node)) {
+            if (effective_name.empty())
+            {
+                if (auto vnode = std::dynamic_pointer_cast<VariableNode>(arg.node))
+                {
                     effective_name = vnode->to_string();
                 }
             }
             eval_args.push_back({effective_name, arg.node->evaluate(v, reg, ls), arg.node->get_unit(reg)});
         }
+
+        // Evaluate the new args
         return func_->evaluate(eval_args);
     }
 
-    inline DualNumber UserFunctionNode::evaluate(const std::vector<DualNumber> &v, const VariableRegistry& reg, const std::unordered_map<std::string, DualNumber>*) const {
+    // Clone of DualNumber method for DualRow
+    inline DualRow CustomFunctionNode::evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualRow> *ls) const
+    {
+        std::vector<FuncArgRow> eval_args;
+
+        // Bind and repack function's args
+        for (const auto &arg : args_)
+        {
+            std::string effective_name = arg.name;
+            if (effective_name.empty())
+            {
+                if (auto vnode = std::dynamic_pointer_cast<VariableNode>(arg.node))
+                {
+                    effective_name = vnode->to_string();
+                }
+            }
+            eval_args.push_back({effective_name, arg.node->evaluate_row(v, reg, ls), arg.node->get_unit(reg)});
+        }
+
+        // Evaluate the new args
+        return func_->evaluate_row(eval_args);
+    }
+
+    // Evaluate a user function and provide a dualnumber as output
+    inline DualNumber UserFunctionNode::evaluate(const std::vector<DualNumber> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualNumber> *) const
+    {
         std::unordered_map<std::string, DualNumber> local_scope;
 
-        // 1. Bind parameters
-        for (size_t i = 0; i < def_->params.size(); ++i) {
-            if (i < arg_nodes_.size()) {
+        // Bind parameters
+        for (size_t i = 0; i < def_->params.size(); ++i)
+        {
+            if (i < arg_nodes_.size())
+            {
                 local_scope[def_->params[i]] = arg_nodes_[i]->evaluate(v, reg);
             }
         }
 
-        // 2. Evaluate body assignments
-        for (const auto& assign : def_->body_assignments) {
+        // Evaluate body assignments
+        for (const auto &assign : def_->body_assignments)
+        {
             local_scope[assign.lhs_name] = assign.rhs_node->evaluate(v, reg, &local_scope);
         }
-        
-        // 3. Return final result
+
+        // Return final result
         return def_->return_node->evaluate(v, reg, &local_scope);
     }
-}
+
+    // Clone of DualNumber method for DualRow
+    inline DualRow UserFunctionNode::evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualRow> *) const
+    {
+        std::unordered_map<std::string, DualRow> local_scope;
+
+        // Bind parameters
+        for (size_t i = 0; i < def_->params.size(); ++i)
+        {
+            if (i < arg_nodes_.size())
+            {
+                local_scope[def_->params[i]] = arg_nodes_[i]->evaluate_row(v, reg);
+            }
+        }
+
+        // Evaluate body assignments
+        for (const auto &assign : def_->body_assignments)
+        {
+            local_scope[assign.lhs_name] = assign.rhs_node->evaluate_row(v, reg, &local_scope);
+        }
+
+        // Return result
+        return def_->return_node->evaluate_row(v, reg, &local_scope);
+    }
+} // Namespace cones
 
 #endif

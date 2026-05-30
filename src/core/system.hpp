@@ -64,35 +64,33 @@ namespace cones
             f.resize(n);
             j.resize(n, m_active);
 
-            std::vector<DualNumber> dual_vals;
-            dual_vals.reserve(registry_.size());
+            std::vector<DualRow> dual_rows;
+            dual_rows.reserve(registry_.size());
             for (size_t i = 0; i < registry_.size(); ++i)
-                dual_vals.emplace_back(registry_.get_variable(i).value, 0.0);
+                dual_rows.emplace_back(registry_.get_variable(i).value, m_active);
+
+            for (int active_j = 0; active_j < m_active; ++active_j)
+            {
+                int global_idx = active_indices[active_j];
+                dual_rows[global_idx].der(active_j) = 1.0;
+            }
 
             for (int i = 0; i < n; ++i)
             {
-                // Pre-evaluate the residual (f) first to check for domain errors
                 try {
-                    DualNumber res = equations_[i]->evaluate(dual_vals, registry_);
-                    f(i) = res.val;
-                } catch (...) {
-                    // Penalty for any issues
-                    f(i) = 1e9; 
-                }
-
-                for (int active_j = 0; active_j < m_active; ++active_j)
-                {
-                    int global_idx = active_indices[active_j];
-                    dual_vals[global_idx].der = 1.0;
-
-                    try {
-                        DualNumber res = equations_[i]->evaluate(dual_vals, registry_);
-                        j(i, active_j) = res.der;
-                    } catch (...) {
-                        j(i, active_j) = 0.0; // Flat gradient in error regions
-                    }
+                    DualRow res = equations_[i]->evaluate_row(dual_rows, registry_);
                     
-                    dual_vals[global_idx].der = 0.0;
+                    if (std::isnan(res.val)) f(i) = 1e9;
+                    else f(i) = res.val;
+
+                    for (int active_j = 0; active_j < m_active; ++active_j)
+                    {
+                        if (std::isnan(res.der(active_j))) j(i, active_j) = 0.0;
+                        else j(i, active_j) = res.der(active_j);
+                    }
+                } catch (...) {
+                    f(i) = 1e9;
+                    j.row(i).setZero();
                 }
             }
         }

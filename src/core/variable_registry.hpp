@@ -16,7 +16,7 @@ namespace cones
         std::string name;
         int index;
         double value = 1.0; // Current value (or initial guess)
-        double lower_bound = 1e-7;
+        double lower_bound = -std::numeric_limits<double>::infinity();
         double upper_bound = std::numeric_limits<double>::infinity();
         bool is_fixed = false;
         bool is_reserved = false; // Materials/Reserved keywords
@@ -92,14 +92,19 @@ namespace cones
             if (v.unit.is_dimensionless() && !unit.is_dimensionless())
             {
                 v.value = (v.value + unit.offset) * unit.scale;
-                if (v.lower_bound > -1e30)
+                if (v.lower_bound > -1e20)
                     v.lower_bound = (v.lower_bound + unit.offset) * unit.scale;
-                if (v.upper_bound < 1e30)
+                if (v.upper_bound < 1e20)
                     v.upper_bound = (v.upper_bound + unit.offset) * unit.scale;
             }
             v.unit = unit;
             if (!name.empty())
                 v.unit_name = name;
+            
+            // Apply sanity bounds for physical quantities
+            if (unit.requires_positivity()) {
+                if (v.lower_bound < 0) v.lower_bound = 1e-7;
+            }
         }
 
         /**

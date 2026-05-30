@@ -1,5 +1,20 @@
 ## CoNES Changelog
-CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.1.8`.
+CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.1.9`.
+
+### Version 0.1.9
+  - Refactor to introduce `DualRow` Struct
+    - New system introduces a value and a row representing the derivates of the variable w.r.t. the parent matrix (e.g. dx/dx, dx/dy, dx/dz)
+    - Created and propogated through `ConstantNode`, `UserFunctionNode`, `VariableNode`, `CustomFunctionNode`, ... `DualRow` clones of the `DualNumer` methods/functions:
+      - math functions
+      - evalutaion
+      - etc
+    - New system will find roots much more quickly (since the jacobian is actually fully evaluated) AND converges where the previous system didn't
+  - Bug fixes
+    - Changed behavior of lower-limiting to only automatically be enacted on physically realizable quantities (pressure, viscosity, ...) to allow the solver to converge for certain ICs
+    - Fixed a bug in `parser.hpp/Parser::power` that incorrectly evaluated `expression()` to double instead of `unary()`; this caused exponents' jacobian to not accurately be solved and introduced needless instability
+    - Temporarily removed jacobian normalization to try to keep solver explosions to a minimum; this will likely be reverted in the future
+    - Fixed a bug during a divergent solution which resulted in iterations not being correctly computed
+  - Documentation improvements
 
 ### Version 0.1.8
   - Internal rework of python interface
