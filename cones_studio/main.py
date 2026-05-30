@@ -4,6 +4,7 @@ ensure_dependencies({'customtkinter', 'CoolProp'})
 
 import customtkinter as ctk
 from tkinter import ttk, filedialog
+import pathlib
 import os
 import threading
 import tempfile
@@ -17,12 +18,16 @@ ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("dark-blue")
 
 class CoNESStudio(ctk.CTk):
+    def _set_title(self, x:str|None=None):
+        if not x: self.title(f"CoNES Studio ({self.versionNumber})")
+        else: self.title(f"CoNES Studio ({self.versionNumber}): {x}")
+        
     def __init__(self):
         super().__init__()
         
         self.backend = CoNESBackend()
-        result = self.backend.version()
-        self.title(f"CoNES Studio ({result})")
+        self.versionNumber = self.backend.version()
+        self._set_title(None) # Empty first
         self.geometry("1100x750")
         self.configure(fg_color="#1e1e1e")
         
@@ -72,8 +77,8 @@ class CoNESStudio(ctk.CTk):
         self.main_container = ctk.CTkFrame(self, corner_radius=0, fg_color="#1e1e1e", border_width=0)
         self.main_container.grid(row=1, column=0, sticky="nsew")
         self.main_container.grid_rowconfigure(0, weight=1)
-        self.main_container.grid_columnconfigure(0, weight=3) 
-        self.main_container.grid_columnconfigure(1, weight=1) 
+        self.main_container.grid_columnconfigure(0, minsize=240, weight=1) # Editor
+        self.main_container.grid_columnconfigure(1, minsize=160, weight=0) # Right column
         
         # Editor (Flush against left and toolbar)
         self.editor = CodeEditor(self.main_container, metadata=self.metadata)
@@ -244,6 +249,7 @@ class CoNESStudio(ctk.CTk):
         self.editor.set_text("")
         self.current_file = None
         self.status_bar.configure(text="  Good luck!", fg_color=color_status_OK)
+        self._set_title(None)
 
     def open_file(self, event=None):
         path = filedialog.askopenfilename(filetypes=[("CoNES Scripts", "*.cnes"), ("All Files", "*.*")])
@@ -255,6 +261,7 @@ class CoNESStudio(ctk.CTk):
             self.editor.set_text(f.read())
         self.current_file = path
         self.status_bar.configure(text=f"  Opened {os.path.basename(path)}", fg_color="#007acc")
+        self._set_title(pathlib.Path(path).name)
         self._clear_trees()
 
     def save_file(self):
@@ -265,6 +272,7 @@ class CoNESStudio(ctk.CTk):
             with open(self.current_file, "w") as f:
                 f.write(self.editor.get_text())
             self.status_bar.configure(text=f"  Saved {os.path.basename(self.current_file)}", fg_color=color_status_Success)
+            self._set_title(pathlib.Path(self.current_file).name)
     
     def save_lib(self):
         # Determine the libs directory relative to project root
@@ -285,6 +293,7 @@ class CoNESStudio(ctk.CTk):
                 with open(save_path, "w") as f:
                     f.write(self.editor.get_text())
                 self.status_bar.configure(text=f"  Library saved to: libs/{lib_name}", fg_color=color_status_Success)
+                self._set_title(lib_name+" (Library)")
             except Exception as e:
                 self.status_bar.configure(text=f"  Failed to save library: {str(e)}", fg_color=color_status_Bad)
 

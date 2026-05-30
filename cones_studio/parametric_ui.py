@@ -5,6 +5,8 @@ import threading
 import os
 import tempfile
 from colors import *
+import time
+from backend import parse_time
 
 # Utils
 def has_brackets(x:str) -> bool: return "[" in x and "]" in x
@@ -387,6 +389,8 @@ class ParametricTable(ctk.CTkFrame):
     def run_table(self):
         if len(self.headers) <= 1: return
         self.btn_run.configure(state="disabled", text="Running...")
+        self.app.status_bar.configure(text=f"  Starting {len(self.tree.get_children())}-row parametric table", fg_color=color_status_OK)
+        self.time_start = time.time_ns() / 1000000
         threading.Thread(target=self._run_loop, daemon=True).start()
         
     def _run_loop(self):
@@ -394,7 +398,7 @@ class ParametricTable(ctk.CTkFrame):
         base_script = self.app.editor.get_text()
         cwd = os.path.dirname(self.app.current_file) if self.app.current_file else os.getcwd()
         
-        for item in self.tree.get_children():
+        for idx, item in enumerate(self.tree.get_children()):
             vals = list(self.tree.item(item, "values"))
             overrides = ""
             user_inputs = self.inputs_map.get(item, set())
@@ -427,6 +431,7 @@ class ParametricTable(ctk.CTkFrame):
                             new_vals.append("-")
                 # Apply 'calculated' tag
                 self.app.after(0, lambda it=item, nv=new_vals: self.tree.item(it, values=nv, tags=("calculated",)))
+                self.app.status_bar.configure(text=f"  Completed item {idx + 1} out of {len(self.tree.get_children())}", fg_color=color_status_OK)
                 if item in self.error_map: del self.error_map[item]
             else:
                 new_vals = [vals[0]]
@@ -438,10 +443,16 @@ class ParametricTable(ctk.CTkFrame):
                 
                 # Store full result for rich tooltip data
                 self.error_map[item] = result
+                self.app.status_bar.configure(text=f"  Failed item {idx + 1} out of {len(self.tree.get_children())}", fg_color=color_status_Diverged)
                 self.app.after(0, lambda it=item, nv=new_vals: self.tree.item(it, values=nv, tags=("error",)))
                 
-        self.app.after(0, lambda: self.btn_run.configure(state="normal", text="Run Table"))
+        self.app.after(0, self._relog)
 
+    def _relog(self):
+        self.btn_run.configure(state="normal", text="Run Table")
+        self.time_end = time.time_ns() / 1000000
+        self.app.status_bar.configure(text=f"  Parametric execution complete ({parse_time(self.time_end - self.time_start)}, {len(self.tree.get_children())} rows)", fg_color=color_status_OK)
+        
 # Pane high-tier wrapper
 class ParametricPane(ctk.CTkFrame):
     def __init__(self, master, app_ref, **kwargs):

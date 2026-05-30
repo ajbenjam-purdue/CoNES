@@ -1,0 +1,48 @@
+// Fins
+// Snatched from Bergman et. Al, Fundamentals of Heat and Mass Transfer (7th ed.) without remorse
+
+// `temperature_convective_tip`
+// For a convective tip condition; this is usually pretty accurate for all fins
+// Return: Temperature at position `x` in Kelvin
+function temperature_convective_tip (T_base, T_inf, h_fluid, P_fin, k_fin, A_fin, L_fin, x)
+ theta_b = T_base [K] - T_inf [K]
+ m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
+ h_inside = m * (L_fin [m] - x [m])
+ h_mk = h_fluid [W/m^2*K] / (m * k_fin [W/m*K])
+ T_x = ((theta_b * ((cosh(h_inside) + h_mk * sinh(h_inside)) ) / (cosh(m * L_fin [m]) + h_mk * sinh(m * L_fin [m]))) [K] + T_inf [K])
+ return T_x [K]
+end function
+
+// `temperature_adiabatic_tip`
+// For an assumed adiabatic tip condition; this is usually ok for fins with a higher P/A ratio
+// Return: Temperature at position `x` in Kelvin
+function temperature_adiabatic_tip (T_base, T_inf, h_fluid, P_fin, k_fin, A_fin, L_fin, x)
+ theta_b = T_base [K] - T_inf [K]
+ m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
+ h_inside = m * (L_fin [m] - x [m])
+ T_x = ((theta_b * (cosh(h_inside)) / cosh(m * L_fin [m])) [K] + T_inf [K])
+ return T_x [K]
+end function
+
+// `temperature_prescribed_tip_temperature` <- What a name!
+// For a tip with a known temperature; seldom applicable
+// Return: Temperature at position `x` in Kelvin
+function temperature_prescribed_tip_temperature (T_base, T_inf, T_tip, h_fluid, P_fin, k_fin, A_fin, L_fin, x)
+ theta_b = T_base [K] - T_inf [K]
+ theta_L = T_tip [K] - T_inf [K]
+ m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
+ h_inside = m * (L_fin [m] - x [m])
+ h_mk = h_fluid [W/m^2*K] / (m * k_fin [W/m*K])
+ T_x = ((theta_b * (theta_L / theta_b * sinh(m * x [m]) + sinh(h_inside)) / sinh(m * L_fin [m])) [K] + T_inf [K])
+ return T_x [K]
+end function
+
+// `temperature_infinite`
+// For an assumed infinite fin; this is never right but usually close
+// Return: Temperature at position `x` in Kelvin
+function temperature_infinite (T_base, T_inf, h_fluid, P_fin, k_fin, A_fin, L_fin, x)
+ theta_b = T_base [K] - T_inf [K]
+ m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
+ T_x = (theta_b * pow(2.7, -m * x [m]) + T_inf [K])
+ return T_x [K]
+end function
