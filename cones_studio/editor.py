@@ -260,7 +260,7 @@ class CodeEditor(ctk.CTkFrame):
         label = tk.Label(self.tooltip, text=text, justify='left',
                          background="#252526", foreground="#cccccc",
                          relief='solid', borderwidth=1, font=UI_FONT_SMALL,
-                         padx=8, pady=5)
+                         padx=5, pady=4)
         label.pack()
 
     def _hide_tooltip(self):

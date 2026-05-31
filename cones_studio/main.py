@@ -6,6 +6,7 @@ import customtkinter as ctk
 from tkinter import ttk, filedialog
 import pathlib
 import os
+import json
 import threading
 import tempfile
 from typing import Optional
@@ -17,6 +18,52 @@ from colors import * # Used for less terrible formatting
 
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("dark-blue")
+
+class CustomInputDialog(ctk.CTkToplevel):
+    """A custom input dialog that supports a pre-filled initial value."""
+    def __init__(self, text: str, title: str, initial_value: str = ""):
+        super().__init__()
+        self.title(title)
+        self.geometry("300x150")
+        self.resizable(False, False)
+        self.transient(self.master) #type: ignore
+        self.grab_set()
+        
+        self.result: Optional[str] = None
+        
+        self.label = ctk.CTkLabel(self, text=text, font=UI_FONT)
+        self.label.pack(pady=(15, 5))
+        
+        self.entry = ctk.CTkEntry(self, width=200)
+        self.entry.pack(pady=5)
+        self.entry.insert(0, initial_value)
+        self.entry.focus_set()
+        
+        self.btn_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.btn_frame.pack(pady=10)
+        
+        self.ok_btn = ctk.CTkButton(self.btn_frame, text="OK", width=80, command=self._on_ok)
+        self.ok_btn.pack(side="left", padx=5)
+        
+        self.cancel_btn = ctk.CTkButton(self.btn_frame, text="Cancel", width=80, fg_color="transparent", 
+                                        border_width=1, command=self._on_cancel)
+        self.cancel_btn.pack(side="left", padx=5)
+        
+        self.bind("<Return>", lambda e: self._on_ok())
+        self.bind("<Escape>", lambda e: self._on_cancel())
+        
+        self.wait_window()
+
+    def _on_ok(self):
+        self.result = self.entry.get()
+        self.destroy()
+
+    def _on_cancel(self):
+        self.result = None
+        self.destroy()
+
+    def get_input(self) -> Optional[str]:
+        return self.result
 
 class CoNESStudio(ctk.CTk):
     """
@@ -43,6 +90,7 @@ class CoNESStudio(ctk.CTk):
         self.shadow_path = os.path.join(self.temp_dir, "shadow_solve.cnes")
         
         self.current_file: Optional[str] = None
+        self.last_lib_name: str = ""
         self.metadata = self.backend.get_metadata()
         self._linting_in_progress = False
         self._lint_pending: Optional[str] = None
@@ -64,7 +112,10 @@ class CoNESStudio(ctk.CTk):
         self.btn_save = ctk.CTkButton(self.toolbar, text="Save", command=self.save_file, **btn_opts)
         self.btn_save.pack(side="left")
 
-        self.btn_save_lib = ctk.CTkButton(self.toolbar, text="Save as Library", command=self.save_lib, **btn_opts)
+        self.btn_save_as = ctk.CTkButton(self.toolbar, text="Save As", command=self.save_file_as, **btn_opts)
+        self.btn_save_as.pack(side="left")
+
+        self.btn_save_lib = ctk.CTkButton(self.toolbar, text="Export Lib", command=self.save_lib, **btn_opts)
         self.btn_save_lib.pack(side="left")
 
         # Solve button with accent color but still blocky
@@ -135,8 +186,12 @@ class CoNESStudio(ctk.CTk):
         self.bind_all("<Command-n>", self.new_file)
         self.bind_all("<Control-o>", self.open_file)
         self.bind_all("<Command-o>", self.open_file)
-        self.bind_all("<Control-s>", lambda e: self.save_file())
-        self.bind_all("<Command-s>", lambda e: self.save_file())
+        self.bind_all("<Control-s>", self.save_file)
+        self.bind_all("<Command-s>", self.save_file)
+        self.bind_all("<Control-Shift-s>", self.save_file_as)
+        self.bind_all("<Command-Shift-s>", self.save_file_as)
+        self.bind_all("<Control-Shift-S>", self.save_file_as)
+        self.bind_all("<Command-Shift-S>", self.save_file_as)
         self.bind_all("<Control-r>", lambda e: self.run_solve())
         self.bind_all("<Command-r>", lambda e: self.run_solve())
 
@@ -352,29 +407,83 @@ class CoNESStudio(ctk.CTk):
                     self.metadata['functions'].update(doc.to_dict())
 
     def open_file(self, event=None):
-        path = filedialog.askopenfilename(filetypes=[("CoNES Scripts", "*.cnes"), ("All Files", "*.*")])
+        """Dynamic open supporting both .cnes and .cnesp project bundles."""
+        path = filedialog.askopenfilename(filetypes=[
+            ("All CoNES Formats", "*.cnes *.cnesp"),
+            ("CoNES Project", "*.cnesp"),
+            ("CoNES Script", "*.cnes"),
+            ("All Files", "*.*")
+        ])
         if path:
             self.load_file(path)
 
-    def load_file(self, path:str):
-        with open(path, "r") as f:
-            self.editor.set_text(f.read())
-        self.current_file = path
-        self.status_bar.configure(text=f"  Opened {os.path.basename(path)}", fg_color="#007acc")
-        self._set_title(pathlib.Path(path).name)
-        self.load_metadata()
-        self._clear_trees()
+    def load_file(self, path: str):
+        """Loads data from disk, handling both raw scripts and project bundles."""
+        try:
+            if path.endswith(".cnesp"):
+                with open(path, "r") as f:
+                    project_data = json.load(f)
+                
+                self.editor.set_text(project_data.get("code", ""))
+                if "parametric_studies" in project_data:
+                    self.parametric_pane.from_dict(project_data["parametric_studies"])
+                
+                msg = f"  Loaded project: {os.path.basename(path)}"
+            else:
+                with open(path, "r") as f:
+                    self.editor.set_text(f.read())
+                msg = f"  Opened script: {os.path.basename(path)}"
 
-    def save_file(self):
-        if not self.current_file:
-            self.current_file = filedialog.asksaveasfilename(defaultextension=".cnes", filetypes=[("CoNES Scripts", "*.cnes")])
-        
-        if self.current_file:
-            with open(self.current_file, "w") as f:
-                f.write(self.editor.get_text())
-            self.status_bar.configure(text=f"  Saved {os.path.basename(self.current_file)}", fg_color=color_status_Success)
-            self._set_title(pathlib.Path(self.current_file).name)
+            self.current_file = path
+            self.status_bar.configure(text=msg, fg_color=COLOR_STATUS_OK)
+            self._set_title(pathlib.Path(path).name)
             self.load_metadata()
+            self._clear_trees()
+        except Exception as e:
+            self.status_bar.configure(text=f"  Failed to load: {str(e)}", fg_color=COLOR_STATUS_BAD)
+
+    def save_file(self, event=None):
+        """Performs a standard save. Prompts for path if none exists."""
+        if not self.current_file:
+            self.save_file_as()
+        else:
+            self._execute_save(self.current_file)
+
+    def save_file_as(self, event=None):
+        """Prompts the user for a new file path and format."""
+        path = filedialog.asksaveasfilename(
+            defaultextension=".cnesp",
+            filetypes=[
+                ("CoNES Project", "*.cnesp"),
+                ("CoNES Script", "*.cnes")
+            ]
+        )
+        if path:
+            self.current_file = path
+            self._execute_save(path)
+
+    def _execute_save(self, path: str):
+        """Internal save logic that handles formatting based on extension."""
+        try:
+            if path.endswith(".cnesp"):
+                project_data = {
+                    "version": "1.0",
+                    "code": self.editor.get_text(),
+                    "parametric_studies": self.parametric_pane.to_dict()
+                }
+                with open(path, "w") as f:
+                    json.dump(project_data, f, indent=2)
+                msg = f"  Project saved: {os.path.basename(path)}"
+            else:
+                with open(path, "w") as f:
+                    f.write(self.editor.get_text())
+                msg = f"  Script saved: {os.path.basename(path)}"
+
+            self.status_bar.configure(text=msg, fg_color=COLOR_STATUS_SUCCESS)
+            self._set_title(pathlib.Path(path).name)
+            self.load_metadata()
+        except Exception as e:
+            self.status_bar.configure(text=f"  Save failed: {str(e)}", fg_color=COLOR_STATUS_BAD)
     
     def save_lib(self):
         # Determine the libs directory relative to project root
@@ -383,7 +492,9 @@ class CoNESStudio(ctk.CTk):
         if not os.path.exists(libs_dir):
             os.makedirs(libs_dir, exist_ok=True)
 
-        dialog = ctk.CTkInputDialog(text="Enter library name (e.g. 'my_lib'):", title="Save as Library")
+        dialog = CustomInputDialog(text="Enter library name (e.g. 'my_lib'):", 
+                                   title="Export Library", 
+                                   initial_value=self.last_lib_name.rstrip('.cnes'))
         lib_name = dialog.get_input()
         
         if lib_name:
@@ -394,10 +505,12 @@ class CoNESStudio(ctk.CTk):
             try:
                 with open(save_path, "w") as f:
                     f.write(self.editor.get_text())
-                self.status_bar.configure(text=f"  Library saved to: libs/{lib_name}", fg_color=color_status_Success)
+                
+                self.last_lib_name = lib_name
+                self.status_bar.configure(text=f"  Library saved to: libs/{lib_name}", fg_color=COLOR_STATUS_SUCCESS)
                 self._set_title(lib_name+" (Library)")
             except Exception as e:
-                self.status_bar.configure(text=f"  Failed to save library: {str(e)}", fg_color=color_status_Bad)
+                self.status_bar.configure(text=f"  Failed to save library: {str(e)}", fg_color=COLOR_STATUS_BAD)
 
     def run_solve(self):
         content = self.editor.get_text()

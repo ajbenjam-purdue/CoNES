@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 import threading
 import os
+import re
 import tempfile
 import time
 import json
@@ -225,23 +226,61 @@ class ParametricTable(ctk.CTkFrame):
         for _ in range(5):
             self.add_row()
 
-    def to_dict(self) -> dict[str, list[str]]:
+    def to_dict(self) -> Dict[str, Any]:
         """
-        Extracts the contents of the table into a dictionary.
-        Format: {"column name": [value1, value2, ...], ...}
+        Extracts the full state of the table for project saving.
         
         Returns:
-            dict[str, list[str]]: Dictionary mapping column headers to lists of row values.
+            Dict[str, Any]: Dictionary containing headers, row data, and input maps.
         """
-        data = {h: [] for h in self.headers}
+        rows = []
         for item in self.tree.get_children():
             values = self.tree.item(item, "values")
-            for i, h in enumerate(self.headers):
-                if i < len(values):
-                    data[h].append(values[i])
-                else:
-                    data[h].append("")
-        return data
+            tags = self.tree.item(item, "tags")
+            user_inputs = list(self.inputs_map.get(item, set()))
+            rows.append({
+                "values": values,
+                "tags": tags,
+                "user_inputs": user_inputs
+            })
+            
+        return {
+            "headers": self.headers,
+            "rows": rows,
+            "run_counter": self.run_counter
+        }
+
+    def from_dict(self, data: Dict[str, Any]):
+        """
+        Loads the table state from a dictionary.
+        """
+        # Clear existing
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        self.inputs_map.clear()
+        self.error_map.clear()
+        
+        self.headers = data.get("headers", ["Run"])
+        self.run_counter = data.get("run_counter", 0)
+        
+        # Configure columns
+        self.tree.configure(columns=self.headers)
+        for h in self.headers:
+            self.tree.heading(h, text=h)
+            if h == "Run":
+                self.tree.column(h, width=50, minwidth=50, anchor="center", stretch=False)
+            else:
+                self.tree.column(h, width=100, minwidth=70, anchor="center", stretch=True)
+                
+        # Insert rows
+        for row_data in data.get("rows", []):
+            vals = row_data.get("values", [])
+            tags = row_data.get("tags", [])
+            user_inputs = set(row_data.get("user_inputs", []))
+            
+            item = self.tree.insert("", "end", values=vals, tags=tags)
+            if user_inputs:
+                self.inputs_map[item] = user_inputs
 
     def __iter__(self):
         """Allows iterating over rows as dictionaries."""
@@ -502,6 +541,7 @@ class ParametricTable(ctk.CTkFrame):
     def run_table(self):
         if len(self.headers) <= 1: return
         self.btn_run.configure(state="disabled", text="Running...")
+        self.clear_outputs() # Clear current outs
         self.app.status_bar.configure(text=f"  Starting {len(self.tree.get_children())}-row parametric table", fg_color=color_status_OK)
         self.time_start = time.time_ns() / 1000000
         threading.Thread(target=self._run_loop, daemon=True).start()
@@ -610,6 +650,44 @@ class ParametricPane(ctk.CTkFrame):
         self.table_counter = 0
 
         self.new_table()
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Serializes all tables in the pane.
+        """
+        return {name: table.to_dict() for name, table in self.tables.items()}
+
+    def from_dict(self, data: Dict[str, Any]):
+        """
+        Clears existing tables and loads from serialized data.
+        """
+        # Remove all existing tabs
+        for name in list(self.tables.keys()):
+            self.tabs.delete(name)
+        self.tables.clear()
+        self.table_counter = 0
+        
+        # Reconstruct tables
+        for name, table_data in data.items():
+            self.tabs.add(name)
+            tab_frame = self.tabs.tab(name)
+            pt = ParametricTable(tab_frame, self.app)
+            pt.pack(fill="both", expand=True)
+            pt.from_dict(table_data)
+            self.tables[name] = pt
+            
+        # Update counter to avoid collisions
+        names = list(self.tables.keys())
+        if names:
+            # Try to extract numbers from "Table N"
+            nums = []
+            for n in names:
+                match = re.search(r"(\d+)", n)
+                if match: nums.append(int(match.group(1)))
+            self.table_counter = max(nums) if nums else len(names)
+            self.tabs.set(names[0])
+        else:
+            self.new_table()
 
     def new_table(self):
         """Creates a new parametric table tab."""
