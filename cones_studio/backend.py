@@ -88,7 +88,6 @@ class CoNESBackend:
                 else:
                     name, summary = p, ""
                 substances[name.strip()] = {"summary": summary.strip()}
-            
             return {
                 "constants": constants,
                 "functions": functions,

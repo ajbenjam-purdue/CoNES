@@ -1,0 +1,48 @@
+// Shape Factors (ch4)
+// Commandeered away from Bergman et. Al, Fundamentals of Heat and Mass Transfer (7th ed.) with neigh regard for safety
+
+
+// I am following the book's order for this
+// Also I do not want to do more derivatives so:
+// `SIGNATURE` acosh
+// `PARAMETERS` x (Number to acosh)
+// `RETURN` Arc-hyperbolic-cosine, unitless
+// `DESCRIPTION` bad implementation
+function acosh(x)
+ return log(x + sqrt(x ^ 2 - 1))
+end function
+
+// `SIGNATURE` S_case_1
+// `PARAMETERS` D (Diameter of the submerged sphere), z (Depth under the surface of the sphere from its center)
+// `RETURN` Shape factor from the sphere's outer shell to the surface, meters
+// `DESCRIPTION` "Isothermal sphere buried in a semi-infinite medium";Valid for: z > D / 2;
+function S_case_1 (D, z)
+ return 2 * CONST_PI * D [m] / (1 - D [m] / z [m])
+end function
+
+// `SIGNATURE` S_case_2
+// `PARAMETERS` L (Length of the submerged cylinder), z (Depth under the surface of the cylinder from its center axis), D (Diameter of the submerged cylinder)
+// `RETURN` Shape factor from the cylinder's outer shell to the surface, meters
+// `DESCRIPTION` "Horizontal isothermal cylinder of length L buried in a semi-infinite medium";Valid for: L >> D, z > 1.5 D;
+function S_case_2 (L, z, D)
+ return 2 * CONST_PI * L [m] / log(4 * z [m] / D [m])
+end function
+
+// `SIGNATURE` S_case_3
+// `PARAMETERS` L (Length of the submerged cylinder), D (Diameter of the submerged cylinder)
+// `RETURN` Shape factor from the cylinder's outer shell to the surface, meters
+// `DESCRIPTION` "Vertical cylinder in a semi-infinite medium";Valid for: L >> D;
+function S_case_3 (L, D)
+ return 2 * CONST_PI * L [m] / log(4 * L [m] / D [m])
+end function
+
+// `SIGNATURE` S_case_4
+// `PARAMETERS` D_1 (Diameter of the first cylinder), D_2 (Diameter of the second cylinder), L (Length of the cylinders), w (center-center separation of the cylinders)
+// `RETURN` Shape factor between the two cylinders, meters
+// `DESCRIPTION` "Conduction between two cylinders of length L in infinite medium";Valid for: L >> D_1, D_2, L >> w;
+function S_case_4 (D_1, D_2, L, w)
+ return 2 * CONST_PI * L [m] / acosh((4 * w ^ 2 - D_1 ^ 2 - D_2 ^ 2) / (2 * D_1 * D_2))
+end function
+
+
+x = S_case_4

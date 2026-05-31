@@ -2,7 +2,39 @@ import importlib.metadata
 import subprocess
 import sys
 import socket
-import os
+import re
+from pathlib import Path
+
+pattern = re.compile(
+    r'^\s*include\s+"([^"]+)"\s*$',
+    re.MULTILINE
+)
+
+def get_all_includes(text: str) -> list[str]:
+    return [instance for instance in pattern.findall(text)]
+
+def resolve_name(name: str, paths:list[Path]|None = None) -> Path | None:
+    """
+    Searches for a .cnes file by name across a list of directory paths.
+    Returns the first resolved Path, or None if not found
+    """
+    if paths is None:
+        paths = []
+
+    # Ensure the target filename ends with the .cnes extension
+    target_name = name if name.endswith('.cnes') else f"{name}.cnes"
+
+    for directory in paths:
+        # Convert to Path object in case a list of strings was passed
+        dir_path = Path(directory)
+        potential_file = dir_path / target_name
+        
+        # Return the first matching file found in the prioritized list
+        if potential_file.is_file():
+            return potential_file
+
+    # Return None if the file was not found in any of the provided paths
+    return None
 
 def is_connected():
     try:

@@ -110,7 +110,7 @@ class CodeEditor(ctk.CTkFrame):
         
         if word in self.metadata["functions"]:
             meta = self.metadata["functions"][word]
-            rich_text = f"{meta['sig']}\n{'-'*20}\n{meta['desc']}"
+            rich_text = f"{meta['sig']}\n{'-'*len(meta['sig'])}\n{meta['desc'].replace(';', '\n')}"
             self._show_tooltip(rich_text, event.x_root, event.y_root)
         elif word in self.metadata["constants"]:
             meta = self.metadata["constants"][word]
@@ -176,8 +176,18 @@ class CodeEditor(ctk.CTkFrame):
         self._clear_ghost()
         cursor_pos = self.text_area.index("insert")
         line_prefix = self.text_area.get("insert linestart", cursor_pos)
+        next_char = self.text_area.get(cursor_pos, f"{cursor_pos}+1c")
+        full_prefix = self.text_area.get("1.0", cursor_pos)
+
+        # Block if inside a block comment
+        last_open = full_prefix.rfind("/*")
+        last_close = full_prefix.rfind("*/")
+
+        # If /* exists and appears after the last */ the cursor must be inside a block comment
+        if last_open != -1 and last_open > last_close:
+            return
         
-        if "//" in line_prefix: return
+        if "//" in line_prefix or next_char.isalnum() or next_char == "_": return
 
         match = re.search(r"(\w+)$", line_prefix)
         
@@ -200,7 +210,7 @@ class CodeEditor(ctk.CTkFrame):
                             root_x = self.text_area.winfo_rootx() + bbox[0]
                             root_y = self.text_area.winfo_rooty() + bbox[1]
                             meta = self.metadata["functions"][c]
-                            rich_text = f"{meta['sig']}\n{'-'*20}\n{meta['desc']}"
+                            rich_text = f"{meta['sig']}\n{'-'*len(meta['sig'])}\n{meta['desc']}"
                             self._show_tooltip(rich_text, root_x, root_y - 40)
                     elif c in self.metadata["constants"]:
                         bbox = self.text_area.bbox(cursor_pos)

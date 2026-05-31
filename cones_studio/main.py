@@ -1,5 +1,5 @@
 # Modified from src: https://stackoverflow.com/questions/46419607/how-to-automatically-install-required-packages-from-a-python-script-as-necessary
-from bootstrap import ensure_dependencies
+from bootstrap import ensure_dependencies, get_all_includes, resolve_name
 ensure_dependencies({'customtkinter', 'CoolProp'})
 
 import customtkinter as ctk
@@ -11,6 +11,7 @@ import tempfile
 from typing import Optional
 from editor import CodeEditor, UI_FONT, UI_FONT_SMALL, MONOSPACED_FONT
 from backend import CoNESBackend, parse_time, is_cnes
+from documentation import Documentation
 from parametric_ui import ParametricPane
 from colors import * # Used for less terrible formatting
 
@@ -77,8 +78,8 @@ class CoNESStudio(ctk.CTk):
         self.main_container = ctk.CTkFrame(self, corner_radius=0, fg_color="#1e1e1e", border_width=0)
         self.main_container.grid(row=1, column=0, sticky="nsew")
         self.main_container.grid_rowconfigure(0, weight=1)
-        self.main_container.grid_columnconfigure(0, minsize=240, weight=1) # Editor
-        self.main_container.grid_columnconfigure(1, minsize=160, weight=0) # Right column
+        self.main_container.grid_columnconfigure(0, minsize=240, weight=4) # Editor
+        self.main_container.grid_columnconfigure(1, minsize=160, weight=2) # Right column
         
         # Editor (Flush against left and toolbar)
         self.editor = CodeEditor(self.main_container, metadata=self.metadata)
@@ -248,8 +249,59 @@ class CoNESStudio(ctk.CTk):
     def new_file(self, event=None):        
         self.editor.set_text("")
         self.current_file = None
-        self.status_bar.configure(text="  Good luck!", fg_color=color_status_OK)
+        self.status_bar.configure(text="   Good luck!", fg_color=color_status_OK)
         self._set_title(None)
+        
+    def _scrape(self, path:pathlib.Path, visited:set[pathlib.Path]) -> set[Documentation]:
+        if path in visited: return set() # Already visited, disregard
+        visited.add(path) # Account
+        
+        # read actual path
+        with open(path, 'r') as f:
+            editor_text = f.read()
+        result = set(Documentation.from_text_block(editor_text))
+            
+        # gobble up
+        name_checks = get_all_includes(editor_text)
+        path_checks = [pathlib.Path(self.backend.exe).parent / 'libs']
+        if self.current_file:
+            path_checks.append(pathlib.Path(self.current_file).parent)
+            
+        for j, name_check in enumerate(name_checks):
+            resolved = resolve_name(name_check, path_checks)
+            # print(f"{j}: Scan {name_check} ({resolved}) for functions")
+            
+            if resolved: 
+                # Use .update() for efficient in-place set merging
+                result.update(self._scrape(resolved, visited))
+            
+        return result
+        
+    def load_metadata(self):
+        # Check native text
+        editor_text = self.editor.get_text()
+        for i, metadata in enumerate(Documentation.from_text_block(editor_text)):
+            print(f"{i}: Add {metadata.to_dict()} to functions")
+            self.metadata['functions'].update(metadata.to_dict())
+            
+        # Recursive descent
+        name_checks = get_all_includes(editor_text)
+        
+        # Safely construct path_checks without adding None
+        path_checks = [pathlib.Path(self.backend.exe).parent / 'libs']
+        if self.current_file:
+            path_checks.append(pathlib.Path(self.current_file).parent)
+            
+        visited = set()
+        for j, name_check in enumerate(name_checks):
+            resolved = resolve_name(name_check, path_checks)
+            # print(f"{j}: Scan {name_check} ({resolved}) for functions")
+            
+            if resolved:
+                # Capture the returned data and merge it into metadata
+                scraped_docs = self._scrape(resolved, visited)
+                for doc in scraped_docs:
+                    self.metadata['functions'].update(doc.to_dict())
 
     def open_file(self, event=None):
         path = filedialog.askopenfilename(filetypes=[("CoNES Scripts", "*.cnes"), ("All Files", "*.*")])
@@ -262,6 +314,7 @@ class CoNESStudio(ctk.CTk):
         self.current_file = path
         self.status_bar.configure(text=f"  Opened {os.path.basename(path)}", fg_color="#007acc")
         self._set_title(pathlib.Path(path).name)
+        self.load_metadata()
         self._clear_trees()
 
     def save_file(self):
@@ -273,6 +326,7 @@ class CoNESStudio(ctk.CTk):
                 f.write(self.editor.get_text())
             self.status_bar.configure(text=f"  Saved {os.path.basename(self.current_file)}", fg_color=color_status_Success)
             self._set_title(pathlib.Path(self.current_file).name)
+            self.load_metadata()
     
     def save_lib(self):
         # Determine the libs directory relative to project root
