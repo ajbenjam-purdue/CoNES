@@ -43,6 +43,3 @@ end function
 function S_case_4 (D_1, D_2, L, w)
  return 2 * CONST_PI * L [m] / acosh((4 * w ^ 2 - D_1 ^ 2 - D_2 ^ 2) / (2 * D_1 * D_2))
 end function
-
-
-x = S_case_4

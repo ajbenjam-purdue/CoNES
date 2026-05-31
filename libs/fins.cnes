@@ -9,12 +9,12 @@
 // `RETURN` Temperature at position x, Kelvin
 // `DESCRIPTION` For a convective tip condition; this is usually pretty accurate for all fins
 function temperature_convective_tip (T_base, T_inf, h_fluid, P_fin, k_fin, A_fin, L_fin, x)
- theta_b = T_base [K] - T_inf [K]
- m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
- h_inside = m * (L_fin [m] - x [m])
- h_mk = h_fluid [W/m^2*K] / (m * k_fin [W/m*K])
- T_x = ((theta_b * ((cosh(h_inside) + h_mk * sinh(h_inside)) ) / (cosh(m * L_fin [m]) + h_mk * sinh(m * L_fin [m]))) [K] + T_inf [K])
- return T_x [K]
+  theta_b = T_base [K] - T_inf [K]
+  m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
+  h_inside = m * (L_fin [m] - x [m])
+  h_mk = h_fluid [W/m^2*K] / (m * k_fin [W/m*K])
+  T_x = ((theta_b * ((cosh(h_inside) + h_mk * sinh(h_inside)) ) / (cosh(m * L_fin [m]) + h_mk * sinh(m * L_fin [m]))) [K] + T_inf [K])
+  return T_x [K]
 end function
 
 // `SIGNATURE` temperature_adiabatic_tip
@@ -22,11 +22,11 @@ end function
 // `RETURN` Temperature at position x, Kelvin
 // `DESCRIPTION` For an assumed adiabatic tip condition; this is usually ok for fins with a higher P/A ratio
 function temperature_adiabatic_tip (T_base, T_inf, h_fluid, P_fin, k_fin, A_fin, L_fin, x)
- theta_b = T_base [K] - T_inf [K]
- m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
- h_inside = m * (L_fin [m] - x [m])
- T_x = ((theta_b * (cosh(h_inside)) / cosh(m * L_fin [m])) [K] + T_inf [K])
- return T_x [K]
+  theta_b = T_base [K] - T_inf [K]
+  m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
+  h_inside = m * (L_fin [m] - x [m])
+  T_x = ((theta_b * (cosh(h_inside)) / cosh(m * L_fin [m])) [K] + T_inf [K])
+  return T_x [K]
 end function
 
 // `SIGNATURE` temperature_prescribed_tip_temperature
@@ -34,13 +34,13 @@ end function
 // `RETURN` Temperature at position x, Kelvin
 // `DESCRIPTION` For a tip with a known temperature; seldom applicable
 function temperature_prescribed_tip_temperature (T_base, T_inf, T_tip, h_fluid, P_fin, k_fin, A_fin, L_fin, x)
- theta_b = T_base [K] - T_inf [K]
- theta_L = T_tip [K] - T_inf [K]
- m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
- h_inside = m * (L_fin [m] - x [m])
- h_mk = h_fluid [W/m^2*K] / (m * k_fin [W/m*K])
- T_x = ((theta_b * (theta_L / theta_b * sinh(m * x [m]) + sinh(h_inside)) / sinh(m * L_fin [m])) [K] + T_inf [K])
- return T_x [K]
+  theta_b = T_base [K] - T_inf [K]
+  theta_L = T_tip [K] - T_inf [K]
+  m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
+  h_inside = m * (L_fin [m] - x [m])
+  h_mk = h_fluid [W/m^2*K] / (m * k_fin [W/m*K])
+  T_x = ((theta_b * (theta_L / theta_b * sinh(m * x [m]) + sinh(h_inside)) / sinh(m * L_fin [m])) [K] + T_inf [K])
+  return T_x [K]
 end function
 
 // `SIGNATURE` temperature_infinite
@@ -48,10 +48,10 @@ end function
 // `RETURN` Temperature at position x, Kelvin
 // `DESCRIPTION` For an assumed infinite fin; this is never right but often close-ish
 function temperature_infinite (T_base, T_inf, h_fluid, P_fin, k_fin, A_fin, L_fin, x)
- theta_b = T_base [K] - T_inf [K]
- m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
- T_x = (theta_b * pow(2.7, -m * x [m]) + T_inf [K])
- return T_x [K]
+  theta_b = T_base [K] - T_inf [K]
+  m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
+  T_x = (theta_b * pow(2.7, -m * x [m]) + T_inf [K])
+  return T_x [K]
 end function
 
 // `SIGNATURE` fin_heat_transfer_convective_tip
@@ -59,12 +59,12 @@ end function
 // `RETURN` Heat transfer through the fin at its base, Watts
 // `DESCRIPTION` For a convective tip condition; this is usually pretty accurate for all fins
 function fin_heat_transfer_convective_tip (T_base, T_inf, h_fluid, P_fin, k_fin, A_fin, L_fin)
- theta_b = T_base [K] - T_inf [K]
- m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
- M = sqrt(h_fluid [W/m^2*K] * P_fin [m] * k_fin [W/m*K] * A_fin [m^2]) * theta_b
- h_mk = h_fluid [W/m^2*K] / (m * k_fin [W/m*K])
- q_f = M * (sinh(m * L_fin[m]) + h_mk * cosh(m * L_fin[m])) / (cosh(m * L_fin[m]) + h_mk * sinh(m * L_fin[m]))
- return q_f [W]
+  theta_b = T_base [K] - T_inf [K]
+  m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
+  M = sqrt(h_fluid [W/m^2*K] * P_fin [m] * k_fin [W/m*K] * A_fin [m^2]) * theta_b
+  h_mk = h_fluid [W/m^2*K] / (m * k_fin [W/m*K])
+  q_f = M * (sinh(m * L_fin[m]) + h_mk * cosh(m * L_fin[m])) / (cosh(m * L_fin[m]) + h_mk * sinh(m * L_fin[m]))
+  return q_f [W]
 end function
 
 // `SIGNATURE` fin_heat_transfer_adiabatic_tip
@@ -72,12 +72,12 @@ end function
 // `RETURN` Heat transfer through the fin at its base, Watts
 // `DESCRIPTION` For an assumed adiabatic tip condition; this is usually ok for fins with a higher P/A ratio
 function fin_heat_transfer_adiabatic_tip (T_base, T_inf, h_fluid, P_fin, k_fin, A_fin, L_fin)
- theta_b = T_base [K] - T_inf [K]
- m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
- M = sqrt(h_fluid [W/m^2*K] * P_fin [m] * k_fin [W/m*K] * A_fin [m^2]) * theta_b
- h_mk = h_fluid [W/m^2*K] / (m * k_fin [W/m*K])
- q_f = M * tanh(m * L_fin [m])
- return q_f [W]
+  theta_b = T_base [K] - T_inf [K]
+  m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
+  M = sqrt(h_fluid [W/m^2*K] * P_fin [m] * k_fin [W/m*K] * A_fin [m^2]) * theta_b
+  h_mk = h_fluid [W/m^2*K] / (m * k_fin [W/m*K])
+  q_f = M * tanh(m * L_fin [m])
+  return q_f [W]
 end function
 
 // `SIGNATURE` fin_heat_transfer_prescribed_tip_temperature
@@ -85,13 +85,13 @@ end function
 // `RETURN` Heat transfer at the fin base, Watts NOT WORKING
 // `DESCRIPTION` For a tip with a known temperature; seldom applicable 
 function fin_heat_transfer_prescribed_tip_temperature (T_base, T_inf, T_tip, h_fluid, P_fin, k_fin, A_fin, L_fin)
- theta_b = T_base [K] - T_inf [K]
- theta_L = T_tip [K] - T_inf [K]
- m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
- M = sqrt(h_fluid [W/m^2*K] * P_fin [m] * k_fin [W/m*K] * A_fin [m^2]) * theta_b
- h_mk = h_fluid [W/m^2*K] / (m * k_fin [W/m*K])
- q_f = M * (cosh(m * L_fin [m]) - theta_L / theta_b) / sinh(m * L[m])
- return q_f [W]
+  theta_b = T_base [K] - T_inf [K]
+  theta_L = T_tip [K] - T_inf [K]
+  m = sqrt(h_fluid [W/m^2*K] * P_fin [m] / (k_fin [W/m*K] * A_fin [m^2]))
+  M = sqrt(h_fluid [W/m^2*K] * P_fin [m] * k_fin [W/m*K] * A_fin [m^2]) * theta_b
+  h_mk = h_fluid [W/m^2*K] / (m * k_fin [W/m*K])
+  q_f = M * (cosh(m * L_fin [m]) - theta_L / theta_b) / sinh(m * L[m])
+  return q_f [W]
 end function
 
 // `SIGNATURE` fin_heat_transfer_infinite
@@ -99,9 +99,9 @@ end function
 // `RETURN` Heat transfer through the fin at its base, Watts
 // `DESCRIPTION` For an assumed infinite fin; this is never right but often close-ish
 function fin_heat_transfer_infinite (T_base, T_inf, h_fluid, P_fin, k_fin, A_fin, L_fin)
- theta_b = T_base [K] - T_inf [K]
- M = sqrt(h_fluid [W/m^2*K] * P_fin [m] * k_fin [W/m*K] * A_fin [m^2]) * theta_b
- return M [W]
+  theta_b = T_base [K] - T_inf [K]
+  M = sqrt(h_fluid [W/m^2*K] * P_fin [m] * k_fin [W/m*K] * A_fin [m^2]) * theta_b
+  return M [W]
 end function
 
 
@@ -112,9 +112,9 @@ end function
 // `RETURN` The effectiveness of the fin, unitless
 // `DESCRIPTION` The ratio of finned heat transfer to would-be unfinned heat transfer, where values > 2 may justify the use of a fin
 function fin_effectiveness (q_fin, h_fluid, A_base_cross_section, T_base, T_inf)
- theta_b = T_base [K] - T_inf [K]
- epsilon_f = q_fin [W] / (h_fluid [W/m^2*K] * A_base_cross_section [m^2] * theta_b)
- return epsilon_f
+  theta_b = T_base [K] - T_inf [K]
+  epsilon_f = q_fin [W] / (h_fluid [W/m^2*K] * A_base_cross_section [m^2] * theta_b)
+  return epsilon_f
 end function
 
 // `SIGNATURE` fin_resistance
@@ -122,25 +122,27 @@ end function
 // `RETURN` Thermal resistance of the fin, Kelvin/Watt
 // `DESCRIPTION` Simple method for determining the circuit equivalent thermal resistance of a single fin
 function fin_resistance (q_fin, T_base, T_inf)
- return ((T_base [K] - T_inf [K]) / q_fin [W]) [K/W]
+  return ((T_base [K] - T_inf [K]) / q_fin [W]) [K/W]
 end function
 
 // `SIGNATURE` fin_efficiency
 // `PARAMETERS` q_fin (Finned heat transfer), h_fluid (Convective heat transfer coefficient of the fluid), P_fin (Single fin perimeter), A_fin (Singe finned area), T_base (Temperature at the base), T_inf (Temperature of the fluid)
 // `RETURN` The efficiency of the measured fin, 0-1
-// `DESCRIPTION` The efficiency of the specified fin w.r.t. an ideal, isothermal fin, where higher values indicate a more "ideal" fin configuration
+// `DESCRIPTION` The efficiency of the specified fin w.r.t. an ideal isothermal fin where higher values indicate a more "ideal" fin configuration
 function fin_efficiency (q_fin, h_fluid, P_fin, A_fin, T_base, T_inf)
- theta_b = T_base [K] - T_inf [K]
- eta_f = q_fin [W] / (h_fluid [W/m^2] * A_fin [m^2] * theta_b)
- return eta_f
+  theta_b = T_base [K] - T_inf [K]
+  eta_f = q_fin [W] / (h_fluid [W/m^2] * A_fin [m^2] * theta_b)
+  return eta_f
 end function
 
 // `SIGNATURE` fin_array_efficiency
 // `PARAMETERS` A_fin (Single finned area), P_fin (Single fin perimeter), L_fin (Fin length), k_fin (Fin material thermal conductivity), N_fins (Number of fins in the array), A_unfinned_base (Area of the array NOT covered by fins), T_base (Temperature at the base), T_inf (Temperature of the fluid), h_fluid (Convective heat transfer coefficient of the fluid), eta_0 (Fin array efficiency)
+// `RETURN` Overall fin array efficiency, 0-1
+// `DESCRIPTION` The efficiency of a finned array w.r.t. an ideal isothermal array of fins where higher values indicate a more "ideal" fin configuration
 routine fin_array_efficiency (A_fin, P_fin, L_fin, k_fin, N_fins, A_unfinned_base, T_base, T_inf, h_fluid, eta_0)
- A_t = A_fin [m^2] * N_fins + A_unfinned_base [m^2]
- q_fin = fin_heat_transfer_convective_tip(T_base, T_inf, h_fluid, P_fin, k_fin, A_fin, L_fin)
- eta_fin = fin_efficiency(q_fin, h_fluid, P_fin, A_fin, T_base, T_inf)
- eta_0 = 1 - (N_fins * A_fin [m^2]) / (A_t) * (1 - eta_fin)
+  A_t = A_fin [m^2] * N_fins + A_unfinned_base [m^2]
+  q_fin = fin_heat_transfer_convective_tip(T_base, T_inf, h_fluid, P_fin, k_fin, A_fin, L_fin)
+  eta_fin = fin_efficiency(q_fin, h_fluid, P_fin, A_fin, T_base, T_inf)
+  eta_0 = 1 - (N_fins * A_fin [m^2]) / (A_t) * (1 - eta_fin)
 end routine
 

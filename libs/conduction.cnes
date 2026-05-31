@@ -5,50 +5,50 @@
 
 // Rates (watts)
 function heat_rate_plane_wall (k_wall, A_wall, delta_T, L_wall)
- return ((k_wall * A_wall * delta_T / L_wall) [W])
+  return ((k_wall * A_wall * delta_T / L_wall) [W])
 end function
 
 function heat_rate_cylindrical_wall (k_wall, r_1, r_2, delta_T, L_wall)
- return (2 * CONST_PI * L_wall * k_wall * delta_T / log(r_2 / r_1)) [W]
+  return (2 * CONST_PI * L_wall * k_wall * delta_T / log(r_2 / r_1)) [W]
 end function
 
 function heat_rate_spherical_wall (k_wall, r_1, r_2, delta_T)
- return ((4 * CONST_PI * k_wall * delta_T) / (1 / r_1 - 1 / r_2)) [W]
+  return ((4 * CONST_PI * k_wall * delta_T) / (1 / r_1 - 1 / r_2)) [W]
 end function
 
 // Fluxes (watts/sq. meter)
 function heat_flux_plane_wall (k_wall, delta_T, L_wall)
- return ((k_wall * delta_T / L_wall) [W/m^2])
+  return ((k_wall * delta_T / L_wall) [W/m^2])
 end function
 
 function heat_flux_spherical_wall (k_wall, r_1, r_2, delta_T)
- return ((k_wall * delta_T) / (1 / r_1 - 1 / r_2)) [W/m^2]
+  return ((k_wall * delta_T) / (1 / r_1 - 1 / r_2)) [W/m^2]
 end function
 
 // Resistances (kelvin/watt)
 function resistance_plane_wall (k_wall, A_wall, L_wall)
- return (L_wall / (k_wall * A_wall)) [K/W]
+  return (L_wall / (k_wall * A_wall)) [K/W]
 end function
 
 function resistance_cylindrical_wall (k_wall, r_1, r_2, L_wall)
- return (log(r_2 / r_1) / (2 * CONST_PI * L_wall * k_wall)) [K/W]
+  return (log(r_2 / r_1) / (2 * CONST_PI * L_wall * k_wall)) [K/W]
 end function
 
 function resistance_spherical_wall (k_wall, r_1, r_2)
- return (((1 / r_1) - (1 / r_2)) / (4 * CONST_PI * k_wall)) [K/W]
+  return (((1 / r_1) - (1 / r_2)) / (4 * CONST_PI * k_wall)) [K/W]
 end function
 
 // Temperature distribution
 function temperature_plane_wall (L_wall, delta_T, T_s1, x)
- return (T_s1 [K] + delta_T [K] * (x [m]) / (L_wall [m])) [C]
+  return (T_s1 [K] + delta_T [K] * (x [m]) / (L_wall [m])) [C]
 end function
 
 function temperature_cylindrical_wall (r_1, r_2, delta_T, T_s2, r)
- return (T_s2 [K] + delta_T [K] * (log(r [m] / r_2 [m]) / log(r_1 [m] / r_2 [m]))) [C]
+  return (T_s2 [K] + delta_T [K] * (log(r [m] / r_2 [m]) / log(r_1 [m] / r_2 [m]))) [C]
 end function
 
 function temperature_spherical_wall (r_1, r_2, delta_T, T_s1, r)
- return (T_s1 [K] - delta_T [K] * ((1 - log(r [m] / r_2 [m])) / (1 - log(r_1 [m] / r_2 [m])))) [C]
+  return (T_s1 [K] - delta_T [K] * ((1 - log(r [m] / r_2 [m])) / (1 - log(r_1 [m] / r_2 [m])))) [C]
 end function
 
 // Assumptions: One-dimensional, steady-state, uniform generation

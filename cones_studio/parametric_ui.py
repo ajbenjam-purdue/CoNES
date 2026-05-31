@@ -4,18 +4,31 @@ from tkinter import ttk
 import threading
 import os
 import tempfile
-from colors import *
 import time
+import json
+from typing import Optional, Callable, Dict, Any, List, Set, Union
+from colors import *
 from backend import parse_time
 
 # Utils
-def has_brackets(x:str) -> bool: return "[" in x and "]" in x
+def has_brackets(x: str) -> bool:
+    """Checks if a string contains both square brackets."""
+    return "[" in x and "]" in x
 
-def parse_user_header(x:str) -> tuple[str, str]:
+def parse_user_header(x: str) -> tuple[str, str]:
+    """
+    Parses a user header like 'T [K]' into ('T', '[K]').
+    
+    Args:
+        x (str): The header string.
+        
+    Returns:
+        tuple[str, str]: (Variable name, Units)
+    """
     split = x.split()
-    if len(split) == 1: # one term
+    if len(split) == 1:  # one term
         return (split[0].replace(".", ""), "")
-    elif len(split) == 2: # 2 terms
+    elif len(split) == 2:  # 2 terms
         return (split[0].replace(".", ""), split[1].replace(".", "")) if has_brackets(split[1]) else ("_".join(split).replace(".", ""), "")
     elif len(split) > 2:
         name = []
@@ -28,16 +41,18 @@ def parse_user_header(x:str) -> tuple[str, str]:
 # Floating tooltip
 class ToolTip:
     """Floating tooltip for error messages and detailed residuals"""
-    def __init__(self, widget):
+    def __init__(self, widget: tk.Widget):
         self.widget = widget
-        self.tip_window = None
+        self.tip_window: Optional[tk.Toplevel] = None
 
-    def show_tip(self, text, x, y):
-        if self.tip_window or not text: return
+    def show_tip(self, text: str, x: int, y: int):
+        """Displays the tooltip at the specified coordinates."""
+        if self.tip_window or not text:
+            return
         self.tip_window = tw = tk.Toplevel(self.widget)
         tw.wm_overrideredirect(True)
         
-        tw.wm_geometry(f"+{x+15}+{y+10}") # Position slightly offset from cursor
+        tw.wm_geometry(f"+{x+15}+{y+10}")  # Position slightly offset from cursor
         
         # Styled to match the dark theme with red text for errors
         label = tk.Label(tw, text=text, justify=tk.LEFT,
@@ -46,28 +61,33 @@ class ToolTip:
         label.pack()
 
     def hide_tip(self):
+        """Hides the tooltip."""
         tw = self.tip_window
         self.tip_window = None
-        if tw: tw.destroy()
+        if tw:
+            tw.destroy()
 
 # Treeview low-tier wrapper
 class EditableTreeview(ttk.Treeview):
     """Treeview that allows double-clicking to edit cells."""
-    def __init__(self, master, on_edit_callback=None, **kwargs):
+    def __init__(self, master, on_edit_callback: Optional[Callable] = None, **kwargs):
         super().__init__(master, **kwargs)
         self.bind("<Double-1>", self.on_double_click)
-        self.entry = None
+        self.entry: Optional[tk.Entry] = None
         self.on_edit_callback = on_edit_callback
 
-    def on_double_click(self, event):
+    def on_double_click(self, event: tk.Event):
+        """Handles double-click events to initiate cell editing."""
         region = self.identify_region(event.x, event.y)
-        if region != "cell": return
+        if region != "cell":
+            return
         
         column = self.identify_column(event.x)
         item = self.identify_row(event.y)
         
         # Column #1 is "Run" (index-based naming like #1, #2...)
-        if column == '#1': return 
+        if column == '#1':
+            return 
         
         x, y, width, height = self.bbox(item, column)
         col_idx = int(column[1:]) - 1
@@ -82,7 +102,8 @@ class EditableTreeview(ttk.Treeview):
         self.entry.select_range(0, tk.END)
         
         def save_edit(event=None):
-            if not self.entry: return
+            if not self.entry:
+                return
             new_val = self.entry.get()
             values = list(self.item(item, 'values'))
             values[col_idx] = new_val
@@ -96,7 +117,8 @@ class EditableTreeview(ttk.Treeview):
             self.entry = None
             
         def cancel_edit(event=None):
-            if not self.entry: return
+            if not self.entry:
+                return
             self.entry.destroy()
             self.entry = None
             
@@ -106,13 +128,18 @@ class EditableTreeview(ttk.Treeview):
 
 # Table mid-tier wrapper
 class ParametricTable(ctk.CTkFrame):
-    def __init__(self, master, app_ref, **kwargs):
+    """
+    A frame containing a table for parametric studies.
+    Allows adding columns (variables) and rows (runs), and executing them.
+    """
+    def __init__(self, master, app_ref: Any, **kwargs):
         super().__init__(master, corner_radius=0, fg_color="transparent", **kwargs)
         self.app = app_ref
         
-        # Maps item_id -> set of column names that are user-set, Maps item_id -> error result dictionary
-        self.inputs_map = {}
-        self.error_map = {}
+        # Maps item_id -> set of column names that are user-set
+        self.inputs_map: Dict[str, Set[str]] = {}
+        # Maps item_id -> error result dictionary
+        self.error_map: Dict[str, Dict[str, Any]] = {}
         self.shadow_path = os.path.join(tempfile.gettempdir(), f"cones_parametric_{id(self)}.cnes")
         
         self.grid_rowconfigure(1, weight=1)
@@ -142,14 +169,14 @@ class ParametricTable(ctk.CTkFrame):
         self.tree_container = ctk.CTkFrame(self, corner_radius=0, fg_color="transparent")
         self.tree_container.grid(row=1, column=0, sticky="nsew")
         
-        # Use place manager for an inner frame to decouple the treeview's requested size from the parent grid, completely preventing the sidebar from expanding.
+        # Use place manager for an inner frame to decouple the treeview's requested size from the parent grid
         self.inner_frame = ctk.CTkFrame(self.tree_container, corner_radius=0, fg_color="transparent")
         self.inner_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
         self.inner_frame.grid_rowconfigure(0, weight=1)
         self.inner_frame.grid_columnconfigure(0, weight=1)
 
         self.tree = EditableTreeview(self.inner_frame, on_edit_callback=self.on_cell_edited, 
-                                     columns=("Run",), show="headings", style="Treeview")
+                                     columns=("Run",), show="headings", style="Treeview", selectmode="extended")
         self.tree.heading("Run", text="Run")
         self.tree.column("Run", width=50, minwidth=50, anchor="center", stretch=False)
         self.tree.grid(row=0, column=0, sticky="nsew")
@@ -168,12 +195,18 @@ class ParametricTable(ctk.CTkFrame):
         self.row_menu.add_command(label="Insert Row Above", command=self.insert_row_above)
         self.row_menu.add_command(label="Duplicate Row", command=self.duplicate_row)
         self.row_menu.add_separator()
-        self.row_menu.add_command(label="Delete Row", command=self.delete_row)
+        self.row_menu.add_command(label="Delete Row(s)", command=self.delete_row)
 
         self.col_menu = tk.Menu(self, tearoff=0, bg="#2d2d2d", fg="#cccccc", activebackground="#3e3e3e")
         self.col_menu.add_command(label="Rename Column", command=self.rename_column)
         self.col_menu.add_command(label="Delete Column", command=self.delete_column)
 
+        # Keyboard bindings - Ensure they are bound to the tree for focus
+        self.tree.bind("<Control-c>", self.copy_to_clipboard)
+        self.tree.bind("<Command-c>", self.copy_to_clipboard)
+        self.tree.bind("<Control-C>", self.copy_to_clipboard)
+        self.tree.bind("<Command-C>", self.copy_to_clipboard)
+        
         # Right click bindings
         self.tree.bind("<Button-3>", self.on_right_click)
         self.tree.bind("<Button-2>", self.on_right_click) # macOS
@@ -189,9 +222,34 @@ class ParametricTable(ctk.CTkFrame):
         # Start with 5 rows
         self.headers = ["Run"]
         self.run_counter = 0
-        for _ in range(5): self.add_row()
+        for _ in range(5):
+            self.add_row()
 
-    def copy_from(self, other):
+    def to_dict(self) -> dict[str, list[str]]:
+        """
+        Extracts the contents of the table into a dictionary.
+        Format: {"column name": [value1, value2, ...], ...}
+        
+        Returns:
+            dict[str, list[str]]: Dictionary mapping column headers to lists of row values.
+        """
+        data = {h: [] for h in self.headers}
+        for item in self.tree.get_children():
+            values = self.tree.item(item, "values")
+            for i, h in enumerate(self.headers):
+                if i < len(values):
+                    data[h].append(values[i])
+                else:
+                    data[h].append("")
+        return data
+
+    def __iter__(self):
+        """Allows iterating over rows as dictionaries."""
+        for item in self.tree.get_children():
+            values = self.tree.item(item, "values")
+            yield {self.headers[i]: values[i] for i in range(min(len(self.headers), len(values)))}
+
+    def copy_from(self, other: 'ParametricTable'):
         """Deep copy state from another ParametricTable instance"""
         # Clear default rows created in __init__
         for item in self.tree.get_children():
@@ -214,7 +272,7 @@ class ParametricTable(ctk.CTkFrame):
         for old_item in other.tree.get_children():
             vals = other.tree.item(old_item, "values")
             tags = other.tree.item(old_item, "tags")
-            new_item = self.tree.insert("", "end", values=vals, tags=tags)
+            new_item = self.tree.insert("", "end", values=tuple(vals), tags=tags)
             item_map[old_item] = new_item
             
         # Re-map inputs and errors
@@ -239,7 +297,7 @@ class ParametricTable(ctk.CTkFrame):
             tags.remove("error")
             self.tree.item(item_id, tags=tags)
 
-    def on_right_click(self, event):
+    def on_right_click(self, event: tk.Event):
         """Show context menus based on clicked region"""
         region = self.tree.identify_region(event.x, event.y)
         if region == "heading":
@@ -247,11 +305,43 @@ class ParametricTable(ctk.CTkFrame):
             self.col_menu.post(event.x_root, event.y_root)
         elif region == "cell":
             item = self.tree.identify_row(event.y)
-            self.tree.selection_set(item)
+            selection = self.tree.selection()
+            if item not in selection:
+                self.tree.selection_set(item)
             self.clicked_row = item
             self.row_menu.post(event.x_root, event.y_root)
 
-    def on_mouse_move(self, event):
+    def copy_to_clipboard(self, event: Optional[tk.Event] = None):
+        """
+        Copies selected rows to the clipboard in a formatted plaintext string.
+        Format: "x = 5 [ft], y = 2 [in]"
+        """
+        selection = self.tree.selection()
+        if not selection:
+            return
+        
+        lines = []
+        for item in selection:
+            vals = self.tree.item(item, "values")
+            row_parts = []
+            # Skip the first column ("Run")
+            for i, col_name in enumerate(self.headers[1:]):
+                val = vals[i+1]
+                if val:
+                    # Parse header to separate name and unit
+                    name, unit = parse_user_header(col_name)
+                    row_parts.append(f"{name} = {val} {unit}".strip())
+            
+            if row_parts:
+                lines.append(", ".join(row_parts))
+        
+        if lines:
+            final_str = "\n".join(lines)
+            self.clipboard_clear()
+            self.clipboard_append(final_str)
+            self.app.status_bar.configure(text=f"  Copied {len(lines)} rows to clipboard", fg_color=COLOR_STATUS_SUCCESS)
+
+    def on_mouse_move(self, event: tk.Event):
         """Display detailed tooltips iff hovering over an ERROR cell"""
         item = self.tree.identify_row(event.y)
         column = self.tree.identify_column(event.x)
@@ -345,32 +435,55 @@ class ParametricTable(ctk.CTkFrame):
             if item in self.inputs_map and name in self.inputs_map[item]:
                 self.inputs_map[item].remove(name)
 
+    def _enforce_run_numbers(self):
+        """Resets the 'Run' column to count upwards sequentially from 1."""
+        items = self.tree.get_children()
+        for idx, item in enumerate(items, start=1):
+            vals = list(self.tree.item(item, "values"))
+            if vals:
+                vals[0] = f"{idx}"
+                self.tree.item(item, values=vals)
+        self.run_counter = len(items)
+
     def add_row(self):
-        self.run_counter += 1
-        vals = [self.run_counter] + [""] * (len(self.headers) - 1)
+        """Adds a new empty row to the end of the table."""
+        vals = [""] * len(self.headers)
         self.tree.insert("", "end", values=vals)
+        self._enforce_run_numbers()
 
     def insert_row_above(self):
+        """Inserts a new empty row above the currently clicked row."""
         index = self.tree.index(self.clicked_row)
-        self.run_counter += 1
-        vals = [self.run_counter] + [""] * (len(self.headers) - 1)
+        vals = [""] * len(self.headers)
         self.tree.insert("", index, values=vals)
+        self._enforce_run_numbers()
 
     def duplicate_row(self):
+        """Duplicates the currently clicked row."""
         index = self.tree.index(self.clicked_row)
         old_vals = list(self.tree.item(self.clicked_row, "values"))
-        self.run_counter += 1
-        new_vals = [self.run_counter] + old_vals[1:]
-        new_item = self.tree.insert("", index + 1, values=new_vals)
+        new_item = self.tree.insert("", index + 1, values=old_vals)
         
         if self.clicked_row in self.inputs_map:
             self.inputs_map[new_item] = self.inputs_map[self.clicked_row].copy()
+        
+        self._enforce_run_numbers()
 
     def delete_row(self):
-        item = self.clicked_row
-        self.tree.delete(item)
-        if item in self.inputs_map: del self.inputs_map[item]
-        if item in self.error_map: del self.error_map[item]
+        """Deletes all currently selected rows."""
+        selection = self.tree.selection()
+        if not selection:
+            return
+            
+        for item in selection:
+            self.tree.delete(item)
+            if item in self.inputs_map:
+                del self.inputs_map[item]
+            if item in self.error_map:
+                del self.error_map[item]
+        
+        self._enforce_run_numbers()
+        self.app.status_bar.configure(text=f"  Deleted {len(selection)} row(s)", fg_color=COLOR_STATUS_OK)
 
     def clear_outputs(self):
         """Clears calculated values while keeping user-defined inputs."""
@@ -446,16 +559,25 @@ class ParametricTable(ctk.CTkFrame):
                 self.app.status_bar.configure(text=f"  Failed item {idx + 1} out of {len(self.tree.get_children())}", fg_color=color_status_Diverged)
                 self.app.after(0, lambda it=item, nv=new_vals: self.tree.item(it, values=nv, tags=("error",)))
                 
-        self.app.after(0, self._relog)
+        self.app.after(0, self._on_execution_complete)
 
-    def _relog(self):
+    def _on_execution_complete(self):
+        """Callback to update UI when parametric execution finishes."""
         self.btn_run.configure(state="normal", text="Run Table")
-        self.time_end = time.time_ns() / 1000000
-        self.app.status_bar.configure(text=f"  Parametric execution complete ({parse_time(self.time_end - self.time_start)}, {len(self.tree.get_children())} rows)", fg_color=color_status_OK)
+        self.time_end = time.time_ns() / 1_000_000
+        duration_str = parse_time(self.time_end - self.time_start)
+        row_count = len(self.tree.get_children())
+        self.app.status_bar.configure(
+            text=f"  Parametric execution complete ({duration_str}, {row_count} rows)", 
+            fg_color=color_status_OK
+        )
         
 # Pane high-tier wrapper
 class ParametricPane(ctk.CTkFrame):
-    def __init__(self, master, app_ref, **kwargs):
+    """
+    High-level container for managing multiple ParametricTable instances via tabs.
+    """
+    def __init__(self, master, app_ref: Any, **kwargs):
         super().__init__(master, corner_radius=0, fg_color="transparent", **kwargs)
         self.app = app_ref
         
@@ -484,16 +606,21 @@ class ParametricPane(ctk.CTkFrame):
                                    text_color="#888888")
         self.tabs.grid(row=1, column=0, sticky="nsew")
         
-        self.tables:dict[str, ParametricTable] = {}
+        self.tables: Dict[str, ParametricTable] = {}
         self.table_counter = 0
 
         self.new_table()
 
     def new_table(self):
-        """Creates a new parametric table tab"""
+        """Creates a new parametric table tab."""
         self.table_counter += 1
         name = f"Table {self.table_counter}"
-        # TODO: Check for already existing
+        
+        # Ensure unique name
+        while name in self.tables:
+            self.table_counter += 1
+            name = f"Table {self.table_counter}"
+            
         self.tabs.add(name)
         tab_frame = self.tabs.tab(name)
         
@@ -503,18 +630,20 @@ class ParametricPane(ctk.CTkFrame):
         self.tabs.set(name)
 
     def rename_table(self):
-        """Renames the current parametric table"""
-        
-        # Get new name
+        """Renames the current parametric table."""
         old_name = self.tabs.get()
-        if not old_name: return
+        if not old_name:
+            return
         
         dialog = ctk.CTkInputDialog(text=f"Rename '{old_name}' to:", title="Rename Table")
         new_name = dialog.get_input()
-        if not new_name or new_name.strip() == "": return
+        if not new_name or not new_name.strip():
+            return
         new_name = new_name.strip()
         
-        if new_name in self.tables: return
+        if new_name in self.tables:
+            # TODO: Show error message
+            return
         
         # Create a new tab and frame
         self.tabs.add(new_name)
@@ -535,9 +664,10 @@ class ParametricPane(ctk.CTkFrame):
         del self.tables[old_name]
     
     def kill_table(self):
-        """Deletes the currently selected table tab"""
+        """Deletes the currently selected table tab."""
         name = self.tabs.get()
-        if not name: return
+        if not name:
+            return
         
         if name in self.tables:
             self.tabs.delete(name)

@@ -1,6 +1,6 @@
 # CoNES (Coupled Nonlinear Equation Solver) Language Standard v1.2
 
-This document defines the formal specification for the `.cnes` scripting language, optimized for high-performance thermophysical system modeling.
+This document defines the formal specification and suggested usage for the `.cnes` scripting language, optimized for high-performance thermophysical system modeling.
 
 ## 1. Lexical Grammar
 
@@ -41,30 +41,57 @@ This document defines the formal specification for the `.cnes` scripting languag
 
 ## 3. User-Defined Blocks (Modularity)
 
-### 3.1 Routines
+### 3.1 Documentation Tagging
+To support IDE features like rich tooltips and autocomplete, all functions and routines should be documented using specialized tags in the comment block immediately preceding the definition.
+
+- **Required Tags**:
+    - `` `SIGNATURE` ``: The function or routine name.
+    - `` `PARAMETERS` ``: A comma-separated list of `name (Description)`.
+    - `` `RETURN` ``: `Description, Unit`.
+    - `` `DESCRIPTION` ``: A plaintext summary of the logic.
+
+Example:
+```cnes
+// `SIGNATURE` fin_resistance
+// `PARAMETERS` q_fin (Heat transfer), T_base (Base temp), T_inf (Fluid temp)
+// `RETURN` Thermal resistance, K/W
+// `DESCRIPTION` Calculates the circuit equivalent thermal resistance.
+function fin_resistance (q_fin, T_base, T_inf)
+  return ((T_base [K] - T_inf [K]) / q_fin [W]) [K/W]
+end function
+```
+
+### 3.2 Indentation & Style
+- **Indentation**: Use **2 spaces** per indentation level. The usage of tabs is possible but discouraged for the sake of standardization.
+- **Naming**: 
+    - Variables/Functions: `snake_case` (e.g., `m_dot`, `T_inlet`).
+    - Constants: `CONST_UPPER_SNAKE` (e.g., `CONST_PI`, `CONST_R_AIR`).
+- **Whitespace**: Provide single spaces around operators (`=`, `:=`, `+`, `-`) for readability.
+
+### 3.3 Routines
 Routines are **macro-style templates**. When called, the parameters are replaced by the provided argument identifiers, and the body tokens are pasted directly into the global solver scope.
 
 - **Definition**:
-  ```ees
+  ```cnes
   routine my_routine(p1, p2)
-      Equation1 = p1 * ...
-      Equation2 = p2 + ...
+    Equation1 = p1 * ...
+    Equation2 = p2 + ...
   end routine
   ```
 - **Call**: `my_routine(VarA, VarB)`
 
-### 3.2 Functions
+### 3.4 Functions
 Functions are **procedural blocks**. They execute sequentially in an isolated local scope. Variables defined inside a function (except the return value) are not visible to the global solver.
 
 - **Definition**:
-  ```ees
+  ```cnes
   function my_procedural_calc(x, y)
-      temp = x^2 + y^2
-      return temp [J]
+    temp = x^2 + y^2
+    return temp [J]
   end function
   ```
 - **Call**: `Result = my_procedural_calc(10, 20)`
-- **Constraint**: Return units are recommended for dimensional consistency.
+- **Constraint**: Return units are recommended for dimensional consistency. Use explicit casting `[unit]` inside functions when operating on inputs to ensure local consistency.
 
 ---
 

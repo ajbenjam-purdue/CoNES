@@ -2,11 +2,14 @@ import tkinter as tk
 from tkinter import ttk
 import customtkinter as ctk
 import re
-from typing import Callable, Optional, Dict, Any
+from typing import Callable, Optional, Dict, Any, Literal
 from colors import *
 
 class CodeEditor(ctk.CTkFrame):
-    def __init__(self, master, metadata=None, **kwargs):
+    """
+    A custom code editor widget with syntax highlighting, line numbers, and tooltips.
+    """
+    def __init__(self, master, metadata: Optional[Dict[str, Any]] = None, **kwargs):
         super().__init__(master, **kwargs)
         self.metadata = metadata or {"constants": {}, "functions": {}, "substances": {}}
         
@@ -56,6 +59,7 @@ class CodeEditor(ctk.CTkFrame):
         self._setup_tags()
 
     def _setup_tags(self):
+        """Configures text tags for syntax highlighting."""
         # Professional Engineering Theme
         self.text_area.tag_configure("keyword", foreground="#569cd6") 
         self.text_area.tag_configure("function", foreground="#dcdcaa") 
@@ -69,34 +73,146 @@ class CodeEditor(ctk.CTkFrame):
         self.text_area.tag_configure("comment", foreground="#6a9955") 
 
     def _setup_shortcuts(self):
+        """Sets up keyboard shortcuts."""
         self.text_area.bind("<Control-Left>", lambda e: self._jump_left(shift=False))
         self.text_area.bind("<Control-Right>", lambda e: self._jump_right(shift=False))
         self.text_area.bind("<Control-Shift-Left>", lambda e: self._jump_left(shift=True))
         self.text_area.bind("<Control-Shift-Right>", lambda e: self._jump_right(shift=True))
         self.text_area.bind("<Control-BackSpace>", self._delete_left)
         self.text_area.bind("<Control-Delete>", self._delete_right)
-        self.text_area.bind("<Tab>", self._accept_ghost)
+        self.text_area.bind("<Tab>", self._handle_tab)
+        self.text_area.bind("<Shift-Tab>", self._handle_shift_tab)
+        self.text_area.bind("<BackSpace>", self._handle_backspace)
         self.text_area.bind("<Control-a>", lambda e: (self.text_area.tag_add("sel", "1.0", "end"), "break"))
+        
+        # Auto-closing pairs
+        for char in ('(', '[', '"', "'"):
+            self.text_area.bind(char, lambda e, c=char: self._handle_auto_close(c))
+        
+        # Overtyping closing characters
+        for char in (')', ']', '"', "'"):
+            self.text_area.bind(char, lambda e, c=char: self._handle_closing_char(c))
 
-    def highlight_error(self, line):
-        self.text_area.tag_remove("error", "1.0", "end")
+    def _handle_auto_close(self, char: str):
+        """Handles auto-closing of brackets and quotes."""
+        pairs = {'(': ')', '[': ']', '"': '"', "'": "'"}
+        closing = pairs[char]
+        
+        # If text is selected, wrap it
+        try:
+            sel_start = self.text_area.index("sel.first")
+            sel_end = self.text_area.index("sel.last")
+            content = self.text_area.get(sel_start, sel_end)
+            self.text_area.delete(sel_start, sel_end)
+            self.text_area.insert(sel_start, f"{char}{content}{closing}")
+            return "break"
+        except tk.TclError:
+            pass
+            
+        cursor_pos = self.text_area.index("insert")
+        next_char = self.text_area.get(cursor_pos, f"{cursor_pos}+1c")
+        
+        # Only auto-close if at end of line or before whitespace/punctuation
+        if next_char in ("", " ", "\t", "\n", ")", "]", "}", ",", ";", "."):
+            self.text_area.insert(cursor_pos, f"{char}{closing}")
+            self.text_area.mark_set("insert", f"{cursor_pos}+1c")
+            return "break"
+        return None
+
+    def _handle_closing_char(self, char: str):
+        """Handles overtyping a closing character."""
+        cursor_pos = self.text_area.index("insert")
+        next_char = self.text_area.get(cursor_pos, f"{cursor_pos}+1c")
+        
+        if next_char == char:
+            self.text_area.mark_set("insert", f"{cursor_pos}+1c")
+            return "break"
+        return None
+
+    def _handle_tab(self, event=None):
+        """Handles Tab key by inserting spaces or indenting selection."""
+        try:
+            # Multi-line indentation
+            sel_start = self.text_area.index("sel.first")
+            sel_end = self.text_area.index("sel.last")
+            start_line = int(sel_start.split('.')[0])
+            end_line = int(sel_end.split('.')[0])
+            
+            for line in range(start_line, end_line + 1):
+                self.text_area.insert(f"{line}.0", "  ")
+            return "break"
+        except tk.TclError:
+            # Single line: insert two spaces (Tab-to-Spaces)
+            if self.current_ghost:
+                return self._accept_ghost()
+            self.text_area.insert("insert", "  ")
+            return "break"
+
+    def _handle_shift_tab(self, event=None):
+        """Handles Shift-Tab key by dedenting selection."""
+        try:
+            sel_start = self.text_area.index("sel.first")
+            sel_end = self.text_area.index("sel.last")
+            start_line = int(sel_start.split('.')[0])
+            end_line = int(sel_end.split('.')[0])
+            
+            for line in range(start_line, end_line + 1):
+                line_start = f"{line}.0"
+                line_prefix = self.text_area.get(line_start, f"{line}.2")
+                if line_prefix.startswith("  "):
+                    self.text_area.delete(line_start, f"{line}.2")
+                elif line_prefix.startswith(" "):
+                    self.text_area.delete(line_start, f"{line}.1")
+            return "break"
+        except tk.TclError:
+            # Single line dedent
+            cursor_pos = self.text_area.index("insert")
+            line_start = f"{cursor_pos} linestart"
+            line_prefix = self.text_area.get(line_start, f"{line_start} + 2c")
+            if line_prefix.startswith("  "):
+                self.text_area.delete(line_start, f"{line_start} + 2c")
+            elif line_prefix.startswith(" "):
+                self.text_area.delete(line_start, f"{line_start} + 1c")
+            return "break"
+
+    def _handle_backspace(self, event=None):
+        """Handles BackSpace key with smart indentation deletion."""
+        cursor_pos = self.text_area.index("insert")
+        line_prefix = self.text_area.get(f"{cursor_pos} linestart", cursor_pos)
+        
+        # If at a 2-space indentation, delete both
+        if line_prefix.endswith("  ") and not line_prefix.strip():
+            self.text_area.delete(f"{cursor_pos}-2c", cursor_pos)
+            return "break"
+        return None
+
+    def _clear_highlights(self, which:Literal['error', 'normal', 'both']='normal'):
+        if which == 'error' or which == 'both': self.text_area.tag_remove("error", "1.0", "end")
+        if which == 'normal' or which == 'both': self.text_area.tag_remove("symbol_highlight", "1.0", "end")
+
+    def highlight_error(self, line: int):
+        """Highlights a specific line as an error."""
+        self._clear_highlights('error')
         if line > 0:
             start = f"{line}.0"
             end = f"{line}.end"
             self.text_area.tag_add("error", start, end)
             self.text_area.see(start)
 
-    def highlight_line(self, line):
-        self.text_area.tag_remove("symbol_highlight", "1.0", "end")
+    def highlight_line(self, line: int):
+        """Highlights a specific line with a background color."""
+        self._clear_highlights('normal')
         if line > 0:
             start = f"{line}.0"
             end = f"{line}.end"
             self.text_area.tag_add("symbol_highlight", start, end)
             self.text_area.see(start)
 
-    def highlight_symbol(self, name):
-        self.text_area.tag_remove("symbol_highlight", "1.0", "end")
-        if not name: return
+    def highlight_symbol(self, name: str):
+        """Highlights all occurrences of a symbol."""
+        self._clear_highlights('normal')
+        if not name:
+            return
         content = self.get_text()
         pattern = r"\b" + re.escape(name) + r"\b"
         for m in re.finditer(pattern, content):
@@ -273,6 +389,7 @@ class CodeEditor(ctk.CTkFrame):
 
     def _on_vscroll(self, *args):
         self.text_area.yview(*args)
+        self._highlight_syntax()
         self._update_line_numbers()
 
     def _update_line_numbers(self):
@@ -320,6 +437,7 @@ class CodeEditor(ctk.CTkFrame):
     def _on_click(self, event):
         self._clear_ghost()
         self._hide_tooltip()
+        self._clear_highlights()
         self.after(1, self._update_line_numbers)
 
     def _jump_left(self, shift=False):

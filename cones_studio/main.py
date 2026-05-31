@@ -19,16 +19,21 @@ ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("dark-blue")
 
 class CoNESStudio(ctk.CTk):
-    def _set_title(self, x:str|None=None):
-        if not x: self.title(f"CoNES Studio ({self.versionNumber})")
-        else: self.title(f"CoNES Studio ({self.versionNumber}): {x}")
+    """
+    Main application window for CoNES Studio.
+    Manages the editor, backend communication, and results display.
+    """
+    def _set_title(self, x: Optional[str] = None):
+        """Sets the window title, optionally appending a file name."""
+        base_title = f"CoNES Studio ({self.versionNumber})"
+        self.title(f"{base_title}: {x}" if x else base_title)
         
     def __init__(self):
         super().__init__()
         
         self.backend = CoNESBackend()
-        self.versionNumber = self.backend.version()
-        self._set_title(None) # Empty first
+        self.versionNumber = self.backend.version() or "Unknown Version"
+        self._set_title(None)
         self.geometry("1100x750")
         self.configure(fg_color="#1e1e1e")
         
@@ -107,6 +112,17 @@ class CoNESStudio(ctk.CTk):
         self.tree.bind("<<TreeviewSelect>>", self._on_table_select)
         self.tree_res.bind("<<TreeviewSelect>>", self._on_residual_select)
         
+        # Table Shortcuts
+        self.tree.bind("<Control-c>", self.copy_solution_to_clipboard)
+        self.tree.bind("<Command-c>", self.copy_solution_to_clipboard)
+        self.tree.bind("<Control-C>", self.copy_solution_to_clipboard)
+        self.tree.bind("<Command-C>", self.copy_solution_to_clipboard)
+        
+        self.tree_res.bind("<Control-c>", self.copy_residuals_to_clipboard)
+        self.tree_res.bind("<Command-c>", self.copy_residuals_to_clipboard)
+        self.tree_res.bind("<Control-C>", self.copy_residuals_to_clipboard)
+        self.tree_res.bind("<Command-C>", self.copy_residuals_to_clipboard)
+        
         # Status Bar
         self.status_bar = ctk.CTkLabel(self, text="  Ready", anchor="w", 
                                        font=UI_FONT_SMALL, height=25, 
@@ -124,6 +140,38 @@ class CoNESStudio(ctk.CTk):
         self.bind_all("<Control-r>", lambda e: self.run_solve())
         self.bind_all("<Command-r>", lambda e: self.run_solve())
 
+    def copy_solution_to_clipboard(self, event=None):
+        """Copies selected solution rows to clipboard."""
+        selection = self.tree.selection()
+        if not selection: return
+        
+        lines = []
+        for item_id in selection:
+            vals = self.tree.item(item_id, "values")
+            # Format: Name = Value [Unit]
+            lines.append(f"{vals[0]} = {vals[1]} [{vals[2]}]")
+        
+        if lines:
+            self.clipboard_clear()
+            self.clipboard_append("\n".join(lines))
+            self.status_bar.configure(text=f"  Copied {len(lines)} variables to clipboard", fg_color=color_status_Success)
+
+    def copy_residuals_to_clipboard(self, event=None):
+        """Copies selected residual rows to clipboard."""
+        selection = self.tree_res.selection()
+        if not selection: return
+        
+        lines = []
+        for item_id in selection:
+            vals = self.tree_res.item(item_id, "values")
+            # Format: ID: EQN = Value
+            lines.append(f"{vals[0]}: {vals[1]} = {vals[2]}")
+        
+        if lines:
+            self.clipboard_clear()
+            self.clipboard_append("\n".join(lines))
+            self.status_bar.configure(text=f"  Copied {len(lines)} residuals to clipboard", fg_color=color_status_Success)
+
     def _on_table_select(self, event):
         """Highlights the selected variable in the code editor."""
         selected = self.tree.selection()
@@ -139,7 +187,7 @@ class CoNESStudio(ctk.CTk):
         if not selected: return
 
         line = self.tree_res.item(selected[0])["values"][3]
-        self.editor.highlight_line(line)
+        self.editor.highlight_line(int(line))
 
     def _setup_solution_table(self):
         style = ttk.Style()
@@ -281,7 +329,7 @@ class CoNESStudio(ctk.CTk):
         # Check native text
         editor_text = self.editor.get_text()
         for i, metadata in enumerate(Documentation.from_text_block(editor_text)):
-            print(f"{i}: Add {metadata.to_dict()} to functions")
+            # print(f"{i}: Add {metadata.to_dict()} to functions")
             self.metadata['functions'].update(metadata.to_dict())
             
         # Recursive descent

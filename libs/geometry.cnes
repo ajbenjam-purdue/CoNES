@@ -1,37 +1,37 @@
 // Areas
 function area_rectangle(x, y)
- return (x [m] * y [m])
+  return (x [m] * y [m])
 end function
 
 function area_circle(r)
- return (3.1415926 * (r [m]) ^ 2)
+  return (3.1415926 * (r [m]) ^ 2)
 end function
 
 function area_ellipse(a, b)
- return (3.1415926 * a [m] * b[m])
+  return (3.1415926 * a [m] * b[m])
 end function
 
 function area_regular_polygon(side_count, apothem)
- side_length = apothem [m] * 2 * tan(3.1415926 / side_count [])
- return 1/2 * side_length [m] * apothem [m] * side_count []
+  side_length = apothem [m] * 2 * tan(3.1415926 / side_count [])
+  return 1/2 * side_length [m] * apothem [m] * side_count []
 end function
 
 
 // Lengths
 function apothem_regular_polygon(side_length, side_count)
- return side_length [m] / (2 * tan(3.1415926 / side_count []))
+  return side_length [m] / (2 * tan(3.1415926 / side_count []))
 end function
 
 function side_length_regular_polygon(apothem, side_count)
- return apothem [m] * 2 * tan(3.1415926 / side_count)
+  return apothem [m] * 2 * tan(3.1415926 / side_count)
 end function
 
 function perimeter_circle(r)
- return 2 * 3.1415926 * r [m]
+  return 2 * 3.1415926 * r [m]
 end function
 
 function perimeter_ellipse(a, b) // Evil perimeter of doom and despair
- return (3.1415926 * (a + b) * (1 + 3 * (a - b) ^ 2 / ((a + b) ^ 2 * (10 + sqrt(4 - 3 * (a - b) ^ 2 / (a + b) ^ 2))))) [m]
+  return (3.1415926 * (a + b) * (1 + 3 * (a - b) ^ 2 / ((a + b) ^ 2 * (10 + sqrt(4 - 3 * (a - b) ^ 2 / (a + b) ^ 2))))) [m]
 end function
 
 
