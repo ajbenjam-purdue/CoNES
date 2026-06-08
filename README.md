@@ -133,3 +133,23 @@ There is a lightweight and extremely simple Integrated Development Environment b
 ## 7. Binary Table Creation
 
 CoNES uses properties sourced from [CoolProp](https://coolprop.org), an open source database. To build the required binary tables to use fluids like `Water` or refrigerants like `R134a`, you must have CoolProp installed with `pip`. Run the `export_props` python script from `CoNES/`:
+
+## 8. Python Bindings (nanobind)
+
+CoNES can be compiled as a native Python extension using [nanobind](https://github.com/wjakob/nanobind). This allows you to directly access the C++ Lexer, Parser, and (eventually) the Solver from Python without the overhead of subprocesses or JSON serialization.
+
+### Compilation
+
+Ensure you have CMake (>=3.15) and the `nanobind` package installed:
+```bash
+pip install nanobind
+```
+
+To build the `cones_cpp` module, run the following from the project root:
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build . --config Release
+```
+This will produce a compiled `.pyd` (Windows) or `.so` (macOS/Linux) file in the `build/Release` or `build/` directory.

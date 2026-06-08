@@ -48,3 +48,6 @@ __pycache__
 .DS_Store
 cnes
 .vercel
+
+# Built Python lib
+/build
