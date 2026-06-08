@@ -145,7 +145,7 @@ Ensure you have CMake (>=3.15) and the `nanobind` package installed:
 pip install nanobind
 ```
 
-To build the `cones_cpp` module, run the following from the project root:
+To build the `cones` module, run the following from the project root:
 ```bash
 mkdir build
 cd build
@@ -153,3 +153,21 @@ cmake ..
 cmake --build . --config Release
 ```
 This will produce a compiled `.pyd` (Windows) or `.so` (macOS/Linux) file in the `build/Release` or `build/` directory.
+
+### Usage
+
+Once built, make sure the compiled binary is accessible on your `PYTHONPATH` (or run your Python script from the same directory).
+
+```python
+import cones
+
+# 1. Version Information
+print(cones.Version.full())
+
+# 2. Direct Lexer Access
+lexer = cones.Lexer("T = 300 [K]")
+tokens = lexer.scan_tokens()
+
+for token in tokens:
+    print(f"Token: {token.lexeme} (Line: {token.line})")
+```

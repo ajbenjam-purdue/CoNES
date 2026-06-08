@@ -21,6 +21,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Python module
-nanobind_add_module(cones_cpp src/bindings.cpp)
+nanobind_add_module(cones src/bindings.cpp)
 
 # Only includes are necessary since the linked files are header-only

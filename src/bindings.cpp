@@ -2,13 +2,15 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 #include "core/version.hpp"
+#include "core/system.hpp"
 #include "lang/token.hpp"
 #include "lang/lexer.hpp"
+#include "lang/parser.hpp"
 
 namespace nb = nanobind;
 
 // Following nanobind.readthedocs.io
-NB_MODULE(cones_cpp, m) {
+NB_MODULE(cones, m) {
     m.doc() = "CoNES Python Bindings";
 
     // Static binds for methods (string, full) and read-only vals (MAJ/MIN/PAT)
@@ -65,4 +67,19 @@ NB_MODULE(cones_cpp, m) {
     nb::class_<cones::Lexer>(m, "Lexer")
         .def(nb::init<std::string>())
         .def("scan_tokens", &cones::Lexer::scan_tokens);
+
+    // System
+    nb::class_<cones::System>(m, "System")
+        .def(nb::init<>())
+        .def("get_equation_count", &cones::System::get_equation_count)
+        .def("get_equation_plaintext", &cones::System::get_equation_plaintext)
+        .def("get_equation_line", &cones::System::get_equation_line);
+
+    // Parser
+    nb::class_<cones::Parser>(m, "Parser")
+        .def("__init__", [](cones::Parser* p, std::vector<cones::Token> tokens, cones::System& sys, std::string path, int depth) {
+            new (p) cones::Parser(std::move(tokens), sys, std::filesystem::path(path), depth);
+        }, nb::arg("tokens"), nb::arg("sys"), nb::arg("initial_path") = ".", nb::arg("depth") = 0)
+        .def("set_exe_path", [](cones::Parser& p, std::string path) { p.set_exe_path(std::filesystem::path(path)); })
+        .def("parse", &cones::Parser::parse);
 }
