@@ -5,6 +5,7 @@
 #include "core/tabulated_substance.hpp"
 #include "core/version.hpp"
 #include "core/python_manager.hpp"
+#include "core/platform.hpp"
 #include <iostream>
 #include <cstdlib>
 #include <fstream>
@@ -276,7 +277,10 @@ int main(int argc, char *argv[])
 {
 
     // Get executable directory for portable material loading
-    std::filesystem::path exe_path = std::filesystem::absolute(argv[0]).parent_path();
+    std::filesystem::path actual_exe_path = get_executable_path();
+    if (actual_exe_path.empty()) actual_exe_path = std::filesystem::absolute(argv[0]);
+    
+    std::filesystem::path exe_path = actual_exe_path.parent_path();
     std::filesystem::path materials_path = exe_path / "materials";
 
     // Init System & Default Environment
@@ -329,7 +333,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        build_substances(argv[0]);
+        build_substances(actual_exe_path);
     }
 
     // Register Built-in Functions (Math & Property)
@@ -357,7 +361,7 @@ int main(int argc, char *argv[])
         }
         if (flag == "--build-substances")
         {
-            build_substances(argv[0]);
+            build_substances(actual_exe_path);
             return 0;
         }
         if (flag == "--IDE")
@@ -377,7 +381,7 @@ int main(int argc, char *argv[])
                     // std::cout << "python interpreter identified: " << py_interpreter_path;
                 }
             }
-            open_ide(argv[0], py_interpreter_path, cnes_file_path);
+            open_ide(actual_exe_path, py_interpreter_path, cnes_file_path);
             return 0;
         }
         if (flag == "-v")

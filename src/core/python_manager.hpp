@@ -1,6 +1,7 @@
 #ifndef CONES_CORE_PYTHON_MANAGER_HPP
 #define CONES_CORE_PYTHON_MANAGER_HPP
 
+#include "platform.hpp"
 #include <iostream>
 #include <string>
 #include <filesystem>
@@ -22,8 +23,17 @@ class PythonManager {
 public:
     explicit PythonManager(std::filesystem::path exe_path, std::string base_interp = "python3") 
         : base_interp_(std::move(base_interp)) {
-        root_path_ = std::filesystem::absolute(exe_path).parent_path();
+        
+        // Resolve the true executable path to ensure .venv is in the project root
+        // even if cnes.exe is called from PATH.
+        std::filesystem::path actual_path = get_executable_path();
+        if (actual_path.empty()) {
+            actual_path = std::filesystem::absolute(exe_path);
+        }
+        
+        root_path_ = actual_path.parent_path();
         venv_path_ = root_path_ / ".venv";
+
 #ifdef _WIN32
         is_windows_ = true;
 #else
@@ -32,7 +42,7 @@ public:
     }
 
     std::filesystem::path get_interpreter() {
-        std::filesystem::path venv_interp = venv_path_ / (is_windows_ ? "Scripts/python.exe" : "bin/python3");
+        std::filesystem::path venv_interp = venv_path_ / (is_windows_ ? "Scripts\\python.exe" : "bin/python3");
         if (std::filesystem::exists(venv_interp)) {
             return venv_interp;
         }
@@ -44,11 +54,11 @@ public:
 
         std::cout << ">>> CoNES: Validating Python environment (" << base_interp_ << ")..." << std::endl;
         
-        // Pre-flight check for tkinter
-        std::string check_cmd = base_interp_ + " -c \"import tkinter; import _tkinter\" > NUL 2>&1";
-        if (!is_windows_) check_cmd = base_interp_ + " -c \"import tkinter; import _tkinter\" > /dev/null 2>&1";
+        // Pre-flight check for tkinter - ensure base_interp is quoted
+        std::string check_cmd = "\"" + base_interp_ + "\" -c \"import tkinter; import _tkinter\" > NUL 2>&1";
+        if (!is_windows_) check_cmd = "\"" + base_interp_ + "\" -c \"import tkinter; import _tkinter\" > /dev/null 2>&1";
         
-        if (std::system(check_cmd.c_str()) != 0) {
+        if (std::system(wrap_command(check_cmd).c_str()) != 0) {
             std::cerr << ">>> CoNES Error: The selected Python interpreter does not have Tkinter installed." << std::endl;
             std::cerr << "    - If using Homebrew: brew install python-tk" << std::endl;
             std::cerr << "    - If on Linux: sudo apt install python3-tk" << std::endl;
@@ -57,8 +67,8 @@ public:
 
         std::cout << ">>> CoNES: Creating virtual environment at " << venv_path_ << "..." << std::endl;
         
-        std::string cmd = base_interp_ + " -m venv \"" + venv_path_.string() + "\"";
-        int result = std::system(cmd.c_str());
+        std::string cmd = "\"" + base_interp_ + "\" -m venv \"" + venv_path_.string() + "\"";
+        int result = std::system(wrap_command(cmd).c_str());
 
         if (result != 0) {
             std::cerr << ">>> CoNES Error: Failed to create virtual environment. Ensure python3 is installed and in your PATH." << std::endl;
@@ -72,7 +82,7 @@ public:
     int run_script(const std::string& script_rel_path, const std::vector<std::string>& args = {}) {
         if (!ensure_venv()) return 1;
 
-        std::filesystem::path script_path = root_path_ / script_rel_path;
+        std::filesystem::path script_path = (root_path_ / std::filesystem::path(script_rel_path)).lexically_normal();
         if (!std::filesystem::exists(script_path)) {
             std::cerr << ">>> CoNES Error: Script not found at " << script_path << std::endl;
             return 1;
@@ -84,7 +94,8 @@ public:
             cmd += " \"" + arg + "\"";
         }
 
-        return std::system(cmd.c_str());
+        std::cerr << ">>> CoNES: Starting IDE (" << cmd << ")" << std::endl;
+        return std::system(wrap_command(cmd).c_str());
     }
 };
 
