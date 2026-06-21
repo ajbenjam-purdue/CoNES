@@ -26,6 +26,16 @@ if(CONES_BUILD_PYTHON)
 endif()
 
 # Eigen and Core
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Eigen")
+    message(STATUS "Eigen not found locally. Fetching Eigen 5.0.0...")
+    include(FetchContent)
+    FetchContent_Declare(
+      eigen
+      URL https://gitlab.com/libeigen/eigen/-/archive/5.0.0/eigen-5.0.0.zip
+    )
+    FetchContent_MakeAvailable(eigen)
+    include_directories(${eigen_SOURCE_DIR})
+endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
