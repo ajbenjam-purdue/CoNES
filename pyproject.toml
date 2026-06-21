@@ -7,7 +7,7 @@ name = "cones"
 version = "0.2.0"
 description = "CoNES: Coupled Nonlinear Equation Solver"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 authors = [
     { name = "ajbenjam" }
 ]

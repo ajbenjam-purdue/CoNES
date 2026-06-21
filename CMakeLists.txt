@@ -9,29 +9,35 @@ if(MSVC)
     set(CMAKE_VS_GLOBALS "IgnoreWarnIntDirInTempDetected=true")
 endif()
 
-# Find Python
-find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+option(CONES_BUILD_PYTHON "Build Python bindings" ON)
 
-# Find nanobind
-execute_process(
-    COMMAND ${Python_EXECUTABLE} -m nanobind --cmake_dir
-    OUTPUT_VARIABLE nanobind_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-list(APPEND CMAKE_PREFIX_PATH "${nanobind_DIR}")
-find_package(nanobind CONFIG REQUIRED)
+if(CONES_BUILD_PYTHON)
+    # Find Python
+    find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+
+    # Find nanobind
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -m nanobind --cmake_dir
+        OUTPUT_VARIABLE nanobind_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    list(APPEND CMAKE_PREFIX_PATH "${nanobind_DIR}")
+    find_package(nanobind CONFIG REQUIRED)
+endif()
 
 # Eigen and Core
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Python module
-nanobind_add_module(cones src/bindings.cpp)
+if(CONES_BUILD_PYTHON)
+    nanobind_add_module(cones src/bindings.cpp)
+    install(TARGETS cones DESTINATION .)
+endif()
 
 # CLI executable
 add_executable(cnes src/main.cpp)
 target_include_directories(cnes PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Installation targets for packaging
-install(TARGETS cones DESTINATION .)
 install(TARGETS cnes RUNTIME DESTINATION bin)
