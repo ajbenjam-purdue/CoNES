@@ -209,6 +209,33 @@ void print_table(std::ostream *out, std::string title, std::vector<dataColumn> d
     *out << std::string(total_width, '=') << "\n";
 }
 
+void list_constants(System& system)
+{
+    std::cout << "Built-in Constants:\n";
+    for (std::string c : system.constant_registry().get_constant_names())
+    {
+        std::cout << " - " << c << "\n";
+    }
+}
+
+void list_functions(System& system)
+{
+    std::cout << "Registered Functions:\n";
+    for (const auto &name : system.function_registry().get_function_names())
+    {
+        std::cout << " - " << name << "\n";
+    }
+}
+
+void list_substances(System& system)
+{
+    std::cout << "Registered Substances:\n";
+    for (const auto &name : system.substance_manager().get_substance_names())
+    {
+        std::cout << " - " << name << "\n";
+    }
+}
+
 void print_metadata(System system)
 {
     // Constants: Name:Value:Unit:Description
@@ -311,21 +338,29 @@ int main(int argc, char *argv[])
     for (int i = 1; i < argc; ++i)
     {
         std::string flag = argv[i];
+
+        // Print the help message
         if (flag == "--help" || flag == "-h")
         {
             print_help();
             return 0;
         }
+
+        // Print the version
         if (flag == "--version")
         {
             std::cout << Version::full() << std::endl;
             return 0;
         }
+
+        // (Re)Build the substance library manually
         if (flag == "--build-substances")
         {
             build_substances(actual_exe_path);
             return 0;
         }
+
+        // Open the IDE
         if (flag == "--IDE")
         {
             std::string cnes_file_path(""), py_interpreter_path("python3"), arg("");
@@ -335,84 +370,89 @@ int main(int argc, char *argv[])
                 if (is_cnes(arg))
                 {
                     cnes_file_path = arg;
-                    // std::cout << ".cnes identified: " << arg;
                 }
                 else 
                 {
                     py_interpreter_path = arg;
-                    // std::cout << "python interpreter identified: " << py_interpreter_path;
                 }
             }
             open_ide(actual_exe_path, py_interpreter_path, cnes_file_path);
             return 0;
         }
-        if (flag == "-v")
+
+        // Verbose execution
+        if (flag == "-v" && !silent)
         {
             verbose = true;
             continue;
         }
-        if (flag == "-s" || flag == "--silent")
+
+        // Silent execution
+        if ((flag == "-s" || flag == "--silent")  && !verbose)
         {
             silent = true;
             continue;
         }
+
+        // JSON output
         if (flag == "-j" || flag == "--json")
         {
             json_out = true;
             continue;
         }
+
+        // Lint mode (stops before solving)
         if (flag == "-L" || flag == "--lint")
         {
             lint_mode = true;
             continue;
         }
+
+        // Set output path
         if (flag == "-o" && i + 1 < argc)
         {
             output_path = argv[++i];
             continue;
         }
+
+        // Set the solver tolerance
         if (flag == "--tol" && i + 1 < argc)
         {
             tol_override = std::stod(argv[++i]);
             continue;
         }
+
+        // Set the solver maximum iterations
         if (flag == "--max-iter" && i + 1 < argc)
         {
             max_iter_override = std::stoi(argv[++i]);
             continue;
         }
 
+        // List the available substances
         if (flag == "--list-substances")
         {
-            std::cout << "Registered Substances:\n";
-            for (const auto &name : system.substance_manager().get_substance_names())
-            {
-                std::cout << " - " << name << "\n";
-            }
+            list_substances(system);
             return 0;
         }
+
+        // List the available functions
         if (flag == "--list-functions")
         {
-            std::cout << "Registered Functions:\n";
-            for (const auto &name : system.function_registry().get_function_names())
-            {
-                std::cout << " - " << name << "\n";
-            }
+            list_functions(system);
             return 0;
         }
+
+        // List the available constants
         if (flag == "--list-constants")
         {
-            std::cout << "Built-in Constants:\n";
-            for (std::string c : system.constant_registry().get_constant_names())
-            {
-                std::cout << " - " << c << "\n";
-            }
+            list_constants(system);
             return 0;
         }
+
+        // (DEPRECATED) Yield the long metadata string containing all the metadata necessary to update the vscode extension
         if (flag == "--out-vscode-metadata")
         {
-            // CONSTANTS_STR ||| FUNCTIONS_STR ||| SUBSTANCES_STR
-
             print_metadata(system);
             return 0;
         }

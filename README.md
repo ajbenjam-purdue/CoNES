@@ -6,9 +6,13 @@ A high-performance C++ environment for solving large-scale systems of coupled no
 
 ## 0. Compilation & Usage
 
-### Compilation
+### Precompiled Binaries
 
-To compile the interpreter, ensure Eigen is in the project root and run:
+For quick setup without a C++ compiler, you can download precompiled standalone CLI executables (`cnes` / `cnes.exe`) for Windows, Linux, and macOS directly from the **GitHub Releases** page.
+
+### Manual Compilation
+
+To compile the interpreter manually, ensure Eigen is in the project root and run:
 
 **MacOS / Linux (g++/clang++):**
 ```bash
@@ -89,7 +93,7 @@ CoNES features a modular, high-performance property engine designed for [EES](ht
 
 ## 3. CNES Script (Interpreter)
 
-A domain-specific language (DSL) designed for clear equation entry and property calls.
+A domain-specific language designed for clear equation entry and property calls.
 
  - **Implicit Equations**: Supports `f(x) = g(x)` syntax.
  - **Unit System**: Full support for SI and common engineering units (C, bar, kJ/kg, kW). Automatic conversion to internal SI representation (A temperature defined in $\degree{F}$ will be internally converted to and used as $\degree{C}$ but still display in $\degree{F}$).
@@ -108,6 +112,7 @@ A domain-specific language (DSL) designed for clear equation entry and property 
  - **[DONE]** Macro-style `routine` blocks for reusable physics.
  - **[DONE]** Procedural `function` blocks with local scoping.
  - **[DONE]** Recursive inclusion with robust path resolution.
+ - **[DONE]** Exposure of c++ methods and structures to Python.
  - **[TODO]** BLT Decomposition (Tarjan's SCC) for block-solving.
  - **[TODO]** Improved parsing comprehension to limit divide-by-zero situations.
  - **[TODO]** Bipartite Matching for DOF validation.
@@ -132,31 +137,54 @@ There is a lightweight and extremely simple Integrated Development Environment b
 
 ## 7. Binary Table Creation
 
-CoNES uses properties sourced from [CoolProp](https://coolprop.org), an open source database. To build the required binary tables to use fluids like `Water` or refrigerants like `R134a`, you must have CoolProp installed with `pip`. Run the `export_props` python script from `CoNES/`:
+CoNES uses properties sourced from [CoolProp](https://coolprop.org), an open source database. To build the required binary tables to use fluids like `Water` or refrigerants like `R134a`, you must have CoolProp installed with `pip`. The creation of such tables will happen automatically and can be re-run using the binary (`cnes --build-substances`).
 
 ## 8. Python Bindings (nanobind)
 
-CoNES can be compiled as a native Python extension using [nanobind](https://github.com/wjakob/nanobind). This allows you to directly access the C++ Lexer, Parser, and (eventually) the Solver from Python without the overhead of subprocesses or JSON serialization.
+CoNES can be compiled as a native Python extension using [nanobind](https://github.com/wjakob/nanobind). This allows you to directly access the C++ Lexer, Parser, Solver, Units, Substances, registries, and Automatic Differentiation structures from Python.
 
-### Compilation
+### Installation
 
-Ensure you have CMake (>=3.15) and the `nanobind` package installed:
+#### Option 1: Install Precompiled Wheels (Recommended)
+You can install precompiled wheels directly from the **GitHub Releases** page without needing a C++ compiler or CMake installed:
 ```bash
-pip install nanobind
+pip install <URL_TO_RELEASE_WHEEL_FILE>
 ```
 
-To build the `cones` module, run the following from the project root:
+#### Option 2: Compile and Install from Source
+Ensure you have CMake (>=3.15) and a C++ compiler installed on your system, then run:
 ```bash
-mkdir build
-cd build
-cmake ..
-cmake --build . --config Release
+pip install .
 ```
-This will produce a compiled `.pyd` (Windows) or `.so` (macOS/Linux) file in the `build/Release` or `build/` directory.
+This compiles and installs:
+1. The **`cones`** Python library (for direct scripting in Python).
+2. The **`cnes`** CLI executable tool (installed globally on your system `PATH` as a script/executable).
+
+### Development & Contribution
+
+If you are modifying the C++ source or Python bindings and want your changes to be active locally, install the package in editable mode:
+
+```bash
+pip install --editable .
+```
+
+To build distribution packages (source distributions and binary wheels) to upload to GitHub Releases:
+
+1. Install `build`:
+   ```bash
+   pip install build
+   ```
+2. Build the distribution files:
+   ```bash
+   python -m build
+   ```
+   This compiles the project and generates package wheels (`.whl`) and source archives (`.tar.gz`) under the `dist/` directory.
 
 ### Usage
 
-Once built, make sure the compiled binary is accessible on your `PYTHONPATH` (or run your Python script from the same directory).
+Once installed, the library can be imported from any Python script, and the CLI can be run globally via the shell command `cnes`.
+
+#### Basic Workflow (Lexing, Parsing, and Solving)
 
 ```python
 import os
@@ -168,7 +196,7 @@ sys_inst.constant_registry().load_standard_constants()
 sys_inst.substance_manager().register_ideal_gasses()
 cones.register_builtin_functions(sys_inst.function_registry(), sys_inst.substance_manager())
 
-# 2. Material Loading (Pythonic Path Resolution)
+# 2. Material Loading
 materials_dir = os.path.join(os.path.dirname(__file__), "materials")
 sys_inst.substance_manager().load_materials(materials_dir)
 
@@ -191,6 +219,66 @@ if report.success:
     for i in range(vars_reg.size()):
         v = vars_reg.get_variable(i)
         print(f"{v.name} = {v.value} {v.unit_name}")
+    
+    # 6. Evaluate residuals and Jacobian matrices directly
+    f, j = sys_inst.evaluate()
+    print("Residual vector f:", f)
+    print("Jacobian matrix j:", j)
 else:
     print(f"Solver Error: {report.error_msg}")
+```
+
+#### Dual Numbers (Automatic Differentiation)
+
+Directly instantiate and perform math with forward-mode automatic differentiation structures:
+
+```python
+import cones
+
+# Construct dual numbers: DualNumber(value, derivative)
+d1 = cones.DualNumber(2.0, 1.0)
+d2 = cones.DualNumber(3.0, 0.0)
+
+res = cones.sin(d1 * d2)
+print("sin(d1 * d2) =", res.val)
+print("Derivative d(sin(d1*d2))/dx =", res.der)
+```
+
+#### Units and Unit Arithmetic
+
+Manage, check, and multiply units programmatically:
+
+```python
+import cones
+
+p_unit = cones.Unit.Pascal()
+print("Pascal unit:", p_unit.to_string())
+
+c_unit = cones.Unit.Celsius()
+print("Celsius offset to Kelvin:", c_unit.offset)
+
+# Perform unit arithmetic (e.g. creating specific entropy/enthalpy units)
+new_unit = p_unit * cones.Unit.Meter()
+print("Compatible units:", new_unit.compatible(cones.Unit.Newton()))
+```
+
+#### Direct Substance Evaluation
+
+Look up property values directly for Ideal Gases and Tabulated Substances:
+
+```python
+import cones
+
+sub_mgr = cones.SubstanceManager()
+sub_mgr.register_ideal_gasses()
+
+air = sub_mgr.get("Air")
+inputs = [
+    cones.PropertyArg(cones.PropertyType.TEMPERATURE, cones.DualNumber(300.0, 0.0)),
+    cones.PropertyArg(cones.PropertyType.PRESSURE, cones.DualNumber(101325.0, 0.0))
+]
+
+# Evaluate density
+density_dn = air.evaluate(cones.PropertyType.DENSITY, inputs)
+print("Air Density at 300K, 1 atm:", density_dn.val, "kg/m^3")
 ```

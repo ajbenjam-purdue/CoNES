@@ -51,3 +51,4 @@ cnes
 
 # Built Python lib
 /build
+/dist

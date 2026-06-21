@@ -4,12 +4,17 @@ project(CoNES LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(MSVC)
+    add_compile_definitions(NOMINMAX)
+    set(CMAKE_VS_GLOBALS "IgnoreWarnIntDirInTempDetected=true")
+endif()
+
 # Find Python
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 
 # Find nanobind
 execute_process(
-    COMMAND python -m nanobind --cmake_dir
+    COMMAND ${Python_EXECUTABLE} -m nanobind --cmake_dir
     OUTPUT_VARIABLE nanobind_DIR
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
@@ -23,4 +28,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 # Python module
 nanobind_add_module(cones src/bindings.cpp)
 
-# Only includes are necessary since the linked files are header-only
+# CLI executable
+add_executable(cnes src/main.cpp)
+target_include_directories(cnes PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+# Installation targets for packaging
+install(TARGETS cones DESTINATION .)
+install(TARGETS cnes RUNTIME DESTINATION bin)

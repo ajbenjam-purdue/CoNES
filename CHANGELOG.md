@@ -1,5 +1,11 @@
 ## CoNES Changelog
-CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.1.9`.
+CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.2.0`.
+
+### Version 0.2.0
+  - Exposed all major data structures and methods directly to Python via the use of _nanobind_ and _scikit-build-core_.
+  - Implemented a more robust platform approach to improve code legibility
+  - Reworked the substance manager to abstract lots of repeated/unnecessary code away and improve code legibility
+  - Implemented a GitHub workflow to automatically compile the binary tool and package and build the Python libraries
 
 ### Version 0.1.9
   - Refactor to introduce `DualRow` Struct

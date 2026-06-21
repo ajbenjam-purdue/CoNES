@@ -10,8 +10,8 @@ namespace cones {
  */
 struct Version {
     static constexpr int MAJOR = 0;
-    static constexpr int MINOR = 1;
-    static constexpr int PATCH = 9;
+    static constexpr int MINOR = 2;
+    static constexpr int PATCH = 0;
     
     static std::string string() {
         return std::to_string(MAJOR) + "." + 
