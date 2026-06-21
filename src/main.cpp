@@ -291,45 +291,7 @@ int main(int argc, char *argv[])
     // Automatically load Tabulated Substances from /materials relative to exe OR load automatically on launch
     if (std::filesystem::exists(materials_path))
     {
-        for (const auto &entry : std::filesystem::directory_iterator(materials_path))
-        {
-            if (entry.path().extension() == ".cnesbin")
-            {
-                std::string fname = entry.path().stem().string(); // e.g., "Water_h"
-
-                // Parse the _ char
-                size_t underscore_pos = fname.find('_');
-                if (underscore_pos == std::string::npos)
-                    continue; // None, skip
-                std::string sub_name = fname.substr(0, underscore_pos);
-                std::string prop_code = fname.substr(underscore_pos + 1);
-
-                // Special handling for multi-word property codes (T_ph, etc.)
-                PropertyType prop = string_to_property(prop_code);
-                if (prop == PropertyType::UNKNOWN)
-                {
-                    // Outdated catch for inverted T(p,h) and T(p,s) tables
-                    if (prop_code == "T_ph")
-                        prop = PropertyType::T_PH;
-                    else if (prop_code == "T_ps")
-                        prop = PropertyType::T_PS;
-                }
-
-                if (prop == PropertyType::UNKNOWN)
-                    continue; // Ignore bad input
-
-                // Load and register to the appropriate substance
-                auto sub = std::dynamic_pointer_cast<TabulatedSubstance>(system.substance_manager().get(sub_name));
-                if (!sub)
-                { // This is very reliant on correct naming of cnes binary tables. Should consider improving the implementation.
-                    sub = std::make_shared<TabulatedSubstance>(sub_name);
-                    system.substance_manager().register_substance(sub);
-                }
-
-                // Populate the substance with the correct property from the provided path
-                sub->load_table(prop, entry.path().string());
-            }
-        }
+        system.substance_manager().load_materials(materials_path.string());
     }
     else
     {

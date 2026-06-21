@@ -159,15 +159,38 @@ This will produce a compiled `.pyd` (Windows) or `.so` (macOS/Linux) file in the
 Once built, make sure the compiled binary is accessible on your `PYTHONPATH` (or run your Python script from the same directory).
 
 ```python
+import os
 import cones
 
-# 1. Version Information
-print(cones.Version.full())
+# 1. Initialize System and Load Built-ins
+sys_inst = cones.System()
+sys_inst.constant_registry().load_standard_constants()
+sys_inst.substance_manager().register_ideal_gasses()
+cones.register_builtin_functions(sys_inst.function_registry(), sys_inst.substance_manager())
 
-# 2. Direct Lexer Access
-lexer = cones.Lexer("T = 300 [K]")
+# 2. Material Loading (Pythonic Path Resolution)
+materials_dir = os.path.join(os.path.dirname(__file__), "materials")
+sys_inst.substance_manager().load_materials(materials_dir)
+
+# 3. Direct Lexer and Parser Access
+script = "T = 300 [K]\nP = T * 2"
+lexer = cones.Lexer(script)
 tokens = lexer.scan_tokens()
+parser = cones.Parser(tokens, sys_inst, os.path.dirname(__file__))
+parser.parse()
 
-for token in tokens:
-    print(f"Token: {token.lexeme} (Line: {token.line})")
+# 4. Numerical Execution (Solving)
+solver = cones.NewtonSolver(tol=1e-9, max_iter=100, verbose=False)
+report = solver.solve(sys_inst)
+
+if report.success:
+    print(f"Solved successfully in {report.iterations} iterations!")
+    
+    # 5. Access System Variables
+    vars_reg = sys_inst.registry()
+    for i in range(vars_reg.size()):
+        v = vars_reg.get_variable(i)
+        print(f"{v.name} = {v.value} {v.unit_name}")
+else:
+    print(f"Solver Error: {report.error_msg}")
 ```
