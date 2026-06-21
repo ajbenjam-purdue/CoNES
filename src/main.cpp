@@ -41,7 +41,9 @@ struct dataColumn
     }
     void add_data(double val)
     {
-        std::string new_val = std::format("{:.5g}", val);
+        char buf[64];
+        std::snprintf(buf, sizeof(buf), "%.5g", val);
+        std::string new_val(buf);
         data.emplace_back(new_val);
         column_width = std::max(column_width, static_cast<int>(new_val.size()));
     }
