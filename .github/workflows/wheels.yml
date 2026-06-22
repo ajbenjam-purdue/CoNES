@@ -35,8 +35,8 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
         # We can configure cibuildwheel options via environment variables
         env:
-          # Build CPython 3.9 to 3.13 (nanobind requires Python 3.9+)
-          CIBW_SKIP: "pp* cp36* cp37* cp38*"
+          # Build CPython 3.11 to 3.13 (modern versions), skip 32-bit and musl targets
+          CIBW_SKIP: "pp* cp36* cp37* cp38* cp39* cp310* *-manylinux_i686 *-musllinux_*"
           # Target macOS 13.3+ to ensure std::to_chars is available for std::format
           CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=13.3"
 
@@ -87,15 +87,27 @@ jobs:
 
       - name: Package CLI (Windows)
         if: matrix.os == 'windows-latest'
-        run: compress-archive -path build/Release/cnes.exe -destinationpath cnes-windows.zip
+        run: |
+          mkdir cnes_dist
+          copy build/Release/cnes.exe cnes_dist/
+          copy -Recurse tools cnes_dist/tools
+          compress-archive -path cnes_dist/* -destinationpath cnes-windows.zip
 
       - name: Package CLI (Linux)
         if: matrix.os == 'ubuntu-latest'
-        run: tar -czvf cnes-linux.tar.gz -C build cnes
+        run: |
+          mkdir cnes_dist
+          cp build/cnes cnes_dist/
+          cp -r tools cnes_dist/tools
+          tar -czvf cnes-linux.tar.gz -C cnes_dist .
 
       - name: Package CLI (macOS)
         if: matrix.os == 'macos-latest'
-        run: zip -j cnes-macos.zip build/cnes
+        run: |
+          mkdir cnes_dist
+          cp build/cnes cnes_dist/
+          cp -r tools cnes_dist/tools
+          cd cnes_dist && zip -r ../cnes-macos.zip . && cd ..
 
       - name: Upload CLI artifact
         uses: actions/upload-artifact@v4
