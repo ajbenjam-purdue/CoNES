@@ -29,7 +29,7 @@
 namespace nb = nanobind;
 
 // Following nanobind.readthedocs.io
-NB_MODULE(cones, m) {
+NB_MODULE(_cones, m) {
     m.doc() = "CoNES Python Bindings";
 
     m.def("register_builtin_functions", &cones::register_builtin_functions, nb::arg("reg"), nb::arg("manager"));

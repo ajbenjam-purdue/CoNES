@@ -1,5 +1,12 @@
 ## CoNES Changelog
-CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.2.0`.
+CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.2.1`.
+
+### Version 0.2.1
+  - Adjusted packaging strategy to include `tools/`, `cones_studio/`, and `materials/` dirs in the packaged wheel
+    - Added a proper `__init__.py` for the python package to correctly expose all the methods and datatypes
+  - Updated `version.hpp` to reflect the versioning of the language standard alongside the binary version
+  - Improved GH build process to package the rest of the necessary files alongside the binaries
+  - Sweeping documentation improvements
 
 ### Version 0.2.0
   - Exposed all major data structures and methods directly to Python via the use of _nanobind_ and _scikit-build-core_.

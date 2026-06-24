@@ -39,6 +39,7 @@ jobs:
           CIBW_SKIP: "pp* cp36* cp37* cp38* cp39* cp310* *-manylinux_i686 *-musllinux_*"
           # Target macOS 13.3+ to ensure std::to_chars is available for std::format
           CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=13.3"
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
           # Use manylinux_2_28 to support GCC 13 toolchain for std::format
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           CIBW_BEFORE_ALL_LINUX: "dnf install -y gcc-toolset-13"
@@ -83,6 +84,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install CoolProp and export materials
+        run: |
+          pip install coolprop
+          python tools/export_props.py
+
       - name: Install GCC 13 (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -92,7 +103,7 @@ jobs:
           echo "CXX=g++-13" >> $GITHUB_ENV
 
       - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCONES_BUILD_PYTHON=OFF -DCMAKE_OSX_DEPLOYMENT_TARGET=13.3
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCONES_BUILD_PYTHON=OFF -DCMAKE_OSX_DEPLOYMENT_TARGET=13.3 -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
 
       - name: Build CLI executable
         run: cmake --build build --config Release --target cnes
@@ -103,6 +114,10 @@ jobs:
           mkdir cnes_dist
           copy build/Release/cnes.exe cnes_dist/
           copy -Recurse tools cnes_dist/tools
+          copy -Recurse cones_studio cnes_dist/cones_studio
+          copy -Recurse materials cnes_dist/materials
+          copy LICENSE cnes_dist/
+          copy README.md cnes_dist/
           compress-archive -path cnes_dist/* -destinationpath cnes-windows.zip
 
       - name: Package CLI (Linux)
@@ -111,6 +126,9 @@ jobs:
           mkdir cnes_dist
           cp build/cnes cnes_dist/
           cp -r tools cnes_dist/tools
+          cp -r cones_studio cnes_dist/cones_studio
+          cp -r materials cnes_dist/materials
+          cp LICENSE README.md cnes_dist/
           tar -czvf cnes-linux.tar.gz -C cnes_dist .
 
       - name: Package CLI (macOS)
@@ -119,6 +137,9 @@ jobs:
           mkdir cnes_dist
           cp build/cnes cnes_dist/
           cp -r tools cnes_dist/tools
+          cp -r cones_studio cnes_dist/cones_studio
+          cp -r materials cnes_dist/materials
+          cp LICENSE README.md cnes_dist/
           cd cnes_dist && zip -r ../cnes-macos.zip . && cd ..
 
       - name: Upload CLI artifact
@@ -126,9 +147,9 @@ jobs:
         with:
           name: cli-${{ matrix.os }}
           path: |
-            cnes-windows.zip
-            cnes-linux.tar.gz
-            cnes-macos.zip
+            cnes-*
+
+
 
   release:
     name: Release Assets

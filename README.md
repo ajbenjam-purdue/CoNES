@@ -1,6 +1,6 @@
 # CoNES: Coupled Nonlinear Equation Solver
 
-A high-performance C++ environment for solving large-scale systems of coupled nonlinear equations, specializing in thermophysical systems. CoNES utilizes a symbolic-numerical hybrid approach with a custom interpreted scripting language. For guidance on the design, usage, and best practices of the language, please see [the standards](CoNES-Standards.md). For information on previous builds, release candidates, and releases, see [the changelog](CHANGELOG.md).
+A high-performance C++ environment for solving large-scale systems of coupled nonlinear equations, specializing in thermophysical systems. CoNES utilizes a symbolic-numerical hybrid approach with a custom interpreted scripting language. For guidance on the design, usage, and best practices of the language, please see [the standards](CoNES-Standards.md). For information on previous builds, release candidates, and releases, see [the changelog](CHANGELOG.md). If you are looking to contribute to CoNES or build the project from source, please see [the contributor guide](CONTRIBUTING.md).
 
 ---
 
@@ -157,8 +157,11 @@ Ensure you have CMake (>=3.15) and a C++ compiler installed on your system, then
 pip install .
 ```
 This compiles and installs:
-1. The **`cones`** Python library (for direct scripting in Python).
+1. The **`cones`** Python package (containing python bindings `_cones`, the `cones_studio` IDE, and the `tools` directory).
 2. The **`cnes`** CLI executable tool (installed globally on your system `PATH` as a script/executable).
+
+> [!NOTE]
+> The Python package bundles all required resources (including `tools/`, `cones_studio/`, and `materials/` databases) internally. When `cnes` is executed globally, it automatically queries Python to locate the package directory and resolves these resources dynamically. You do not need to clone the repository to run `cnes` or use the database from outside the project directory.
 
 ### Development & Contribution
 
@@ -182,7 +185,7 @@ To build distribution packages (source distributions and binary wheels) to uploa
 
 ### Usage
 
-Once installed, the library can be imported from any Python script, and the CLI can be run globally via the shell command `cnes`.
+Once installed, the library can be imported from any Python script, and the CLI can be run globally via the shell command `cnes` (e.g. `cnes --list-substances`).
 
 #### Basic Workflow (Lexing, Parsing, and Solving)
 

@@ -72,6 +72,7 @@ bool is_cnes(std::string path)
 void print_help()
 {
     std::cout << Version::full() << " (Coupled Nonlinear Equation Solver)\n"
+              << "" << Version::lang_full() << "\n"
               << "Usage: cnes [input_file.cnes] [options]\n\n"
               << "Options:\n\n"
               << "  Output Parameters:\n"
@@ -316,6 +317,19 @@ int main(int argc, char *argv[])
     system.substance_manager().register_ideal_gasses(); // Ideal gas definitions are in the substance manager
 
     // Automatically load Tabulated Substances from /materials relative to exe OR load automatically on launch
+    if (!std::filesystem::exists(materials_path))
+    {
+        // Try finding it inside the installed cones python package
+        PythonManager py(actual_exe_path);
+        std::filesystem::path pkg_path = py.find_package_path();
+        if (!pkg_path.empty()) {
+            std::filesystem::path pkg_materials = pkg_path / "materials";
+            if (std::filesystem::exists(pkg_materials)) {
+                materials_path = pkg_materials;
+            }
+        }
+    }
+
     if (std::filesystem::exists(materials_path))
     {
         system.substance_manager().load_materials(materials_path.string());
@@ -349,7 +363,7 @@ int main(int argc, char *argv[])
         // Print the version
         if (flag == "--version")
         {
-            std::cout << Version::full() << std::endl;
+            std::cout << Version::full() << " / " << Version::lang_full() << "\nCopyright (c) 2026 ajbenjam-purdue.\nThis is free and open-sourced software available under an MIT license.\nThere is NO warranty." << std::endl;
             return 0;
         }
 

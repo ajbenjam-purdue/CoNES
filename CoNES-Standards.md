@@ -15,8 +15,6 @@ This document defines the formal specification and suggested usage for the `.cne
 - `//` : Single-line comment.
 - `/* ... */` : Multi-line block comment.
 
----
-
 ## 2. Syntactic Grammar
 
 ### 2.1 File Inclusions (`include`)
@@ -36,8 +34,6 @@ This document defines the formal specification and suggested usage for the `.cne
 ### 2.3 Equations (`=`)
 - **Syntax**: `Expression = Expression`
 - **Unit Inheritance**: If a variable on the LHS has no unit, it inherits the unit of the RHS expression. Inheritance triggers a **suggested guess** based on the unit's physical magnitude.
-
----
 
 ## 3. User-Defined Blocks (Modularity)
 
@@ -93,8 +89,6 @@ Functions are **procedural blocks**. They execute sequentially in an isolated lo
 - **Call**: `Result = my_procedural_calc(10, 20)`
 - **Constraint**: Return units are recommended for dimensional consistency. Use explicit casting `[unit]` inside functions when operating on inputs to ensure local consistency.
 
----
-
 ## 4. Units and Casting
 
 ### 4.1 SI-Internal Representation
@@ -109,8 +103,6 @@ CoNES operates entirely in SI ($kg, m, s, K, Pa, J, W, mol$).
 - **Specific Entropy**: `J/kg*K`, `kJ/kg*K`
 - **Time**: `s`, `min`, `hr`, `ms`, `us`
 
----
-
 ## 5. Property Lookups
 
 ### 5.1 Independent Properties
@@ -121,8 +113,6 @@ The thermophysical engine supports flexible input pairs. The priority of resolut
 
 ### 5.2 Positional Substance Identification
 When calling `Pressure(R134a, T=T1, x=1)`, the first positional argument is automatically identified as the target substance if its name matches a registered material.
-
----
 
 ## 6. Suggested Script Usage (Best Practices)
 
@@ -155,8 +145,6 @@ To maintain clarity and prevent solver divergence, scripts should follow this st
    h_in = Enthalpy(Water, T=T_inlet, P=P_amb)
    ```
 
----
-
 ## 7. Solver Logic
 
 ### 7.1 Automatic Heuristic Guessing
@@ -165,8 +153,6 @@ If a variable is assigned a unit but lacks a `.guess`, CoNES provides ballpark s
 - **Temperature**: 293.15 K
 - **Specific Enthalpy**: 1,500 J/kg
 - **Density**: 1.2 kg/m³
-
----
 
 ## 8. Tool Integration (JSON & Linting)
 

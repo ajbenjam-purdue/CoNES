@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <cstdlib>
 #include <vector>
+#include <cstdio>
 
 namespace cones {
 
@@ -79,10 +80,57 @@ public:
         return true;
     }
 
+    std::filesystem::path find_package_path() {
+        std::filesystem::path interpreter = get_interpreter();
+        std::string interp_str = interpreter.string();
+        
+        // Command to find the package directory:
+        // <python> -c "import os, cones; print(os.path.dirname(cones.__file__))"
+        std::string cmd = "\"" + interp_str + "\" -c \"import os, cones; print(os.path.dirname(cones.__file__))\"";
+        
+        std::string result = "";
+#ifdef _WIN32
+        // On Windows, wrap in cmd /c to handle quotes correctly
+        std::string win_cmd = "cmd.exe /c " + wrap_command(cmd);
+        FILE* pipe = _popen(win_cmd.c_str(), "r");
+#else
+        FILE* pipe = popen(cmd.c_str(), "r");
+#endif
+        if (pipe) {
+            char buffer[256];
+            while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+                result += buffer;
+            }
+#ifdef _WIN32
+            _pclose(pipe);
+#else
+            pclose(pipe);
+#endif
+        }
+        
+        // Trim whitespace and newlines
+        while (!result.empty() && (result.back() == '\n' || result.back() == '\r' || result.back() == ' ' || result.back() == '\t')) {
+            result.pop_back();
+        }
+        
+        if (!result.empty() && std::filesystem::exists(result)) {
+            return std::filesystem::path(result);
+        }
+        return "";
+    }
+
     int run_script(const std::string& script_rel_path, const std::vector<std::string>& args = {}) {
         if (!ensure_venv()) return 1;
 
         std::filesystem::path script_path = (root_path_ / std::filesystem::path(script_rel_path)).lexically_normal();
+        if (!std::filesystem::exists(script_path)) {
+            // Script not found relative to executable path. Try finding it inside the installed cones package!
+            std::filesystem::path pkg_path = find_package_path();
+            if (!pkg_path.empty()) {
+                script_path = (pkg_path / std::filesystem::path(script_rel_path)).lexically_normal();
+            }
+        }
+
         if (!std::filesystem::exists(script_path)) {
             std::cerr << ">>> CoNES Error: Script not found at " << script_path << std::endl;
             return 1;

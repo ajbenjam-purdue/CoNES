@@ -9,9 +9,15 @@ namespace cones {
  * @brief Versioning constants for the CoNES engine.
  */
 struct Version {
+
+    // Binary
     static constexpr int MAJOR = 0;
     static constexpr int MINOR = 2;
-    static constexpr int PATCH = 0;
+    static constexpr int PATCH = 1;
+
+    // Lang standards
+    static constexpr int LANG_MAJOR = 1;
+    static constexpr int LANG_MINOR = 2;
     
     static std::string string() {
         return std::to_string(MAJOR) + "." + 
@@ -19,8 +25,17 @@ struct Version {
                std::to_string(PATCH);
     }
     
+    static std::string lang_string() {
+        return std::to_string(LANG_MAJOR) + "." + 
+               std::to_string(LANG_MINOR);
+    }
+    
     static std::string full() {
         return "CoNES v" + string();
+    }
+    
+    static std::string lang_full() {
+        return "CoNES Language Standard v" + lang_string();
     }
 };
 

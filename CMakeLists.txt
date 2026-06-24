@@ -41,8 +41,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Python module
 if(CONES_BUILD_PYTHON)
-    nanobind_add_module(cones src/bindings.cpp)
-    install(TARGETS cones DESTINATION .)
+    nanobind_add_module(_cones src/bindings.cpp)
+    install(TARGETS _cones DESTINATION cones)
 endif()
 
 # CLI executable
@@ -50,4 +50,10 @@ add_executable(cnes src/main.cpp)
 target_include_directories(cnes PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Installation targets for packaging
-install(TARGETS cnes RUNTIME DESTINATION bin)
+install(TARGETS cnes RUNTIME DESTINATION bin)
+
+if(CONES_BUILD_PYTHON)
+    install(DIRECTORY tools DESTINATION cones)
+    install(DIRECTORY cones_studio DESTINATION cones)
+    install(DIRECTORY materials DESTINATION cones OPTIONAL)
+endif()
