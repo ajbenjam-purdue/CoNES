@@ -19,14 +19,14 @@
     {
       "label": "cnes-module.js",
       "path": "/runtime/cnes-module.js",
-      "bytes": 77224,
-      "sha256": "365634491b685a7dd7f01de3372a3bece8347f401eb3924c0a0f311408126070"
+      "bytes": 78153,
+      "sha256": "8e1276fd34a9244a381012c9b5cbd07f995d5066705794a0303beecda6938c90"
     },
     {
       "label": "cnes-module.wasm",
       "path": "/runtime/cnes-module.wasm",
-      "bytes": 730990,
-      "sha256": "bccd2e0a7809271ff03b21a45b460d1041584493c645abf35a5b56b6cd2821fc"
+      "bytes": 802489,
+      "sha256": "f15451f6a9e3dd0a2373148fb0b9911028a3c57fc92dd1df027b0417c9bf042c"
     }
   ],
   "artifactSummary": {
@@ -37,13 +37,13 @@
     },
     "moduleJs": {
       "path": "/runtime/cnes-module.js",
-      "bytes": 77224,
-      "sha256": "365634491b685a7dd7f01de3372a3bece8347f401eb3924c0a0f311408126070"
+      "bytes": 78153,
+      "sha256": "8e1276fd34a9244a381012c9b5cbd07f995d5066705794a0303beecda6938c90"
     },
     "moduleWasm": {
       "path": "/runtime/cnes-module.wasm",
-      "bytes": 730990,
-      "sha256": "bccd2e0a7809271ff03b21a45b460d1041584493c645abf35a5b56b6cd2821fc"
+      "bytes": 802489,
+      "sha256": "f15451f6a9e3dd0a2373148fb0b9911028a3c57fc92dd1df027b0417c9bf042c"
     }
   },
   "manifests": [

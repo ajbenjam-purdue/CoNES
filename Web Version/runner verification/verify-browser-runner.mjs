@@ -12,13 +12,13 @@ const cases = [
   {
     label: "examples/test.cnes",
     fileName: "test.cnes",
-    path: new URL("CoNES/examples/test.cnes", REPO_ROOT),
+    path: new URL("examples/test.cnes", REPO_ROOT),
     expect: ({ parsed }) => parsed?.success === true && findVariable(parsed, "T_surface")?.value === 40,
   },
   {
     label: "tests/test_units.cnes",
     fileName: "test_units.cnes",
-    path: new URL("CoNES/tests/test_units.cnes", REPO_ROOT),
+    path: new URL("tests/test_units.cnes", REPO_ROOT),
     expect: ({ parsed }) => {
       const power = findVariable(parsed, "Power");
       return parsed?.success === true && power?.unit === "W" && power?.value === 50;
@@ -27,7 +27,7 @@ const cases = [
   {
     label: "examples/HVAC_example.cnes",
     fileName: "HVAC_example.cnes",
-    path: new URL("CoNES/examples/HVAC_example.cnes", REPO_ROOT),
+    path: new URL("examples/vapor_compression_cycle.cnes", REPO_ROOT),
     expect: ({ parsed }) => {
       const cop = findVariable(parsed, "COP_HP");
       return parsed?.success === true && Math.abs(cop?.value - 11.7950669027) < 0.0000001;
@@ -220,14 +220,14 @@ x := 1
       while (performance.now() - startedAt < timeoutMs) {
         const status = document.querySelector("[data-workbench-lint-status]")?.textContent?.trim();
         if (terminalStates.some((state) => state instanceof RegExp ? state.test(status || "") : state === status)) {
-          return lintSnapshot(status);
+          return await lintSnapshot(status);
         }
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
       throw new Error("Timed out waiting for lint status.");
     };
 
-    const lintSnapshot = (status) => ({
+    const lintSnapshot = async (status) => ({
       status,
       mode: document.querySelector("[data-workbench-lint-mode]")?.textContent?.trim() || "",
       count: Number(document.querySelector("[data-workbench-diagnostics-panel]")?.getAttribute("data-workbench-diagnostics-count") || "0"),
@@ -263,7 +263,7 @@ x := 1
     while (performance.now() - runStartedAt < 45000) {
       const runStatus = document.querySelector("[data-workbench-run-status]")?.textContent?.trim();
       const stdout = await readJsonDownload();
-      if ((runStatus === "Success" || runStatus === "Failure") && stdout) {
+      if (runStatus === "Success" && stdout) {
         return { valid, parserInvalid, missingInclude, staleAuto, runAfterLint: { runStatus, stdout } };
       }
       await new Promise((resolve) => setTimeout(resolve, 100));
