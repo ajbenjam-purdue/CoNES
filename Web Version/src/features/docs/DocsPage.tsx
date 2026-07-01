@@ -13,7 +13,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 
-const reviewUrl = "https://cones-web-version.vercel.app/runner/";
+const reviewUrl = "https://cones.dev/runner/";
 
 const workflowSteps = [
   {

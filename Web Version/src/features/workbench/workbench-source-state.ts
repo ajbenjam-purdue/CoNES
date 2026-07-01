@@ -6,18 +6,58 @@ export type WorkbenchSourceMeta = {
   lastModified: number | null;
 };
 
-const defaultSource = `// CoNES workbench draft
-include "heat_transfer_lib"
+const defaultSource = `// CoNES Web V0.2.2 Copyright (c) 2026 ajbenjam-purdue
+// Inclusions work similar to c++ header files. On cones.dev, you may use prebuilt libraries; on the desktop version, you can build and distribute your own libraries in addition.
+// The prebuilt libraries include (from Bergman et. al) "1D_SS", "conduction", "fins", "geometry", "shape_factors", and (from a variety of sources) "thermo_lib"
 
-h := 100 [W/m^2*K]
-h.unit := [W/m^2*K]
-A_c := 0.5
-A_c.unit := [m^2]
-T_fluid := 20 [C]
-Q := 1 [kW]
-NewtonCooling(h, A_c, T_surface, T_fluid, Q)
-T_surface.unit := [C]
-`;
+// Variables defined with := and an optional unit cast (e.g. variable_name := 5 [C]) are fixed and excluded from the jacobian
+// Variables defined with = aren't fixed and will attempt to be solved
+
+// The following is an example script for a Brayton Cycle
+// As converted from the EES code: https://fchartsoftware.com/assets/downloads/eesysolns/eesysol43.pdf
+
+// Input conditions (Fixed)
+T_amb := 20 [C]
+P_atm := 101.325 [kPa]
+PR := 5
+T_t_in := 1400 [K]
+m_dot := 1.0 [kg/s]
+
+// State 1
+T_1 = T_amb
+P_1 = P_atm
+s_1 = Entropy(Air, T=T_1, P=P_1)
+h_1 = Enthalpy(Air, T=T_1)
+
+// State 2
+P_2 = P_1 * PR
+s_2 = s_1
+h_2 = Enthalpy(Air, s=s_2, P=P_2)
+W_dot_c = (h_2 - h_1) * m_dot
+T_2 = Temperature(Air, h=h_2)
+
+// State 3
+T_3 = T_t_in
+P_3 = P_2
+h_3 = Enthalpy(Air, T=T_3)
+s_3 = Entropy(Air, T=T_3, P=P_3)
+Q_dot_c = (h_3 - h_2) * m_dot
+
+// State 4
+s_4 = s_3
+h_4 = Enthalpy(Air, s=s_4, P=P_4)
+W_dot_gt = (h_3 - h_4) * m_dot
+W_dot_gt = W_dot_c // Gas turbine drives compressor
+T_4 = Temperature(Air, h=h_4)
+
+// State 5
+P_5 = P_atm
+s_5 = s_4
+h_5 = Enthalpy(Air, s=s_5, P=P_5)
+W_dot_pt = (h_4 - h_5) * m_dot
+T_5 = Temperature(Air, h=h_5)
+
+eta = W_dot_pt / Q_dot_c`;
 
 const defaultFileName = "untitled.cnes";
 

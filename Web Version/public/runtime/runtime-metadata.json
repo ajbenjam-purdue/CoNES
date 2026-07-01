@@ -25,8 +25,8 @@
     {
       "label": "cnes-module.wasm",
       "path": "/runtime/cnes-module.wasm",
-      "bytes": 802489,
-      "sha256": "f15451f6a9e3dd0a2373148fb0b9911028a3c57fc92dd1df027b0417c9bf042c"
+      "bytes": 819449,
+      "sha256": "8c7d3acac92ed880b26e79c40660562ba2c87c81b4c07a8df83558dc41007cb2"
     }
   ],
   "artifactSummary": {
@@ -42,8 +42,8 @@
     },
     "moduleWasm": {
       "path": "/runtime/cnes-module.wasm",
-      "bytes": 802489,
-      "sha256": "f15451f6a9e3dd0a2373148fb0b9911028a3c57fc92dd1df027b0417c9bf042c"
+      "bytes": 819449,
+      "sha256": "8c7d3acac92ed880b26e79c40660562ba2c87c81b4c07a8df83558dc41007cb2"
     }
   },
   "manifests": [
@@ -68,19 +68,19 @@
     {
       "label": "libs",
       "path": "/runtime-data/libs/manifest.json",
-      "bytes": 907,
-      "sha256": "ab7d7a02642e17a1c4e0e6a5b6180816b2142ed9271e9cbf45c5981f3154c8e5",
+      "bytes": 1880,
+      "sha256": "a6cc97eb2f66736f2cb01870f922b8fb43e4bf3b581c19bf2e20f7483c8d130d",
       "kind": "cones-libs",
       "mountRoot": "/app/libs",
       "integrity": "sha256",
-      "count": 3,
-      "totalBytes": 7147,
-      "manifestSha256": "ab7d7a02642e17a1c4e0e6a5b6180816b2142ed9271e9cbf45c5981f3154c8e5",
+      "count": 7,
+      "totalBytes": 22232,
+      "manifestSha256": "a6cc97eb2f66736f2cb01870f922b8fb43e4bf3b581c19bf2e20f7483c8d130d",
       "perFileSha256": {
         "exists": true,
         "complete": true,
-        "filesWithSha256": 3,
-        "fileCount": 3
+        "filesWithSha256": 7,
+        "fileCount": 7
       }
     }
   ],
@@ -106,19 +106,19 @@
     "libs": {
       "label": "libs",
       "path": "/runtime-data/libs/manifest.json",
-      "bytes": 907,
-      "sha256": "ab7d7a02642e17a1c4e0e6a5b6180816b2142ed9271e9cbf45c5981f3154c8e5",
+      "bytes": 1880,
+      "sha256": "a6cc97eb2f66736f2cb01870f922b8fb43e4bf3b581c19bf2e20f7483c8d130d",
       "kind": "cones-libs",
       "mountRoot": "/app/libs",
       "integrity": "sha256",
-      "count": 3,
-      "totalBytes": 7147,
-      "manifestSha256": "ab7d7a02642e17a1c4e0e6a5b6180816b2142ed9271e9cbf45c5981f3154c8e5",
+      "count": 7,
+      "totalBytes": 22232,
+      "manifestSha256": "a6cc97eb2f66736f2cb01870f922b8fb43e4bf3b581c19bf2e20f7483c8d130d",
       "perFileSha256": {
         "exists": true,
         "complete": true,
-        "filesWithSha256": 3,
-        "fileCount": 3
+        "filesWithSha256": 7,
+        "fileCount": 7
       }
     }
   },

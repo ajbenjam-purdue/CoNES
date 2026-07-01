@@ -1,8 +1,8 @@
 {
-  "version": "2026-05-24",
+  "version": "2026-07-01",
   "kind": "cones-libs",
-  "count": 3,
-  "totalBytes": 7147,
+  "count": 7,
+  "totalBytes": 22232,
   "mountRoot": "/app/libs",
   "integrity": "sha256",
   "files": [
@@ -14,11 +14,39 @@
       "vfsPath": "/app/libs/1D_SS.cnes"
     },
     {
+      "name": "conduction.cnes",
+      "bytes": 1945,
+      "sha256": "aa9e97ebdd09d9352c56e7a9c9cf33b2ce05c26d7057fb409e2ece3747dfafef",
+      "url": "/runtime-data/libs/conduction.cnes",
+      "vfsPath": "/app/libs/conduction.cnes"
+    },
+    {
+      "name": "fins.cnes",
+      "bytes": 9962,
+      "sha256": "e406ec861111330012db2e6ac49774f6709ebaed4435ca32afdcc44a59312085",
+      "url": "/runtime-data/libs/fins.cnes",
+      "vfsPath": "/app/libs/fins.cnes"
+    },
+    {
+      "name": "geometry.cnes",
+      "bytes": 982,
+      "sha256": "2fc0d5398a7086288ab56840dee410711338fbe13205d41071cfdaee43316e5a",
+      "url": "/runtime-data/libs/geometry.cnes",
+      "vfsPath": "/app/libs/geometry.cnes"
+    },
+    {
       "name": "heat_transfer_lib.cnes",
       "bytes": 1276,
       "sha256": "76a3e6b61b5bac222fee67de3dc6bede95e4e8e847095b9e089bcb785dce6120",
       "url": "/runtime-data/libs/heat_transfer_lib.cnes",
       "vfsPath": "/app/libs/heat_transfer_lib.cnes"
+    },
+    {
+      "name": "shape_factors.cnes",
+      "bytes": 2196,
+      "sha256": "cf515f700791d68c209456cd3e9b983fb64aa4b1b2dd482c7fb329dc01815313",
+      "url": "/runtime-data/libs/shape_factors.cnes",
+      "vfsPath": "/app/libs/shape_factors.cnes"
     },
     {
       "name": "thermo_lib.cnes",
