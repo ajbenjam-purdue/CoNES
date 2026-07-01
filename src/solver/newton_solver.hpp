@@ -36,6 +36,9 @@ public:
         auto &reg = const_cast<System &>(system).registry();
         SolverReport report;
 
+        // Store original guesses
+        Eigen::VectorXd original_guesses = reg.get_active_values();
+
         // Try initial guess first
         if (solve_internal(system, report)) return report;
 
@@ -47,7 +50,8 @@ public:
         {
             if (verbose_) std::cout << "Attempt " << attempt + 1 << "/" << max_attempts_ << "..." << std::endl;
             
-            Eigen::VectorXd active_vals = reg.get_active_values();
+            // Perturb from the original guess values
+            Eigen::VectorXd active_vals = original_guesses;
             for (int i = 0; i < active_vals.size(); ++i)
             {
                 double range = 1.0; 
@@ -58,6 +62,10 @@ public:
 
             if (solve_internal(system, report)) return report;
         }
+
+        // Restore original guesses if we failed
+        reg.update_active_values(original_guesses);
+        reg.apply_bounds();
 
         report.success = false;
         report.error_msg = "NewtonSolver: Failed to converge after " + std::to_string(max_attempts_) + " attempts.";
@@ -71,6 +79,19 @@ private:
         int n = static_cast<int>(system.get_equation_count());
         auto active_indices = reg.get_active_indices();
         int m = static_cast<int>(active_indices.size());
+
+        if (verbose_) {
+            std::cout << "--- Variables before solve ---" << std::endl;
+            for (size_t i = 0; i < reg.size(); ++i) {
+                const auto &var = reg.get_variable(i);
+                std::cout << "Var " << i << ": " << var.name << " = " << var.value 
+                          << " [" << var.unit_name << "] bounds=[" << var.lower_bound << ", " << var.upper_bound << "]" << std::endl;
+            }
+            std::cout << "--- Equations before solve ---" << std::endl;
+            for (size_t i = 0; i < system.get_equation_count(); ++i) {
+                std::cout << "Eq " << i << ": " << system.get_equation_plaintext(i) << std::endl;
+            }
+        }
 
         if (n == 0) { report.success = true; return true; }
 
@@ -97,20 +118,53 @@ private:
                 return true;
             }
 
-            // Original Solver Logic
-            Eigen::MatrixXd AtA = j.transpose() * j;
-            Eigen::VectorXd Atf = j.transpose() * f;
+            // Jacobi preconditioning: scale columns of the Jacobian to handle ill-conditioned systems
+            Eigen::VectorXd col_norms(m);
+            for (int i = 0; i < m; ++i) {
+                col_norms(i) = std::max(j.col(i).norm(), 1e-4);
+            }
+
+            Eigen::MatrixXd j_scaled = j;
+            for (int i = 0; i < m; ++i) {
+                j_scaled.col(i) /= col_norms(i);
+            }
+
+            Eigen::MatrixXd AtA = j_scaled.transpose() * j_scaled;
+            Eigen::VectorXd Atf = j_scaled.transpose() * f;
             
             for(int i=0; i<m; ++i) AtA(i,i) += lambda * (AtA(i,i) + 1.0);
 
-            Eigen::VectorXd delta_x = AtA.ldlt().solve(-Atf);
+            Eigen::VectorXd delta_y = AtA.colPivHouseholderQr().solve(-Atf);
 
-            double max_change = 0.0;
+            // Unscale step back to normal variables
+            Eigen::VectorXd delta_x(m);
+            for (int i = 0; i < m; ++i) {
+                delta_x(i) = delta_y(i) / col_norms(i);
+            }
+
             Eigen::VectorXd x_orig = reg.get_active_values();
             for(int i=0; i < delta_x.size(); ++i) {
-                max_change = std::max(max_change, std::abs(delta_x(i)) / (std::abs(x_orig(i)) + 1e-3));
+                double val = x_orig(i);
+                double step = delta_x(i);
+                int global_idx = active_indices[i];
+                const auto &var = reg.get_variable(global_idx);
+                if (var.lower_bound > 0) {
+                    // Prevent it from dropping too low (no more than 80% decrease)
+                    if (step < 0 && val + step < 0.2 * val) {
+                        delta_x(i) = -0.8 * val;
+                    }
+                    // Prevent it from growing too fast (no more than 5x increase)
+                    if (step > 0 && val + step > 5.0 * val) {
+                        delta_x(i) = 4.0 * val;
+                    }
+                } else {
+                    // General variables: limit step to 5x of value + 1000.0 to allow growth from 0
+                    double limit = 5.0 * (std::abs(val) + 1000.0);
+                    if (std::abs(step) > limit) {
+                        delta_x(i) = (step > 0 ? 1.0 : -1.0) * limit;
+                    }
+                }
             }
-            if (max_change > 0.1) delta_x *= (0.1 / max_change);
 
             double alpha = 1.0;
             bool success = false;
@@ -126,9 +180,10 @@ private:
                 system.evaluate(f_new, j_unused);
                 double new_l2_norm = f_new.norm();
                 
-                // If the result is improved, we keep it
-                if (new_l2_norm < current_l2_norm) { 
+                // Relaxed non-monotone line search: accept step if norm decreases, is close to solved, or increases by at most 10%
+                if (new_l2_norm < current_l2_norm * 1.1 || new_l2_norm < tolerance_) { 
                     success = true;
+                    if (verbose_) std::cout << "    LS success at step=" << ls << " alpha=" << alpha << " ratio=" << new_l2_norm / current_l2_norm << std::endl;
                     lambda = std::max(lambda_min, lambda * 0.1);
                     break;
                 }
@@ -136,6 +191,7 @@ private:
             }
 
             if (!success) {
+                if (verbose_) std::cout << "    LS failed! No improvement found." << std::endl;
                 lambda = std::min(lambda_max, lambda * 10.0);
                 Eigen::VectorXd jittered = x_orig;
                 for(int i=0; i<jittered.size(); ++i) {
@@ -147,6 +203,11 @@ private:
 
             if (verbose_ && iter % 20 == 0) {
                 std::cout << "  Iter " << iter << " Resid: " << current_inf_norm << " (L=" << lambda << ")" << std::endl;
+                for (int i = 0; i < n; ++i) {
+                    if (std::abs(f(i)) > tolerance_) {
+                        std::cout << "    Eq " << i << " (" << system.get_equation_plaintext(i) << ") = " << f(i) << std::endl;
+                    }
+                }
             }
             report.residuals = f;
         }

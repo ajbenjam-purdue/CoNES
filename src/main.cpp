@@ -346,7 +346,7 @@ int main(int argc, char *argv[])
     std::string input_path(""), output_path("");
     bool verbose(false), silent(false), json_out(false), lint_mode(false);
     double tol_override = 1e-9;
-    int max_iter_override = 100;
+    int max_iter_override = 500;
 
     // Flags
     for (int i = 1; i < argc; ++i)

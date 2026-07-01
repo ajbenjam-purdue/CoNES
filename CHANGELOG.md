@@ -1,5 +1,14 @@
 ## CoNES Changelog
-CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.2.1`.
+CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.2.2`.
+
+### Version 0.2.2
+  - Implemented component-wise step clamping to prevent variable-clamping deadlock near lower limits
+    - This new approach contrasts the system-wide steps and shifts which would often force divergence for systems with units of greatly varying scales (like C and Pa)
+  - Relaxed the monotone line search to allow up to a temporary 0.1x increase in the L2 norm of residuals, resolving convergence locks and restoring quadratic convergence behavior
+  - Replaced the LDLT normal equation solver with a rank-revealing QR decomposition with column pivoting (`colPivHouseholderQr()`) to robustly solve rank-deficient and redundant system formulations (credit: Gemini 3.5 Flash-Medium)
+  - Integrated Jacobi column preconditioning to mitigate extreme matrix ill-conditioning from physical unit discrepancies
+  - Bug fixes
+    - Fixed a critical unit inference bug in property function named parameters that left variables dimensionless and unbounded
 
 ### Version 0.2.1
   - Adjusted packaging strategy to include `tools/`, `cones_studio/`, and `materials/` dirs in the packaged wheel

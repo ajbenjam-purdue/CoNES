@@ -163,6 +163,7 @@ namespace cones
 
     public:
         VariableNode(int i, std::string n) : idx_(i), n_(n) {}
+        int get_index() const { return idx_; }
         DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualNumber> *ls = nullptr) const override;
         DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualRow> *ls = nullptr) const override;
         std::string to_string() const override { return n_; }

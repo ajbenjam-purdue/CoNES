@@ -222,8 +222,8 @@ namespace cones
                 }
                 if (pt == PropertyType::UNKNOWN && !arg.unit.is_dimensionless()) pt = unit_to_property(arg.unit);
                 if (pt != PropertyType::UNKNOWN) {
-                    double si_val = (arg.value.val + arg.unit.offset) * arg.unit.scale;
-                    double si_der = arg.value.der * arg.unit.scale;
+                    double si_val = arg.value.val;
+                    double si_der = arg.value.der;
                     inputs.push_back({pt, {si_val, si_der}});
                 }
             }
@@ -245,8 +245,8 @@ namespace cones
                 }
                 if (pt == PropertyType::UNKNOWN && !arg.unit.is_dimensionless()) pt = unit_to_property(arg.unit);
                 if (pt != PropertyType::UNKNOWN) {
-                    double si_val = (arg.value.val + arg.unit.offset) * arg.unit.scale;
-                    Eigen::VectorXd si_der = arg.value.der * arg.unit.scale;
+                    double si_val = arg.value.val;
+                    Eigen::VectorXd si_der = arg.value.der;
                     inputs.push_back({pt, {si_val, si_der}});
                 }
             }
