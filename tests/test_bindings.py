@@ -3,8 +3,9 @@ import os
 import unittest
 
 # Append release build path to PYTHONPATH
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "build", "Release"))
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "build"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "build", "Release"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "build"))
 
 import cones
 

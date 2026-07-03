@@ -421,5 +421,6 @@ NB_MODULE(_cones, m) {
     // NewtonSolver
     nb::class_<cones::NewtonSolver>(m, "NewtonSolver")
         .def(nb::init<double, int, bool>(), nb::arg("tol") = 1e-9, nb::arg("max_iter") = 1000, nb::arg("verbose") = false)
+        .def("set_blocking", &cones::NewtonSolver::set_blocking, nb::arg("blocking"))
         .def("solve", &cones::NewtonSolver::solve, nb::arg("system"));
 }

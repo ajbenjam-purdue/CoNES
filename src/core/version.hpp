@@ -13,7 +13,7 @@ struct Version {
     // Binary
     static constexpr int MAJOR = 0;
     static constexpr int MINOR = 2;
-    static constexpr int PATCH = 2;
+    static constexpr int PATCH = 3;
 
     // Lang standards
     static constexpr int LANG_MAJOR = 1;

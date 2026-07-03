@@ -36,6 +36,10 @@ Closed_Isothermal_Expansion(Air, T_H, P_3, v_3, P_4, v_4, s_3, s_4, u_3_check, u
 // Cools down to T_C.
 T_4_check = T_H
 Closed_Isochoric_Heat_Rejection(Air, T_4_check, P_4, v_4, P_1_check, T_1_check, u_4_check, u_1_check, Q_out_isocho, m)
+T_1_check = T_C
+P_1_check = P_1
+
+
 
 // Ideal Stirling cycle regenerates the isochoric heat perfectly.
 // Total heat added from source is just the isothermal expansion heat.

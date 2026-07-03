@@ -172,6 +172,12 @@ namespace cones
             return active;
         }
 
+        bool is_active(int index) const
+        {
+            if (index < 0 || index >= static_cast<int>(variables_.size())) return false;
+            return !variables_[index].is_fixed;
+        }
+
         /**
          * @brief Gets the values of only the active variables.
          */

@@ -6,7 +6,7 @@ export type WorkbenchSourceMeta = {
   lastModified: number | null;
 };
 
-const defaultSource = `// CoNES Web V0.2.2 Copyright (c) 2026 ajbenjam-purdue
+const defaultSource = `// CoNES Web V0.2.3 Copyright (c) 2026 ajbenjam-purdue
 // Inclusions work similar to c++ header files. On cones.dev, you may use prebuilt libraries; on the desktop version, you can build and distribute your own libraries in addition.
 // The prebuilt libraries include (from Bergman et. al) "1D_SS", "conduction", "fins", "geometry", "shape_factors", and (from a variety of sources) "thermo_lib"
 

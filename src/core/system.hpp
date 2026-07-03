@@ -37,6 +37,7 @@ namespace cones
             equation_lines_.push_back(line);
         }
         size_t get_equation_count() const { return equations_.size(); }
+        const std::vector<NodePtr>& get_equations() const { return equations_; }
         std::string get_equation_plaintext(size_t index) const {
             if (index >= equations_.size()) return "";
             return equations_[index]->to_string();
@@ -79,6 +80,47 @@ namespace cones
             {
                 try {
                     DualRow res = equations_[i]->evaluate_row(dual_rows, registry_);
+                    
+                    if (std::isnan(res.val)) f(i) = 1e9;
+                    else f(i) = res.val;
+
+                    for (int active_j = 0; active_j < m_active; ++active_j)
+                    {
+                        if (std::isnan(res.der(active_j))) j(i, active_j) = 0.0;
+                        else j(i, active_j) = res.der(active_j);
+                    }
+                } catch (...) {
+                    f(i) = 1e9;
+                    j.row(i).setZero();
+                }
+            }
+        }
+
+        void evaluate_subset(const std::vector<int> &eq_indices, Eigen::VectorXd &f, Eigen::MatrixXd &j) const
+        {
+            const int n = static_cast<int>(eq_indices.size());
+            auto active_indices = registry_.get_active_indices();
+            const int m_active = static_cast<int>(active_indices.size());
+
+            f.resize(n);
+            j.resize(n, m_active);
+
+            std::vector<DualRow> dual_rows;
+            dual_rows.reserve(registry_.size());
+            for (size_t i = 0; i < registry_.size(); ++i)
+                dual_rows.emplace_back(registry_.get_variable(i).value, m_active);
+
+            for (int active_j = 0; active_j < m_active; ++active_j)
+            {
+                int global_idx = active_indices[active_j];
+                dual_rows[global_idx].der(active_j) = 1.0;
+            }
+
+            for (int i = 0; i < n; ++i)
+            {
+                int eq_idx = eq_indices[i];
+                try {
+                    DualRow res = equations_[eq_idx]->evaluate_row(dual_rows, registry_);
                     
                     if (std::isnan(res.val)) f(i) = 1e9;
                     else f(i) = res.val;

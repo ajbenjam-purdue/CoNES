@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <algorithm>
 
 namespace cones
@@ -28,6 +29,7 @@ namespace cones
         virtual DualRow evaluate_row(const std::vector<DualRow> &values, const VariableRegistry &reg, const std::unordered_map<std::string, DualRow> *local_scope = nullptr) const = 0;
         virtual std::string to_string() const = 0;
         virtual Unit get_unit(const VariableRegistry &reg) const = 0;
+        virtual void collect_active_variables(std::unordered_set<int> &vars, const VariableRegistry &reg) const = 0;
     };
 
     using NodePtr = std::shared_ptr<Node>;
@@ -70,6 +72,7 @@ namespace cones
         std::string to_string() const override { return child_->to_string() + " [" + (unit_name_.empty() ? to_unit_.to_string() : unit_name_) + "]"; }
         Unit get_unit(const VariableRegistry &) const override { return to_unit_; }
         std::string get_unit_name() const { return unit_name_; }
+        void collect_active_variables(std::unordered_set<int> &vars, const VariableRegistry &reg) const override { child_->collect_active_variables(vars, reg); }
     };
 
     struct NodeArg
@@ -87,13 +90,27 @@ namespace cones
         CustomFunctionNode(std::shared_ptr<IFunction> f, std::vector<NodeArg> a) : func_(f), args_(a) {}
         DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualNumber> *ls = nullptr) const override;
         DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualRow> *ls = nullptr) const override;
-        std::string to_string() const override { return func_->name() + "(...)"; }
+        std::string to_string() const override {
+            std::string s = func_->name() + "(";
+            for (size_t i = 0; i < args_.size(); ++i) {
+                if (i > 0) s += ",";
+                if (!args_[i].name.empty()) s += args_[i].name + "=";
+                s += args_[i].node->to_string();
+            }
+            s += ")";
+            return s;
+        }
         Unit get_unit(const VariableRegistry &reg) const override
         {
             std::vector<Unit> units;
             for (const auto &arg : args_)
                 units.push_back(arg.node->get_unit(reg));
             return func_->get_unit(units);
+        }
+        void collect_active_variables(std::unordered_set<int> &vars, const VariableRegistry &reg) const override
+        {
+            for (const auto &arg : args_)
+                arg.node->collect_active_variables(vars, reg);
         }
     };
 
@@ -106,9 +123,25 @@ namespace cones
         UserFunctionNode(const FunctionDef *d, std::vector<NodePtr> a) : def_(d), arg_nodes_(std::move(a)) {}
         DualNumber evaluate(const std::vector<DualNumber> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualNumber> *ls = nullptr) const override;
         DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualRow> *ls = nullptr) const override;
-        std::string to_string() const override { return def_->name + "(...)"; }
+        std::string to_string() const override {
+            std::string s = def_->name + "(";
+            for (size_t i = 0; i < arg_nodes_.size(); ++i) {
+                if (i > 0) s += ",";
+                s += arg_nodes_[i]->to_string();
+            }
+            s += ")";
+            return s;
+        }
         Unit get_unit(const VariableRegistry &) const override { return def_->return_unit; }
         std::string get_unit_name() const { return def_->return_unit_name; }
+        void collect_active_variables(std::unordered_set<int> &vars, const VariableRegistry &reg) const override
+        {
+            for (const auto &arg : arg_nodes_)
+                arg->collect_active_variables(vars, reg);
+            for (const auto &assign : def_->body_assignments)
+                assign.rhs_node->collect_active_variables(vars, reg);
+            def_->return_node->collect_active_variables(vars, reg);
+        }
     };
 
     class ConstantNode : public Node
@@ -124,6 +157,7 @@ namespace cones
         }
         std::string to_string() const override { return std::to_string(v_); }
         Unit get_unit(const VariableRegistry &) const override { return Unit::Dimensionless(); }
+        void collect_active_variables(std::unordered_set<int> &, const VariableRegistry &) const override {}
     };
 
     class LocalVariableNode : public Node
@@ -154,6 +188,7 @@ namespace cones
         }
         std::string to_string() const override { return name_; }
         Unit get_unit(const VariableRegistry &) const override { return Unit::Dimensionless(); }
+        void collect_active_variables(std::unordered_set<int> &, const VariableRegistry &) const override {}
     };
 
     class VariableNode : public Node
@@ -168,6 +203,11 @@ namespace cones
         DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &reg, const std::unordered_map<std::string, DualRow> *ls = nullptr) const override;
         std::string to_string() const override { return n_; }
         Unit get_unit(const VariableRegistry &reg) const override;
+        void collect_active_variables(std::unordered_set<int> &vars, const VariableRegistry &reg) const override
+        {
+            if (reg.is_active(idx_))
+                vars.insert(idx_);
+        }
     };
 
     class UnaryNode : public Node
@@ -177,6 +217,10 @@ namespace cones
 
     public:
         explicit UnaryNode(NodePtr c) : c_(c) {}
+        void collect_active_variables(std::unordered_set<int> &vars, const VariableRegistry &reg) const override
+        {
+            c_->collect_active_variables(vars, reg);
+        }
     };
     class BinaryNode : public Node
     {
@@ -185,6 +229,11 @@ namespace cones
 
     public:
         BinaryNode(NodePtr l, NodePtr r) : l_(l), r_(r) {}
+        void collect_active_variables(std::unordered_set<int> &vars, const VariableRegistry &reg) const override
+        {
+            l_->collect_active_variables(vars, reg);
+            r_->collect_active_variables(vars, reg);
+        }
     };
 
     class AddNode : public BinaryNode
@@ -234,6 +283,10 @@ namespace cones
         DualRow evaluate_row(const std::vector<DualRow> &v, const VariableRegistry &r, const std::unordered_map<std::string, DualRow> *ls = nullptr) const override { return pow(b_->evaluate_row(v, r, ls), e_); }
         std::string to_string() const override { return "pow(" + b_->to_string() + "," + std::to_string(e_) + ")"; }
         Unit get_unit(const VariableRegistry &reg) const override;
+        void collect_active_variables(std::unordered_set<int> &vars, const VariableRegistry &reg) const override
+        {
+            b_->collect_active_variables(vars, reg);
+        }
     };
     class NegNode : public UnaryNode
     {

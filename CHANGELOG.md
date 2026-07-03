@@ -1,5 +1,17 @@
 ## CoNES Changelog
-CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.2.2`.
+CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.2.3`.
+
+### Version 0.2.3
+  - Implemented Solver Block Decomposition to encourage fast convergence and allow for physically separate systems
+    - Like EES, this system identifies blocks of systems that are independant and implements a sequential solution process
+    - The decomposer avoids external API rework and automatically handles some over-constrained systems, dependent on their structure
+  - Performance improvements
+    - Implemented a stricter, more directed approach for Bipartite matching that counts active variables and prioritizes simple equations for later blocking
+  - Documentation improvements
+    - Created `examples/demo.py` to provide a reference for the new nanobind configuration. Still needs pylance integration
+  - Bug fixes
+    - Fixed a serialization issue with user-defined functions that would key any function's arguments as the string "..." instead of the actual arguments, which lead to errors when solution blocking
+    - Fixed the default Stirling Cycle script by adding the final P/T_1_check equivalence to P/T_1
 
 ### Version 0.2.2
   - Implemented component-wise step clamping to prevent variable-clamping deadlock near lower limits

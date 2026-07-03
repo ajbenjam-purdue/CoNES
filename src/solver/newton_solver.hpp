@@ -2,12 +2,14 @@
 #define CONES_SOLVER_NEWTON_SOLVER_HPP
 
 #include "../core/system.hpp"
+#include "block_decomposer.hpp"
 #include <Eigen/Dense>
 #include <iostream>
 #include <stdexcept>
 #include <random>
 #include <cmath>
 #include <cstdio>
+#include <algorithm>
 
 namespace cones
 {
@@ -26,12 +28,121 @@ class NewtonSolver
     int max_iterations_;
     int max_attempts_ = 100;
     bool verbose_;
+    bool enable_blocking_ = true;
 
 public:
     explicit NewtonSolver(double tol = 1e-9, int max_iter = 1000, bool verbose = false)
         : tolerance_(tol), max_iterations_(max_iter), verbose_(verbose) {}
 
+    void set_blocking(bool b) { enable_blocking_ = b; }
+
     SolverReport solve(const System &system)
+    {
+        if (!enable_blocking_) {
+            return solve_unblocked(system);
+        }
+
+        auto &reg = const_cast<System &>(system).registry();
+        auto active_indices = reg.get_active_indices();
+        
+        if (active_indices.empty()) {
+            SolverReport report;
+            report.success = true;
+            return report;
+        }
+
+        std::vector<SolverBlock> blocks = BlockDecomposer::decompose(system, verbose_);
+        
+        if (blocks.size() <= 1) {
+            if (verbose_ && !blocks.empty()) {
+                std::cout << "BlockDecomposer: System is tightly coupled in 1 block." << std::endl;
+            }
+            return solve_unblocked(system);
+        }
+
+        if (verbose_) {
+            std::cout << "--- Solving System in " << blocks.size() << " Blocks ---" << std::endl;
+            for (size_t b_idx = 0; b_idx < blocks.size(); ++b_idx) {
+                std::cout << "  Block " << b_idx << ": " << blocks[b_idx].variable_indices.size() << " variables, "
+                          << blocks[b_idx].equation_indices.size() << " equations" << std::endl;
+                std::cout << "    Vars: ";
+                for (int v : blocks[b_idx].variable_indices) std::cout << reg.get_variable(v).name << " ";
+                std::cout << "\n    Eqs: ";
+                for (int e : blocks[b_idx].equation_indices) std::cout << system.get_equation_plaintext(e) << " | ";
+                std::cout << std::endl;
+            }
+        }
+
+        SolverReport total_report;
+        total_report.success = true;
+        total_report.iterations = 0;
+
+        // Save original guesses to restore if overall solution fails
+        Eigen::VectorXd original_guesses = reg.get_active_values();
+
+        // Solve each block sequentially
+        for (size_t b_idx = 0; b_idx < blocks.size(); ++b_idx) {
+            const auto& block = blocks[b_idx];
+
+            if (verbose_) {
+                std::cout << "=== Solving Block " << b_idx << "/" << blocks.size() - 1 << " ===" << std::endl;
+            }
+
+            // Temporarily fix all active variables NOT in the current block
+            std::vector<int> vars_to_unfix;
+            std::vector<int> vars_to_fix;
+            for (int v_idx : active_indices) {
+                bool in_block = std::find(block.variable_indices.begin(), block.variable_indices.end(), v_idx) != block.variable_indices.end();
+                const auto& var = reg.get_variable(v_idx);
+                if (in_block) {
+                    if (var.is_fixed) {
+                        reg.set_fixed(v_idx, false);
+                        vars_to_unfix.push_back(v_idx);
+                    }
+                } else {
+                    if (!var.is_fixed) {
+                        reg.set_fixed(v_idx, true);
+                        vars_to_fix.push_back(v_idx);
+                    }
+                }
+            }
+
+            // Solve this block subsystem
+            SolverReport block_report;
+            bool block_success = solve_block_subsystem(system, block.equation_indices, block_report);
+            total_report.iterations += block_report.iterations;
+
+            // Restore fixed status of all variables
+            for (int v_idx : vars_to_unfix) {
+                reg.set_fixed(v_idx, true);
+            }
+            for (int v_idx : vars_to_fix) {
+                reg.set_fixed(v_idx, false);
+            }
+
+            if (!block_success) {
+                if (verbose_) {
+                    std::cout << "Block " << b_idx << " failed to converge!" << std::endl;
+                }
+                total_report.success = false;
+                total_report.error_msg = "Block " + std::to_string(b_idx) + " failed to converge: " + block_report.error_msg;
+                // Restore all active variables to original guesses
+                reg.update_active_values(original_guesses);
+                reg.apply_bounds();
+                return total_report;
+            }
+        }
+
+        // Evaluate whole system residual to return in report
+        Eigen::VectorXd f;
+        Eigen::MatrixXd j;
+        system.evaluate(f, j);
+        total_report.residuals = f;
+        
+        return total_report;
+    }
+
+    SolverReport solve_unblocked(const System &system)
     {
         auto &reg = const_cast<System &>(system).registry();
         SolverReport report;
@@ -73,6 +184,38 @@ public:
     }
 
 private:
+    bool solve_block_subsystem(const System &system, const std::vector<int> &eq_indices, SolverReport &report)
+    {
+        auto &reg = const_cast<System &>(system).registry();
+        Eigen::VectorXd original_guesses = reg.get_active_values();
+
+        if (solve_internal_block(system, eq_indices, report)) return true;
+
+        // Multistart/Scrambling for this block
+        std::mt19937 gen(42 + eq_indices.size());
+        std::uniform_real_distribution<> dis(-1.0, 1.0);
+
+        for (int attempt = 1; attempt < max_attempts_; ++attempt)
+        {
+            Eigen::VectorXd active_vals = original_guesses;
+            for (int i = 0; i < active_vals.size(); ++i)
+            {
+                double range = 1.0; 
+                active_vals(i) += dis(gen) * range * (std::abs(active_vals(i)) + 1.0);
+            }
+            reg.update_active_values(active_vals);
+            reg.apply_bounds();
+
+            if (solve_internal_block(system, eq_indices, report)) return true;
+        }
+
+        reg.update_active_values(original_guesses);
+        reg.apply_bounds();
+        report.success = false;
+        report.error_msg = "Block failed to converge after " + std::to_string(max_attempts_) + " attempts.";
+        return false;
+    }
+
     bool solve_internal(const System &system, SolverReport &report)
     {
         auto &reg = const_cast<System &>(system).registry();
@@ -206,6 +349,130 @@ private:
                 for (int i = 0; i < n; ++i) {
                     if (std::abs(f(i)) > tolerance_) {
                         std::cout << "    Eq " << i << " (" << system.get_equation_plaintext(i) << ") = " << f(i) << std::endl;
+                    }
+                }
+            }
+            report.residuals = f;
+        }
+
+        return false;
+    }
+
+    bool solve_internal_block(const System &system, const std::vector<int> &eq_indices, SolverReport &report)
+    {
+        auto &reg = const_cast<System &>(system).registry();
+        int n = static_cast<int>(eq_indices.size());
+        auto active_indices = reg.get_active_indices();
+        int m = static_cast<int>(active_indices.size());
+
+        if (n == 0) { report.success = true; return true; }
+
+        Eigen::VectorXd f(n);
+        Eigen::MatrixXd j(n, m);
+
+        double lambda = 1e-7;
+        const double lambda_min = 1e-12;
+        const double lambda_max = 1e3;
+
+        std::mt19937 gen(1337);
+        std::uniform_real_distribution<> dis(-1.0, 1.0);
+
+        for (int iter = 0; iter < max_iterations_; ++iter)
+        {
+            system.evaluate_subset(eq_indices, f, j);
+            double current_inf_norm = f.lpNorm<Eigen::Infinity>();
+
+            report.iterations = std::max(iter, report.iterations);
+            if (current_inf_norm < tolerance_)
+            {
+                report.success = true;
+                report.residuals = f;
+                return true;
+            }
+
+            // Jacobi preconditioning
+            Eigen::VectorXd col_norms(m);
+            for (int i = 0; i < m; ++i) {
+                col_norms(i) = std::max(j.col(i).norm(), 1e-4);
+            }
+
+            Eigen::MatrixXd j_scaled = j;
+            for (int i = 0; i < m; ++i) {
+                j_scaled.col(i) /= col_norms(i);
+            }
+
+            Eigen::MatrixXd AtA = j_scaled.transpose() * j_scaled;
+            Eigen::VectorXd Atf = j_scaled.transpose() * f;
+            
+            for(int i=0; i<m; ++i) AtA(i,i) += lambda * (AtA(i,i) + 1.0);
+
+            Eigen::VectorXd delta_y = AtA.colPivHouseholderQr().solve(-Atf);
+
+            // Unscale step back to normal variables
+            Eigen::VectorXd delta_x(m);
+            for (int i = 0; i < m; ++i) {
+                delta_x(i) = delta_y(i) / col_norms(i);
+            }
+
+            Eigen::VectorXd x_orig = reg.get_active_values();
+            for(int i=0; i < delta_x.size(); ++i) {
+                double val = x_orig(i);
+                double step = delta_x(i);
+                int global_idx = active_indices[i];
+                const auto &var = reg.get_variable(global_idx);
+                if (var.lower_bound > 0) {
+                    if (step < 0 && val + step < 0.2 * val) {
+                        delta_x(i) = -0.8 * val;
+                    }
+                    if (step > 0 && val + step > 5.0 * val) {
+                        delta_x(i) = 4.0 * val;
+                    }
+                } else {
+                    double limit = 5.0 * (std::abs(val) + 1000.0);
+                    if (std::abs(step) > limit) {
+                        delta_x(i) = (step > 0 ? 1.0 : -1.0) * limit;
+                    }
+                }
+            }
+
+            double alpha = 1.0;
+            bool success = false;
+            double current_l2_norm = f.norm();
+
+            for (int ls = 0; ls < 5; ++ls) {
+                reg.update_active_values(x_orig + alpha * delta_x);
+                reg.apply_bounds();
+                
+                Eigen::VectorXd f_new;
+                Eigen::MatrixXd j_unused;
+                system.evaluate_subset(eq_indices, f_new, j_unused);
+                double new_l2_norm = f_new.norm();
+                
+                if (new_l2_norm < current_l2_norm * 1.1 || new_l2_norm < tolerance_) { 
+                    success = true;
+                    if (verbose_) std::cout << "    LS success at step=" << ls << " alpha=" << alpha << " ratio=" << new_l2_norm / current_l2_norm << std::endl;
+                    lambda = std::max(lambda_min, lambda * 0.1);
+                    break;
+                }
+                alpha *= 0.25;
+            }
+
+            if (!success) {
+                if (verbose_) std::cout << "    LS failed! No improvement found." << std::endl;
+                lambda = std::min(lambda_max, lambda * 10.0);
+                Eigen::VectorXd jittered = x_orig;
+                for(int i=0; i<jittered.size(); ++i) {
+                    jittered(i) += dis(gen) * (std::abs(jittered(i)) * 0.01 + 0.01);
+                }
+                reg.update_active_values(jittered);
+                reg.apply_bounds();
+            }
+
+            if (verbose_ && iter % 20 == 0) {
+                std::cout << "  Iter " << iter << " Resid: " << current_inf_norm << " (L=" << lambda << ")" << std::endl;
+                for (int i = 0; i < n; ++i) {
+                    if (std::abs(f(i)) > tolerance_) {
+                        std::cout << "    Eq " << eq_indices[i] << " (" << system.get_equation_plaintext(eq_indices[i]) << ") = " << f(i) << std::endl;
                     }
                 }
             }

@@ -82,7 +82,8 @@ void print_help()
               << "    -j, --json            Output results in JSON format\n\n"
               << "  Solver Parameters:\n"
               << "    --tol <val>           Override convergence tolerance (default: 1e-9)\n"
-              << "    --max-iter <val>      Override max solver iterations (default: 100)\n\n"
+              << "    --max-iter <val>      Override max solver iterations (default: 100)\n"
+              << "    --no-block            Disable equation block decomposition\n\n"
               << "  Development Tools:\n"
               << "    -L, --lint            Check syntax and definitions of the input file without solving\n"
               << "    --list-substances     (Standalone) List all registered substances\n"
@@ -345,6 +346,7 @@ int main(int argc, char *argv[])
     // Argument Parsing
     std::string input_path(""), output_path("");
     bool verbose(false), silent(false), json_out(false), lint_mode(false);
+    bool enable_blocking(true);
     double tol_override = 1e-9;
     int max_iter_override = 500;
 
@@ -443,6 +445,13 @@ int main(int argc, char *argv[])
             continue;
         }
 
+        // Disable block decomposition
+        if (flag == "--no-block")
+        {
+            enable_blocking = false;
+            continue;
+        }
+
         // List the available substances
         if (flag == "--list-substances")
         {
@@ -513,6 +522,7 @@ int main(int argc, char *argv[])
 
         // Otherwise, solve system and yield the results
         NewtonSolver solver(tol_override, max_iter_override, verbose);
+        solver.set_blocking(enable_blocking);
         SolverReport report = solver.solve(system);
 
         // Get total duration and yield the duration
