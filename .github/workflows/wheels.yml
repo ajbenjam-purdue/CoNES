@@ -114,6 +114,7 @@ jobs:
           mkdir cnes_dist
           copy build/Release/cnes.exe cnes_dist/
           copy -Recurse tools cnes_dist/tools
+          copy -Recurse libs cnes_dist/libs
           copy -Recurse cones_studio cnes_dist/cones_studio
           copy -Recurse materials cnes_dist/materials
           copy LICENSE cnes_dist/
@@ -126,6 +127,7 @@ jobs:
           mkdir cnes_dist
           cp build/cnes cnes_dist/
           cp -r tools cnes_dist/tools
+          cp -r libs cnes_dist/libs
           cp -r cones_studio cnes_dist/cones_studio
           cp -r materials cnes_dist/materials
           cp LICENSE README.md cnes_dist/
@@ -137,6 +139,7 @@ jobs:
           mkdir cnes_dist
           cp build/cnes cnes_dist/
           cp -r tools cnes_dist/tools
+          cp -r libs cnes_dist/libs
           cp -r cones_studio cnes_dist/cones_studio
           cp -r materials cnes_dist/materials
           cp LICENSE README.md cnes_dist/
