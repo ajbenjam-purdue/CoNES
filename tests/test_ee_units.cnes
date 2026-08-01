@@ -1,0 +1,23 @@
+// CoNES EE Units Verification Test
+// 1. Current & Potential Basics
+I_main := 2.5 [A]
+I_milli := 2500 [mA]
+V_main := 120 [V]
+V_kilo := 0.12 [kV]
+
+// 2. Ohm's Law & Resistance
+R_main := 48 [Ohm]
+R_kilo := 0.048 [kOhm]
+V_calc = I_main * R_main
+
+// 3. Capacitance & Inductance
+C_val := 100 [uF]
+L_val := 10 [mH]
+Q_stored = C_val * V_main
+Flux = L_val * I_main
+
+// 4. Frequency & Magnetic Field
+freq := 60 [Hz]
+freq_k := 0.06 [kHz]
+B_field := 1.5 [T]
+B_gauss := 15000 [Ga]
