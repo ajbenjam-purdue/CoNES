@@ -13,23 +13,23 @@ namespace cones
 
     inline PropertyType unit_to_property(const Unit &u)
     {
-        if (u.dims == std::vector<int>{0, 0, 0, 1, 0})
+        if (u.dims == std::vector<int>{0, 0, 0, 1, 0, 0})
             return PropertyType::TEMPERATURE;
-        if (u.dims == std::vector<int>{1, -1, -2, 0, 0})
+        if (u.dims == std::vector<int>{1, -1, -2, 0, 0, 0})
             return PropertyType::PRESSURE;
-        if (u.dims == std::vector<int>{1, 2, -2, 0, 0})
+        if (u.dims == std::vector<int>{1, 2, -2, 0, 0, 0})
             return PropertyType::ENTHALPY; // Joule (Total)
-        if (u.dims == std::vector<int>{0, 2, -2, 0, 0})
+        if (u.dims == std::vector<int>{0, 2, -2, 0, 0, 0})
             return PropertyType::ENTHALPY; // Specific (J/kg)
-        if (u.dims == std::vector<int>{0, 2, -2, -1, 0})
+        if (u.dims == std::vector<int>{0, 2, -2, -1, 0, 0})
             return PropertyType::ENTROPY; // J/kg*K
-        if (u.dims == std::vector<int>{1, -3, 0, 0, 0})
+        if (u.dims == std::vector<int>{1, -3, 0, 0, 0, 0})
             return PropertyType::DENSITY;
-        if (u.dims == std::vector<int>{-1, 3, 0, 0, 0})
+        if (u.dims == std::vector<int>{-1, 3, 0, 0, 0, 0})
             return PropertyType::SPECIFIC_VOLUME;
-        if (u.dims == std::vector<int>{1, -1, -1, 0, 0})
+        if (u.dims == std::vector<int>{1, -1, -1, 0, 0, 0})
             return PropertyType::VISCOSITY; // Pa*s
-        if (u.dims == std::vector<int>{1, 1, -3, -1, 0})
+        if (u.dims == std::vector<int>{1, 1, -3, -1, 0, 0})
             return PropertyType::CONDUCTIVITY; // W/m*K
         return PropertyType::UNKNOWN;
     }
@@ -148,7 +148,7 @@ namespace cones
                     const double sigma = 5.670374419e-8;
                     return a[0] * sigma * a[1] * (pow(a[2], 4) - pow(a[3], 4)); 
                 },
-                [](const std::vector<Unit> &) { return Unit(1.0, {1, 2, -3, 0, 0}); }}}
+                [](const std::vector<Unit> &) { return Unit(1.0, {1, 2, -3, 0, 0, 0}); }}}
         };
         return funcs;
     }
@@ -261,14 +261,14 @@ namespace cones
             {
             case PropertyType::PRESSURE: return Unit::Pascal();
             case PropertyType::TEMPERATURE: return Unit::Kelvin();
-            case PropertyType::ENTHALPY: return Unit(1.0, {0, 2, -2, 0, 0});
-            case PropertyType::ENTROPY: return Unit(1.0, {0, 2, -2, -1, 0});
-            case PropertyType::INTERNAL_ENERGY: return Unit(1.0, {0, 2, -2, 0, 0});
-            case PropertyType::SPECIFIC_VOLUME: return Unit(1.0, {-1, 3, 0, 0, 0});
-            case PropertyType::DENSITY: return Unit(1.0, {1, -3, 0, 0, 0});
+            case PropertyType::ENTHALPY: return Unit(1.0, {0, 2, -2, 0, 0, 0});
+            case PropertyType::ENTROPY: return Unit(1.0, {0, 2, -2, -1, 0, 0});
+            case PropertyType::INTERNAL_ENERGY: return Unit(1.0, {0, 2, -2, 0, 0, 0});
+            case PropertyType::SPECIFIC_VOLUME: return Unit(1.0, {-1, 3, 0, 0, 0, 0});
+            case PropertyType::DENSITY: return Unit(1.0, {1, -3, 0, 0, 0, 0});
             case PropertyType::QUALITY: return Unit::Dimensionless();
-            case PropertyType::VISCOSITY: return Unit(1.0, {1, -1, -1, 0, 0});
-            case PropertyType::CONDUCTIVITY: return Unit(1.0, {1, 1, -3, -1, 0});
+            case PropertyType::VISCOSITY: return Unit(1.0, {1, -1, -1, 0, 0, 0});
+            case PropertyType::CONDUCTIVITY: return Unit(1.0, {1, 1, -3, -1, 0, 0});
             case PropertyType::PRANDTL: return Unit::Dimensionless();
             default: return Unit::Dimensionless();
             }
