@@ -332,7 +332,12 @@ int main(int argc, char *argv[])
     system.constant_registry().load_standard_constants(); // TODO: Make API more uniform with location of constants/functions/substances
     system.substance_manager().register_ideal_gasses(); // Ideal gas definitions are in the substance manager
 
-    // Automatically load Tabulated Substances from /materials relative to exe OR load automatically on launch
+    if (!std::filesystem::exists(materials_path) && std::filesystem::exists("materials"))
+    {
+        materials_path = std::filesystem::absolute("materials");
+    }
+
+    // Automatically load Tabulated Substances from /materials relative to exe OR current working directory OR python package
     if (!std::filesystem::exists(materials_path))
     {
         // Try finding it inside the installed cones python package
