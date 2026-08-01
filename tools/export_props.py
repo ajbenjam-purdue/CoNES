@@ -127,6 +127,12 @@ def export_substance(name, p_range=(1e3, 2e8), t_range=(100, 1000), count=50):
     tsat_data = [PropsSISafe('T', 'P', p, 'Q', 0, name) for p in p_sat_grid]
     write_cnesbin(os.path.join(OUT, f"{name}_Tsat.cnesbin"), p_sat_grid, [0.0], tsat_data)
 
+    # Temperature Glide saturation boundaries (Tsat_f at Q=0, Tsat_g at Q=1)
+    tsat_f_data = [PropsSISafe('T', 'P', p, 'Q', 0, name) for p in p_sat_grid]
+    tsat_g_data = [PropsSISafe('T', 'P', p, 'Q', 1, name) for p in p_sat_grid]
+    write_cnesbin(os.path.join(OUT, f"{name}_Tsat_f.cnesbin"), p_sat_grid, [0.0], tsat_f_data)
+    write_cnesbin(os.path.join(OUT, f"{name}_Tsat_g.cnesbin"), p_sat_grid, [0.0], tsat_g_data)
+
     # Two-Phase Boundary tables vs Pressure
     for pcode, cp_name, q in [('hf', 'H', 0), ('hg', 'H', 1), ('sf', 'S', 0), ('sg', 'S', 1)]:
         data = [PropsSISafe(cp_name, 'P', p, 'Q', q, name) for p in p_sat_grid]

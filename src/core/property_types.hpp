@@ -22,6 +22,7 @@ namespace cones
         REYNOLDS,         // Re
         SATURATION_PRESSURE,    // Psat
         SATURATION_TEMPERATURE, // Tsat
+        T_SAT_F, T_SAT_G,       // Bubble and dew saturation temperatures (glide)
         H_F, H_G, S_F, S_G,     // Saturated liquid/vapor h and s
         T_PH, T_PS,             // Inverted T(P,h) and T(P,s)
         UNKNOWN
@@ -62,6 +63,8 @@ namespace cones
             return PropertyType::SATURATION_PRESSURE;
         if (s == "Tsat")
             return PropertyType::SATURATION_TEMPERATURE;
+        if (s == "Tsat_f" || s == "T_sat_f" || s == "Tf_sat") return PropertyType::T_SAT_F;
+        if (s == "Tsat_g" || s == "T_sat_g" || s == "Tg_sat") return PropertyType::T_SAT_G;
         if (s == "hf") return PropertyType::H_F;
         if (s == "hg") return PropertyType::H_G;
         if (s == "sf") return PropertyType::S_F;
@@ -88,6 +91,8 @@ namespace cones
             case PropertyType::REYNOLDS:        return "Reynolds";
             case PropertyType::SATURATION_PRESSURE:    return "Psat";
             case PropertyType::SATURATION_TEMPERATURE: return "Tsat";
+            case PropertyType::T_SAT_F: return "Tsat_f";
+            case PropertyType::T_SAT_G: return "Tsat_g";
             case PropertyType::H_F: return "hf";
             case PropertyType::H_G: return "hg";
             case PropertyType::S_F: return "sf";

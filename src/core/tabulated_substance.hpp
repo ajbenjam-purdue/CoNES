@@ -73,9 +73,22 @@ namespace cones
             }
             if (has_X && (has_P || has_T)) {
                 if (!has_P && has_T) { P = evaluate(PropertyType::SATURATION_PRESSURE, {{PropertyType::TEMPERATURE, T}}); has_P = true; }
-                if (!has_T && has_P) { T = evaluate(PropertyType::SATURATION_TEMPERATURE, {{PropertyType::PRESSURE, P}}); has_T = true; }
+                if (!has_T && has_P) {
+                    DualNumber tf = evaluate_direct(PropertyType::T_SAT_F, P, {0,0});
+                    DualNumber tg = evaluate_direct(PropertyType::T_SAT_G, P, {0,0});
+                    if (tf.val < 1e8 && tg.val < 1e8) {
+                        T = tf + X * (tg - tf);
+                    } else if (tf.val < 1e8) {
+                        T = tf;
+                    } else {
+                        T = evaluate(PropertyType::SATURATION_TEMPERATURE, {{PropertyType::PRESSURE, P}});
+                    }
+                    has_T = true;
+                }
                 if (target == PropertyType::PRESSURE) return P;
                 if (target == PropertyType::TEMPERATURE) return T;
+                if (target == PropertyType::T_SAT_F) return evaluate_direct(PropertyType::T_SAT_F, P, {0,0});
+                if (target == PropertyType::T_SAT_G) return evaluate_direct(PropertyType::T_SAT_G, P, {0,0});
                 if (target == PropertyType::ENTHALPY) {
                     DualNumber hf = evaluate(PropertyType::H_F, {{PropertyType::PRESSURE, P}, {PropertyType::TEMPERATURE, T}});
                     DualNumber hg = evaluate(PropertyType::H_G, {{PropertyType::PRESSURE, P}, {PropertyType::TEMPERATURE, T}});
@@ -85,6 +98,15 @@ namespace cones
                     DualNumber sf = evaluate(PropertyType::S_F, {{PropertyType::PRESSURE, P}, {PropertyType::TEMPERATURE, T}});
                     DualNumber sg = evaluate(PropertyType::S_G, {{PropertyType::PRESSURE, P}, {PropertyType::TEMPERATURE, T}});
                     return sf + X * (sg - sf);
+                }
+            }
+            if (target == PropertyType::T_SAT_F && has_P) return evaluate_direct(PropertyType::T_SAT_F, P, {0,0});
+            if (target == PropertyType::T_SAT_G && has_P) return evaluate_direct(PropertyType::T_SAT_G, P, {0,0});
+            if (target == PropertyType::QUALITY && has_P && has_T) {
+                DualNumber tf = evaluate_direct(PropertyType::T_SAT_F, P, {0,0});
+                DualNumber tg = evaluate_direct(PropertyType::T_SAT_G, P, {0,0});
+                if (tf.val < 1e8 && tg.val < 1e8 && (tg.val - tf.val) > 1e-5) {
+                    return (T - tf) / (tg - tf);
                 }
             }
             if (!has_T) {
@@ -118,9 +140,22 @@ namespace cones
             }
             if (has_X && (has_P || has_T)) {
                 if (!has_P && has_T) { P = evaluate(PropertyType::SATURATION_PRESSURE, {{PropertyType::TEMPERATURE, T}}); has_P = true; }
-                if (!has_T && has_P) { T = evaluate(PropertyType::SATURATION_TEMPERATURE, {{PropertyType::PRESSURE, P}}); has_T = true; }
+                if (!has_T && has_P) {
+                    DualRow tf = evaluate_direct(PropertyType::T_SAT_F, P, DualRow(0, der_size));
+                    DualRow tg = evaluate_direct(PropertyType::T_SAT_G, P, DualRow(0, der_size));
+                    if (tf.val < 1e8 && tg.val < 1e8) {
+                        T = tf + X * (tg - tf);
+                    } else if (tf.val < 1e8) {
+                        T = tf;
+                    } else {
+                        T = evaluate(PropertyType::SATURATION_TEMPERATURE, {{PropertyType::PRESSURE, P}});
+                    }
+                    has_T = true;
+                }
                 if (target == PropertyType::PRESSURE) return P;
                 if (target == PropertyType::TEMPERATURE) return T;
+                if (target == PropertyType::T_SAT_F) return evaluate_direct(PropertyType::T_SAT_F, P, DualRow(0, der_size));
+                if (target == PropertyType::T_SAT_G) return evaluate_direct(PropertyType::T_SAT_G, P, DualRow(0, der_size));
                 if (target == PropertyType::ENTHALPY) {
                     DualRow hf = evaluate(PropertyType::H_F, {{PropertyType::PRESSURE, P}, {PropertyType::TEMPERATURE, T}});
                     DualRow hg = evaluate(PropertyType::H_G, {{PropertyType::PRESSURE, P}, {PropertyType::TEMPERATURE, T}});
@@ -130,6 +165,15 @@ namespace cones
                     DualRow sf = evaluate(PropertyType::S_F, {{PropertyType::PRESSURE, P}, {PropertyType::TEMPERATURE, T}});
                     DualRow sg = evaluate(PropertyType::S_G, {{PropertyType::PRESSURE, P}, {PropertyType::TEMPERATURE, T}});
                     return sf + X * (sg - sf);
+                }
+            }
+            if (target == PropertyType::T_SAT_F && has_P) return evaluate_direct(PropertyType::T_SAT_F, P, DualRow(0, der_size));
+            if (target == PropertyType::T_SAT_G && has_P) return evaluate_direct(PropertyType::T_SAT_G, P, DualRow(0, der_size));
+            if (target == PropertyType::QUALITY && has_P && has_T) {
+                DualRow tf = evaluate_direct(PropertyType::T_SAT_F, P, DualRow(0, der_size));
+                DualRow tg = evaluate_direct(PropertyType::T_SAT_G, P, DualRow(0, der_size));
+                if (tf.val < 1e8 && tg.val < 1e8 && (tg.val - tf.val) > 1e-5) {
+                    return (T - tf) / (tg - tf);
                 }
             }
             if (!has_T) {
@@ -151,7 +195,13 @@ namespace cones
     private:
         DualNumber evaluate_direct(PropertyType type, DualNumber p1, DualNumber p2) const {
             auto it = tables_.find(type);
-            if (it == tables_.end()) throw std::runtime_error("Table not found: " + property_to_string(type));
+            if (it == tables_.end()) {
+                if (type == PropertyType::T_SAT_F || type == PropertyType::T_SAT_G) {
+                    auto it_sat = tables_.find(PropertyType::SATURATION_TEMPERATURE);
+                    if (it_sat != tables_.end()) return interpolate_1d_p(it_sat->second, p1);
+                }
+                throw std::runtime_error("Table not found: " + property_to_string(type));
+            }
             const auto &table = it->second;
             if (table.p_grid.size() == 1) return interpolate_1d_t(table, p2);
             if (table.t_grid.size() == 1) return interpolate_1d_p(table, p1);
@@ -159,7 +209,13 @@ namespace cones
         }
         DualRow evaluate_direct(PropertyType type, DualRow p1, DualRow p2) const {
             auto it = tables_.find(type);
-            if (it == tables_.end()) throw std::runtime_error("Table not found: " + property_to_string(type));
+            if (it == tables_.end()) {
+                if (type == PropertyType::T_SAT_F || type == PropertyType::T_SAT_G) {
+                    auto it_sat = tables_.find(PropertyType::SATURATION_TEMPERATURE);
+                    if (it_sat != tables_.end()) return interpolate_1d_p(it_sat->second, p1);
+                }
+                throw std::runtime_error("Table not found: " + property_to_string(type));
+            }
             const auto &table = it->second;
             if (table.p_grid.size() == 1) return interpolate_1d_t(table, p2);
             if (table.t_grid.size() == 1) return interpolate_1d_p(table, p1);

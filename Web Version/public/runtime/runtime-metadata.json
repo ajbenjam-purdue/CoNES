@@ -25,8 +25,8 @@
     {
       "label": "cnes-module.wasm",
       "path": "/runtime/cnes-module.wasm",
-      "bytes": 901284,
-      "sha256": "597e308445719fdac46c83e2206da29b3901aa3d3b2f9d3c0edf7c611b24cb2e"
+      "bytes": 911405,
+      "sha256": "eefb83d092dfb52b85875c97dd6f1cdd37733c54e32e54c12f08b9beeedbcabb"
     }
   ],
   "artifactSummary": {
@@ -42,8 +42,8 @@
     },
     "moduleWasm": {
       "path": "/runtime/cnes-module.wasm",
-      "bytes": 901284,
-      "sha256": "597e308445719fdac46c83e2206da29b3901aa3d3b2f9d3c0edf7c611b24cb2e"
+      "bytes": 911405,
+      "sha256": "eefb83d092dfb52b85875c97dd6f1cdd37733c54e32e54c12f08b9beeedbcabb"
     }
   },
   "manifests": [

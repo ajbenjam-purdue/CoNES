@@ -260,7 +260,10 @@ namespace cones
             switch (target_type_)
             {
             case PropertyType::PRESSURE: return Unit::Pascal();
-            case PropertyType::TEMPERATURE: return Unit::Kelvin();
+            case PropertyType::TEMPERATURE:
+            case PropertyType::SATURATION_TEMPERATURE:
+            case PropertyType::T_SAT_F:
+            case PropertyType::T_SAT_G: return Unit::Kelvin();
             case PropertyType::ENTHALPY: return Unit(1.0, {0, 2, -2, 0, 0, 0});
             case PropertyType::ENTROPY: return Unit(1.0, {0, 2, -2, -1, 0, 0});
             case PropertyType::INTERNAL_ENERGY: return Unit(1.0, {0, 2, -2, 0, 0, 0});
@@ -284,6 +287,8 @@ namespace cones
         };
         add_prop("Pressure", PropertyType::PRESSURE, "Yields the pressure [Pa].");
         add_prop("Temperature", PropertyType::TEMPERATURE, "Yields the temperature [K].");
+        add_prop("Tsat_f", PropertyType::T_SAT_F, "Yields the bubble-point saturation temperature [K].");
+        add_prop("Tsat_g", PropertyType::T_SAT_G, "Yields the dew-point saturation temperature [K].");
         add_prop("Enthalpy", PropertyType::ENTHALPY, "Yields the specific enthalpy [J/kg].");
         add_prop("Entropy", PropertyType::ENTROPY, "Yields the specific entropy [J/kg*K].");
         add_prop("InternalEnergy", PropertyType::INTERNAL_ENERGY, "Yields the specific internal energy [J/kg].");
