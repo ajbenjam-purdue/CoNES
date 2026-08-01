@@ -86,7 +86,8 @@ public:
         
         // Command to find the package directory:
         // <python> -c "import os, cones; print(os.path.dirname(cones.__file__))"
-        std::string cmd = "\"" + interp_str + "\" -c \"import os, cones; print(os.path.dirname(cones.__file__))\"";
+        std::string redirect = is_windows_ ? " 2> NUL" : " 2> /dev/null";
+        std::string cmd = "\"" + interp_str + "\" -c \"import os, cones; print(os.path.dirname(cones.__file__))\"" + redirect;
         
         std::string result = "";
 #ifdef _WIN32
@@ -120,8 +121,6 @@ public:
     }
 
     int run_script(const std::string& script_rel_path, const std::vector<std::string>& args = {}) {
-        if (!ensure_venv()) return 1;
-
         std::filesystem::path script_path = (root_path_ / std::filesystem::path(script_rel_path)).lexically_normal();
         if (!std::filesystem::exists(script_path)) {
             // Script not found relative to executable path. Try finding it inside the installed cones package!
@@ -135,6 +134,8 @@ public:
             std::cerr << ">>> CoNES Error: Script not found at " << script_path << std::endl;
             return 1;
         }
+
+        if (!ensure_venv()) return 1;
 
         std::string interp = get_interpreter().string();
         std::string cmd = "\"" + interp + "\" \"" + script_path.string() + "\"";

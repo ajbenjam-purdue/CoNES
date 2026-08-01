@@ -195,9 +195,25 @@ NB_MODULE(_cones, m) {
         .def_static("Pascal", &cones::Unit::Pascal)
         .def_static("Watt", &cones::Unit::Watt)
         .def_static("Mol", &cones::Unit::Mol)
+        .def_static("Coulomb", &cones::Unit::Coulomb)
+        .def_static("Ampere", &cones::Unit::Ampere)
+        .def_static("Volt", &cones::Unit::Volt)
+        .def_static("Ohm", &cones::Unit::Ohm)
+        .def_static("Farad", &cones::Unit::Farad)
+        .def_static("Weber", &cones::Unit::Weber)
+        .def_static("Tesla", &cones::Unit::Tesla)
+        .def_static("Henry", &cones::Unit::Henry)
+        .def_static("Hertz", &cones::Unit::Hertz)
+        .def_static("Gauss", &cones::Unit::Gauss)
         .def("__repr__", [](const cones::Unit& u) {
+            std::string dims_str = "[";
+            for (size_t i = 0; i < u.dims.size(); ++i) {
+                if (i > 0) dims_str += ",";
+                dims_str += std::to_string(u.dims[i]);
+            }
+            dims_str += "]";
             return "Unit(scale=" + std::to_string(u.scale) + 
-                   ", dims=[" + std::to_string(u.dims[0]) + "," + std::to_string(u.dims[1]) + "," + std::to_string(u.dims[2]) + "," + std::to_string(u.dims[3]) + "," + std::to_string(u.dims[4]) + "]" +
+                   ", dims=" + dims_str +
                    ", offset=" + std::to_string(u.offset) + ")";
         });
 
