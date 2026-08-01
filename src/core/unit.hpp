@@ -13,13 +13,13 @@ namespace cones
 {
 
     /**
-     * @brief Dimensions: [Mass, Length, Time, Temp, Moles]
+     * @brief Dimensions: [Mass, Length, Time, Temp, Moles, Charge]
      */
     struct Unit
     {
-        double scale = 1.0;                      // Scale relative to the SI reference
-        double offset = 0.0;                     // Offset relative to the SI reference (temp)
-        std::vector<int> dims = {0, 0, 0, 0, 0}; // Tracks the relative power of each dimension [Mass, Length, Time, Temp, Moles]
+        double scale = 1.0;                         // Scale relative to the SI reference
+        double offset = 0.0;                        // Offset relative to the SI reference (temp)
+        std::vector<int> dims = {0, 0, 0, 0, 0, 0}; // Tracks the relative power of each dimension [Mass, Length, Time, Temp, Moles, Charge]
 
         Unit() = default;                                                                               // Empty constructor
         Unit(double s, std::vector<int> d, double o = 0.0) : scale(s), offset(o), dims(std::move(d)) {} // Pre-pop constructor
@@ -32,16 +32,16 @@ namespace cones
             return true;
         }
         bool requires_positivity() const { // Returns true if the unit has to be +ive (Temperature, Pressure, Density, Specific Volume, Viscosity)
-            // Temperature [0,0,0,1,0]
-            if (dims == std::vector<int>{0, 0, 0, 1, 0}) return true;
-            // Pressure [1,-1,-2,0,0]
-            if (dims == std::vector<int>{1, -1, -2, 0, 0}) return true;
-            // Density [1,-3,0,0,0]
-            if (dims == std::vector<int>{1, -3, 0, 0, 0}) return true;
-            // Specific Volume [-1,3,0,0,0]
-            if (dims == std::vector<int>{-1, 3, 0, 0, 0}) return true;
-            // Viscosity [1,-1,-1,0,0]
-            if (dims == std::vector<int>{1, -1, -1, 0, 0}) return true;
+            // Temperature [0,0,0,1,0,0]
+            if (dims == std::vector<int>{0, 0, 0, 1, 0, 0}) return true;
+            // Pressure [1,-1,-2,0,0,0]
+            if (dims == std::vector<int>{1, -1, -2, 0, 0, 0}) return true;
+            // Density [1,-3,0,0,0,0]
+            if (dims == std::vector<int>{1, -3, 0, 0, 0, 0}) return true;
+            // Specific Volume [-1,3,0,0,0,0]
+            if (dims == std::vector<int>{-1, 3, 0, 0, 0, 0}) return true;
+            // Viscosity [1,-1,-1,0,0,0]
+            if (dims == std::vector<int>{1, -1, -1, 0, 0, 0}) return true;
             return false;
         }
         bool compatible(const Unit &other) const { return dims == other.dims; } // Are this unit and the other compatible (e.g. for addition/similar)?
@@ -83,7 +83,7 @@ namespace cones
         {
             if (is_dimensionless()) return "";
 
-            if (dims == std::vector<int>{1, 2, -2, 0, 0}) // Energy
+            if (dims == std::vector<int>{1, 2, -2, 0, 0, 0}) // Energy
             {
                 if (std::abs(scale - 1e3) < 1e-5)
                     return "kJ";
@@ -93,7 +93,7 @@ namespace cones
                     return "GJ";
                 return "J";
             }
-            if (dims == std::vector<int>{1, 1, -2, 0, 0}) // Force
+            if (dims == std::vector<int>{1, 1, -2, 0, 0, 0}) // Force
             {
                 if (std::abs(scale - 1e3) < 1e-5)
                     return "kN";
@@ -101,15 +101,15 @@ namespace cones
                     return "MN";
                 return "N";
             }
-            if (dims == std::vector<int>{0, 2, -2, 0, 0}) // Entropy
+            if (dims == std::vector<int>{0, 2, -2, 0, 0, 0}) // Entropy
             {
                 return (std::abs(scale - 1000.0) < 1e-5) ? "kJ/kg" : "J/kg";
             }
-            if (dims == std::vector<int>{0, 2, -2, -1, 0}) // Enthalpy
+            if (dims == std::vector<int>{0, 2, -2, -1, 0, 0}) // Enthalpy
             {
                 return (std::abs(scale - 1000.0) < 1e-5) ? "kJ/kg*K" : "J/kg*K";
             }
-            if (dims == std::vector<int>{1, 2, -3, 0, 0}) // Power
+            if (dims == std::vector<int>{1, 2, -3, 0, 0, 0}) // Power
             {
                 if (std::abs(scale - 1e3) < 1e-5)
                     return "kW";
@@ -117,7 +117,7 @@ namespace cones
                     return "MW";
                 return "W";
             }
-            if (dims == std::vector<int>{1, -1, -2, 0, 0}) // Pressure
+            if (dims == std::vector<int>{1, -1, -2, 0, 0, 0}) // Pressure
             {
                 if (std::abs(scale - 1e6) < 1e-5)
                     return "MPa";
@@ -129,7 +129,7 @@ namespace cones
                     return "mbar";
                 return "Pa";
             }
-            if (dims == std::vector<int>{0, 1, -1, 0, 0}) // Speed
+            if (dims == std::vector<int>{0, 1, -1, 0, 0, 0}) // Speed
             {
                 if (std::abs(scale - 0.01) < 1e-5)
                     return "cm/s";
@@ -137,16 +137,79 @@ namespace cones
                     return "mm/s";
                 return "m/s";
             }
-            if (dims == std::vector<int>{0, 1, -2, 0, 0}) // Acceleration
+            if (dims == std::vector<int>{0, 1, -2, 0, 0, 0}) // Acceleration
             {
                 if (std::abs(scale - 9.81) < 1e-5)
                     return "G";
                 return "m/s^2";
             }
-            if (dims == std::vector<int>{0, 0, 0, 1, 0}) // Temperature
-                return offset > 200 ? "C" : "K";
+            if (dims == std::vector<int>{0, 0, 0, 1, 0, 0}) // Temperature
+                return offset > 200 ? "degC" : "K";
 
-            if (dims == std::vector<int>{0, 0, 1, 0, 0}) // Time
+            if (dims == std::vector<int>{0, 0, 0, 0, 0, 1}) // Coulomb
+                return "C";
+
+            if (dims == std::vector<int>{0, 0, -1, 0, 0, 1}) // Ampere
+            {
+                if (std::abs(scale - 1e-9) < 1e-12) return "nA";
+                if (std::abs(scale - 1e-6) < 1e-9)  return "uA";
+                if (std::abs(scale - 1e-3) < 1e-6)  return "mA";
+                if (std::abs(scale - 1e3)  < 1e-1)  return "kA";
+                return "A";
+            }
+            if (dims == std::vector<int>{1, 2, -2, 0, 0, -1}) // Volt
+            {
+                if (std::abs(scale - 1e-9) < 1e-12) return "nV";
+                if (std::abs(scale - 1e-6) < 1e-9)  return "uV";
+                if (std::abs(scale - 1e-3) < 1e-6)  return "mV";
+                if (std::abs(scale - 1e3)  < 1e-1)  return "kV";
+                return "V";
+            }
+            if (dims == std::vector<int>{1, 2, -1, 0, 0, -2}) // Ohm
+            {
+                if (std::abs(scale - 1e-6) < 1e-9)  return "uOhm";
+                if (std::abs(scale - 1e-3) < 1e-6)  return "mOhm";
+                if (std::abs(scale - 1e3)  < 1e-1)  return "kOhm";
+                if (std::abs(scale - 1e6)  < 1e2)   return "MOhm";
+                return "Ohm";
+            }
+            if (dims == std::vector<int>{1, 2, 0, 0, 0, -2}) // Henry
+            {
+                if (std::abs(scale - 1e-6) < 1e-9)  return "uH";
+                if (std::abs(scale - 1e-3) < 1e-6)  return "mH";
+                if (std::abs(scale - 1e3)  < 1e-1)  return "kH";
+                return "H";
+            }
+            if (dims == std::vector<int>{-1, -2, 2, 0, 0, 2}) // Farad
+            {
+                if (std::abs(scale - 1e-12) < 1e-15) return "pF";
+                if (std::abs(scale - 1e-9)  < 1e-12) return "nF";
+                if (std::abs(scale - 1e-6)  < 1e-9)  return "uF";
+                if (std::abs(scale - 1e-3)  < 1e-6)  return "mF";
+                if (std::abs(scale - 1e3)   < 1e-1)  return "kF";
+                return "F";
+            }
+            if (dims == std::vector<int>{1, 2, -1, 0, 0, -1}) // Weber
+            {
+                if (std::abs(scale - 1e-12) < 1e-15) return "pWb";
+                if (std::abs(scale - 1e-9)  < 1e-12) return "nWb";
+                if (std::abs(scale - 1e-6)  < 1e-9)  return "uWb";
+                if (std::abs(scale - 1e-3)  < 1e-6)  return "mWb";
+                return "Wb";
+            }
+            if (dims == std::vector<int>{1, 0, -1, 0, 0, -1}) // Tesla / Gauss
+            {
+                if (std::abs(scale - 1e-9) < 1e-12) return "nT";
+                if (std::abs(scale - 1e-6) < 1e-9)  return "uT";
+                if (std::abs(scale - 1e-3) < 1e-6)  return "mT";
+                if (std::abs(scale - 1e-7) < 1e-10) return "mGa";
+                if (std::abs(scale - 1e-4) < 1e-7)  return "Ga";
+                if (std::abs(scale - 0.1)  < 1e-4)  return "kGa";
+                if (std::abs(scale - 100.0)< 1e-1)  return "MGa";
+                return "T";
+            }
+
+            if (dims == std::vector<int>{0, 0, 1, 0, 0, 0}) // Time
             {
                 if (std::abs(scale - 60.0) < 1e-5)
                     return "min";
@@ -158,11 +221,11 @@ namespace cones
                     return "us";
             }
 
-            if (dims == std::vector<int>{1, 0, -1, 0, 0}) // Mass flow
+            if (dims == std::vector<int>{1, 0, -1, 0, 0, 0}) // Mass flow
             {
                 return (std::abs(scale - 1.0 / 3600.0) < 1e-8) ? "kg/hr" : "kg/s";
             }
-            if (dims == std::vector<int>{0, 1, 0, 0, 0}) // Distance
+            if (dims == std::vector<int>{0, 1, 0, 0, 0, 0}) // Distance
             {
                 if (std::abs(scale - 1000.0) < 1e-5)
                     return "km";
@@ -173,7 +236,7 @@ namespace cones
                 return "m";
             }
 
-            static const std::vector<std::string> names = {"kg", "m", "s", "K", "mol"};
+            static const std::vector<std::string> names = {"kg", "m", "s", "K", "mol", "C"};
             std::string s = "";
             bool first = true;
             for (size_t i = 0; i < dims.size(); ++i)
@@ -192,17 +255,27 @@ namespace cones
         }
 
         // Core and common units
-        static Unit Dimensionless() { return {1.0, {0, 0, 0, 0, 0}}; }
-        static Unit Meter() { return {1.0, {0, 1, 0, 0, 0}}; }
-        static Unit Second() { return {1.0, {0, 0, 1, 0, 0}}; }
-        static Unit Kilogram() { return {1.0, {1, 0, 0, 0, 0}}; }
-        static Unit Kelvin() { return {1.0, {0, 0, 0, 1, 0}}; }
-        static Unit Celsius() { return {1.0, {0, 0, 0, 1, 0}, 273.15}; }
-        static Unit Newton() { return {1.0, {1, 1, -2, 0, 0}}; }
-        static Unit Joule() { return {1.0, {1, 2, -2, 0, 0}}; }
-        static Unit Pascal() { return {1.0, {1, -1, -2, 0, 0}}; }
-        static Unit Watt() { return {1.0, {1, 2, -3, 0, 0}}; }
-        static Unit Mol() { return {1.0, {0, 0, 0, 0, 1}}; }
+        static Unit Dimensionless() { return {1.0, {0, 0, 0, 0, 0, 0}}; }
+        static Unit Meter() { return {1.0, {0, 1, 0, 0, 0, 0}}; }
+        static Unit Second() { return {1.0, {0, 0, 1, 0, 0, 0}}; }
+        static Unit Kilogram() { return {1.0, {1, 0, 0, 0, 0, 0}}; }
+        static Unit Kelvin() { return {1.0, {0, 0, 0, 1, 0, 0}}; }
+        static Unit Celsius() { return {1.0, {0, 0, 0, 1, 0, 0}, 273.15}; }
+        static Unit Newton() { return {1.0, {1, 1, -2, 0, 0, 0}}; }
+        static Unit Joule() { return {1.0, {1, 2, -2, 0, 0, 0}}; }
+        static Unit Pascal() { return {1.0, {1, -1, -2, 0, 0, 0}}; }
+        static Unit Watt() { return {1.0, {1, 2, -3, 0, 0, 0}}; }
+        static Unit Mol() { return {1.0, {0, 0, 0, 0, 1, 0}}; }
+        static Unit Coulomb() { return {1.0, {0, 0, 0, 0, 0, 1}}; }
+        static Unit Ampere() { return Coulomb() / Second(); }
+        static Unit Volt() { return Joule() / Coulomb(); }
+        static Unit Ohm() { return Volt() / Ampere(); }
+        static Unit Farad() { return Coulomb() / Volt(); }
+        static Unit Weber() { return Volt() * Second(); }
+        static Unit Tesla() { return Weber() / (Meter() * Meter()); }
+        static Unit Henry() { return Weber() / Ampere(); }
+        static Unit Hertz() { return Dimensionless() / Second(); }
+        static Unit Gauss() { return Tesla() * 1e-4; }
     };
 
 } // namespace cones
