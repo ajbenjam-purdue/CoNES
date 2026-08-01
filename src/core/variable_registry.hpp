@@ -118,22 +118,22 @@ namespace cones
                 return;
 
             // Pressure (Pa)
-            if (u.dims == std::vector<int>{1, -1, -2, 0, 0})
+            if (u.dims == std::vector<int>{1, -1, -2, 0, 0, 0})
                 v.value = 101325.0;
             // Temperature (K)
-            else if (u.dims == std::vector<int>{0, 0, 0, 1, 0})
+            else if (u.dims == std::vector<int>{0, 0, 0, 1, 0, 0})
                 v.value = 293.15;
             // Enthalpy / Specific Energy (J/kg)
-            else if (u.dims == std::vector<int>{0, 2, -2, 0, 0})
+            else if (u.dims == std::vector<int>{0, 2, -2, 0, 0, 0})
                 v.value = 250000.0;
             // Entropy (J/kg*K)
-            else if (u.dims == std::vector<int>{0, 2, -2, -1, 0})
+            else if (u.dims == std::vector<int>{0, 2, -2, -1, 0, 0})
                 v.value = 1500.0;
             // Density (kg/m^3)
-            else if (u.dims == std::vector<int>{1, -3, 0, 0, 0})
+            else if (u.dims == std::vector<int>{1, -3, 0, 0, 0, 0})
                 v.value = 1.2;
             // Energy (J)
-            else if (u.dims == std::vector<int>{1, 2, -2, 0, 0})
+            else if (u.dims == std::vector<int>{1, 2, -2, 0, 0, 0})
                 v.value = 1000.0;
         }
 
