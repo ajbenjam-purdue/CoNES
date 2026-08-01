@@ -155,10 +155,10 @@ h := 100 [W/m^2*K]
 h.unit := [W/m^2*K]
 A_c := 0.5
 A_c.unit := [m^2]
-T_fluid := 20 [C]
+T_fluid := 20 [degC]
 Q := 1 [kW]
 NewtonCooling(h, A_c, T_surface, T_fluid, Q)
-T_surface.unit := [C]
+T_surface.unit := [degC]
 `;
 
   const parserInvalidSource = `h := 100 [W/m^2*K]
@@ -494,10 +494,10 @@ h := 100 [W/m^2*K]
 h.unit := [W/m^2*K]
 A_c := 0.5
 A_c.unit := [m^2]
-T_fluid := 20 [C]
+T_fluid := 20 [degC]
 Q := 2 [kW]
 NewtonCooling(h, A_c, T_surface, T_fluid, Q)
-T_surface.unit := [C]
+T_surface.unit := [degC]
 `;
 
   const expression = `async () => {

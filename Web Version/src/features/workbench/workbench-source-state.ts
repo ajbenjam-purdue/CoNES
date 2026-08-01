@@ -6,18 +6,18 @@ export type WorkbenchSourceMeta = {
   lastModified: number | null;
 };
 
-const defaultSource = `// CoNES Web V0.2.3 Copyright (c) 2026 ajbenjam-purdue
+const defaultSource = `// CoNES Web V0.2.4 Copyright (c) 2026 ajbenjam-purdue
 // Inclusions work similar to c++ header files. On cones.dev, you may use prebuilt libraries; on the desktop version, you can build and distribute your own libraries in addition.
 // The prebuilt libraries include (from Bergman et. al) "1D_SS", "conduction", "fins", "geometry", "shape_factors", and (from a variety of sources) "thermo_lib"
 
-// Variables defined with := and an optional unit cast (e.g. variable_name := 5 [C]) are fixed and excluded from the jacobian
+// Variables defined with := and an optional unit cast (e.g. variable_name := 5 [degC]) are fixed and excluded from the jacobian
 // Variables defined with = aren't fixed and will attempt to be solved
 
 // The following is an example script for a Brayton Cycle
 // As converted from the EES code: https://fchartsoftware.com/assets/downloads/eesysolns/eesysol43.pdf
 
 // Input conditions (Fixed)
-T_amb := 20 [C]
+T_amb := 20 [degC]
 P_atm := 101.325 [kPa]
 PR := 5
 T_t_in := 1400 [K]
