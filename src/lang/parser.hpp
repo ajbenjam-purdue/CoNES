@@ -481,13 +481,13 @@ private:
                                 std::string u_name = "";
                                 if (arg.name == "T" || arg.name == "Temperature") { inferred = Unit::Kelvin(); u_name = "K"; }
                                 else if (arg.name == "P" || arg.name == "Pressure") { inferred = Unit::Pascal(); u_name = "Pa"; }
-                                else if (arg.name == "h" || arg.name == "Enthalpy") { inferred = Unit(1.0, {0, 2, -2, 0, 0}); u_name = "J/kg"; }
-                                else if (arg.name == "s" || arg.name == "Entropy") { inferred = Unit(1.0, {0, 2, -2, -1, 0}); u_name = "J/(kg*K)"; }
-                                else if (arg.name == "u" || arg.name == "InternalEnergy") { inferred = Unit(1.0, {0, 2, -2, 0, 0}); u_name = "J/kg"; }
-                                else if (arg.name == "rho" || arg.name == "Density") { inferred = Unit(1.0, {1, -3, 0, 0, 0}); u_name = "kg/m^3"; }
-                                else if (arg.name == "v" || arg.name == "SpecificVolume") { inferred = Unit(1.0, {-1, 3, 0, 0, 0}); u_name = "m^3/kg"; }
-                                else if (arg.name == "mu" || arg.name == "Viscosity") { inferred = Unit(1.0, {1, -1, -1, 0, 0}); u_name = "Pa*s"; }
-                                else if (arg.name == "k" || arg.name == "Conductivity") { inferred = Unit(1.0, {1, 1, -3, -1, 0}); u_name = "W/m*K"; }
+                                else if (arg.name == "h" || arg.name == "Enthalpy") { inferred = Unit(1.0, {0, 2, -2, 0, 0, 0}); u_name = "J/kg"; }
+                                else if (arg.name == "s" || arg.name == "Entropy") { inferred = Unit(1.0, {0, 2, -2, -1, 0, 0}); u_name = "J/(kg*K)"; }
+                                else if (arg.name == "u" || arg.name == "InternalEnergy") { inferred = Unit(1.0, {0, 2, -2, 0, 0, 0}); u_name = "J/kg"; }
+                                else if (arg.name == "rho" || arg.name == "Density") { inferred = Unit(1.0, {1, -3, 0, 0, 0, 0}); u_name = "kg/m^3"; }
+                                else if (arg.name == "v" || arg.name == "SpecificVolume") { inferred = Unit(1.0, {-1, 3, 0, 0, 0, 0}); u_name = "m^3/kg"; }
+                                else if (arg.name == "mu" || arg.name == "Viscosity") { inferred = Unit(1.0, {1, -1, -1, 0, 0, 0}); u_name = "Pa*s"; }
+                                else if (arg.name == "k" || arg.name == "Conductivity") { inferred = Unit(1.0, {1, 1, -3, -1, 0, 0}); u_name = "W/m*K"; }
 
                                 if (!inferred.is_dimensionless()) {
                                     system_.registry().set_unit(idx, inferred, u_name);
