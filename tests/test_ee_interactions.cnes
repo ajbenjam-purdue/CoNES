@@ -1,0 +1,21 @@
+// CoNES EE Electro-Thermal & Power Interactions Test
+// 1. Electrical circuit setup
+V_supply := 24 [V]
+R_heater := 12 [Ohm]
+I_circuit = V_supply / R_heater
+
+// 2. Joule heating power generation
+P_elec = V_supply * I_circuit
+
+// 3. Thermal dissipation coupling
+// P_elec (W) balance with Newton's law of cooling: Q_conv = h * A * (T_surf - T_amb)
+h_conv := 25 [W/m^2*K]
+A_surface := 0.05 [m^2]
+T_amb := 293.15 [K]
+
+T_surf.guess := 320 [K]
+P_elec = h_conv * A_surface * (T_surf - T_amb)
+
+// 4. Energy calculation over time
+dt := 3600 [s]
+E_total = P_elec * dt

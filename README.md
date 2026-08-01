@@ -106,16 +106,16 @@ A domain-specific language designed for clear equation entry and property calls.
 
 ## 4. Development Roadmap
 
- - **[DONE]** Modular Property Function Registry.
- - **[DONE]** Inverted $T(P,h)$ and $T(P,s)$ lookups.
- - **[DONE]** Heuristic initial guessing based on units.
- - **[DONE]** Macro-style `routine` blocks for reusable physics.
- - **[DONE]** Procedural `function` blocks with local scoping.
- - **[DONE]** Recursive inclusion with robust path resolution.
- - **[DONE]** Exposure of c++ methods and structures to Python.
- - **[TODO]** BLT Decomposition (Tarjan's SCC) for block-solving.
- - **[TODO]** Improved parsing comprehension to limit divide-by-zero situations.
- - **[TODO]** Bipartite Matching for DOF validation.
+ - **[DONE]** Modular Property Function Registry
+ - **[DONE]** Inverted $T(P,h)$ and $T(P,s)$ lookups
+ - **[DONE]** Heuristic initial guessing based on units
+ - **[DONE]** Macro-style `routine` blocks for reusable physics and procedural `function` blocks with local scoping
+ - **[DONE]** Recursive inclusion with robust path resolution
+ - **[DONE]** Exposure of c++ methods and structures to Python
+ - **[DONE]** Complete final SI unit (Coulomb)
+ - **[DONE]** BLT Decomposition (Tarjan's SCC) for block-solving
+ - **[DONE]** Improved parsing comprehension to limit divide-by-zero situations
+ - **[TODO]** Bipartite Matching for DOF validation
  - **[TODO]** Psychrometrics!
 
 ## 5. VS Code Extension

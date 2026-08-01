@@ -1,4 +1,4 @@
-# CoNES (Coupled Nonlinear Equation Solver) Language Standard v1.2
+# CoNES (Coupled Nonlinear Equation Solver) Language Standard v1.3
 
 This document defines the formal specification and suggested usage for the `.cnes` scripting language, optimized for high-performance thermophysical system modeling.
 
@@ -92,16 +92,25 @@ Functions are **procedural blocks**. They execute sequentially in an isolated lo
 ## 4. Units and Casting
 
 ### 4.1 SI-Internal Representation
-CoNES operates entirely in SI ($kg, m, s, K, Pa, J, W, mol$).
+CoNES operates entirely in SI ($kg, m, s, K, Pa, J, W, mol, C$).
 
 ### 4.2 Supported Units
-- **Length**: `m`, `km`, `cm`, `mm`
-- **Temperature**: `K`, `C`
-- **Pressure**: `Pa`, `kPa`, `MPa`, `bar`, `mbar`
-- **Energy/Power**: `J`, `kJ`, `W`, `kW`
+- **Length**: `m`, `km`, `cm`, `mm`, `ft`, `in`, `mile`
+- **Temperature**: `K`, `degC` *(or `deg_C`)*, `F`, `R`
+- **Pressure**: `Pa`, `kPa`, `MPa`, `bar`, `mbar`, `atm`, `psia`, `psig`
+- **Energy/Power**: `J`, `kJ`, `MJ`, `GJ`, `W`, `kW`, `MW`, `BTU`, `cal`, `hp`
 - **Specific Energy**: `J/kg`, `kJ/kg`
 - **Specific Entropy**: `J/kg*K`, `kJ/kg*K`
 - **Time**: `s`, `min`, `hr`, `ms`, `us`
+- **Electrical Current**: `A`, `nA`, `uA`, `mA`, `kA`
+- **Electric Potential**: `V`, `nV`, `uV`, `mV`, `kV`
+- **Electrical Resistance**: `Ohm`, `uOhm`, `mOhm`, `kOhm`, `MOhm`
+- **Inductance**: `H`, `uH`, `mH`, `kH`
+- **Frequency**: `Hz`, `mHz`, `kHz`, `MHz`
+- **Electric Charge**: `C`
+- **Capacitance**: `F`, `pF`, `nF`, `uF`, `mF`, `kF`
+- **Magnetic Flux**: `Wb`, `pWb`, `nWb`, `uWb`, `mWb`
+- **Magnetic Flux Density**: `T`, `nT`, `uT`, `mT`, `Ga`, `mGa`, `kGa`, `MGa`
 
 ## 5. Property Lookups
 
@@ -130,7 +139,7 @@ To maintain clarity and prevent solver divergence, scripts should follow this st
 3. **Problem Constants & Boundary Conditions**:
    ```cnes
    P_amb := 101325 [Pa]
-   T_inlet := 25 [C]
+   T_inlet := 25 [degC]
    ```
 
 4. **Solver Setup (Guesses & Bounds)**:

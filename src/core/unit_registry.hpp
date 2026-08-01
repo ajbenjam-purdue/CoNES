@@ -48,13 +48,76 @@ private:
         register_unit("kg", Unit::Kilogram(), "Kilogram [Mass]");
         register_unit("K", Unit::Kelvin(), "Kelvin [Temperature]");
         register_unit("mol", Unit::Mol(), "Mole [Amount of substance]");
+        register_unit("C", Unit::Coulomb(), "Coulomb [Electric Charge]");
 
         // Derived SI Units
         register_unit("N", Unit::Newton(), "Newton [Force]");
         register_unit("J", Unit::Joule(), "Joule [Energy]");
         register_unit("Pa", Unit::Pascal(), "Pascal [Pressure]");
         register_unit("W", Unit::Watt(), "Watt [Power]");
-        register_unit("C", Unit::Celsius(), "Celsius [Temperature]");
+        register_unit("degC", Unit::Celsius(), "Celsius [Temperature]");
+        register_unit("deg_C", Unit::Celsius(), "Celsius [Temperature]");
+
+        // Electrical / Electromagnetic Units (EE)
+        // Amperes
+        register_unit("A", Unit::Ampere(), "Ampere [Electric Current]");
+        register_unit("nA", Unit::Ampere() * 1e-9, "Nanoampere");
+        register_unit("uA", Unit::Ampere() * 1e-6, "Microampere");
+        register_unit("mA", Unit::Ampere() * 1e-3, "Milliampere");
+        register_unit("kA", Unit::Ampere() * 1e3, "Kiloampere");
+
+        // Volts
+        register_unit("V", Unit::Volt(), "Volt [Electric Potential]");
+        register_unit("nV", Unit::Volt() * 1e-9, "Nanovolt");
+        register_unit("uV", Unit::Volt() * 1e-6, "Microvolt");
+        register_unit("mV", Unit::Volt() * 1e-3, "Millivolt");
+        register_unit("kV", Unit::Volt() * 1e3, "Kilovolt");
+
+        // Ohms
+        register_unit("Ohm", Unit::Ohm(), "Ohm [Electrical Resistance]");
+        register_unit("uOhm", Unit::Ohm() * 1e-6, "Microohm");
+        register_unit("mOhm", Unit::Ohm() * 1e-3, "Milliohm");
+        register_unit("kOhm", Unit::Ohm() * 1e3, "Kiloohm");
+        register_unit("MOhm", Unit::Ohm() * 1e6, "Megaohm");
+
+        // Henries
+        register_unit("H", Unit::Henry(), "Henry [Inductance]");
+        register_unit("uH", Unit::Henry() * 1e-6, "Microhenry");
+        register_unit("mH", Unit::Henry() * 1e-3, "Millihenry");
+        register_unit("kH", Unit::Henry() * 1e3, "Kilohenry");
+
+        // Hertz
+        register_unit("Hz", Unit::Hertz(), "Hertz [Frequency]");
+        register_unit("mHz", Unit::Hertz() * 1e-3, "Millihertz");
+        register_unit("kHz", Unit::Hertz() * 1e3, "Kilohertz");
+        register_unit("MHz", Unit::Hertz() * 1e6, "Megahertz");
+
+        // Farads
+        register_unit("F", Unit::Farad(), "Farad [Capacitance]");
+        register_unit("pF", Unit::Farad() * 1e-12, "Picofarad");
+        register_unit("nF", Unit::Farad() * 1e-9, "Nanofarad");
+        register_unit("uF", Unit::Farad() * 1e-6, "Microfarad");
+        register_unit("mF", Unit::Farad() * 1e-3, "Millifarad");
+        register_unit("kF", Unit::Farad() * 1e3, "Kilofarad");
+
+        // Webers
+        register_unit("Wb", Unit::Weber(), "Weber [Magnetic Flux]");
+        register_unit("pWb", Unit::Weber() * 1e-12, "Picoweber");
+        register_unit("nWb", Unit::Weber() * 1e-9, "Nanoweber");
+        register_unit("uWb", Unit::Weber() * 1e-6, "Micoweber");
+        register_unit("mWb", Unit::Weber() * 1e-3, "Milliweber");
+
+        // Gauss
+        register_unit("Ga", Unit::Gauss(), "Gauss [Magnetic Flux Density]");
+        register_unit("mGa", Unit::Gauss() * 1e-3, "Milligauss");
+        register_unit("kGa", Unit::Gauss() * 1e3, "Kilogauss");
+        register_unit("MGa", Unit::Gauss() * 1e6, "Megagauss");
+
+        // Teslas
+        register_unit("T", Unit::Tesla(), "Tesla [Magnetic Flux Density]");
+        register_unit("nT", Unit::Tesla() * 1e-9, "Nanotesla");
+        register_unit("uT", Unit::Tesla() * 1e-6, "Microtesla");
+        register_unit("mT", Unit::Tesla() * 1e-3, "Millitesla");
         
         // SI Prefixes & Common variations
         register_unit("kJ", Unit::Joule() * 1000.0, "Kilojoule");
@@ -78,17 +141,17 @@ private:
         register_unit("atm", Unit::Pascal() * 101325.0, "Standard Atmosphere [Pressure]");
 
         // Eng Units
-        register_unit("J/kg*K", {1.0, {0, 2, -2, -1, 0}}, "Specific Entropy");
-        register_unit("kJ/kg*K", {1000.0, {0, 2, -2, -1, 0}}, "Specific Entropy (kilo)");
-        register_unit("J/kg", {1.0, {0, 2, -2, 0, 0}}, "Specific Enthalpy");
-        register_unit("kJ/kg", {1000.0, {0, 2, -2, 0, 0}}, "Specific Enthalpy (kilo)");
+        register_unit("J/kg*K", {1.0, {0, 2, -2, -1, 0, 0}}, "Specific Entropy");
+        register_unit("kJ/kg*K", {1000.0, {0, 2, -2, -1, 0, 0}}, "Specific Entropy (kilo)");
+        register_unit("J/kg", {1.0, {0, 2, -2, 0, 0, 0}}, "Specific Enthalpy");
+        register_unit("kJ/kg", {1000.0, {0, 2, -2, 0, 0, 0}}, "Specific Enthalpy (kilo)");
         register_unit("kg/s", Unit::Kilogram() / Unit::Second(), "Mass Flow Rate");
-        register_unit("kg/hr", Unit::Kilogram() / Unit(3600.0, {0, 0, 1, 0, 0}), "Mass Flow Rate (hourly)");
+        register_unit("kg/hr", Unit::Kilogram() / Unit(3600.0, {0, 0, 1, 0, 0, 0}), "Mass Flow Rate (hourly)");
         register_unit("m/s", Unit::Meter() / Unit::Second(), "Velocity");
-        register_unit("cm/s", {0.01, {0, 1, -1, 0, 0}}, "Velocity (cm/s)");
-        register_unit("mm/s", {0.001, {0, 1, -1, 0, 0}}, "Velocity (mm/s)");
+        register_unit("cm/s", {0.01, {0, 1, -1, 0, 0, 0}}, "Velocity (cm/s)");
+        register_unit("mm/s", {0.001, {0, 1, -1, 0, 0, 0}}, "Velocity (mm/s)");
         register_unit("m/s^2", Unit::Meter() / (Unit::Second() * Unit::Second()), "Acceleration");
-        register_unit("G", {9.81, {0, 1, -2, 0, 0}}, "Gravitational Acceleration");
+        register_unit("G", {9.81, {0, 1, -2, 0, 0, 0}}, "Gravitational Acceleration");
         
         // US CUSTOMARY / IMPERIAL UNITS
         // Length
@@ -103,7 +166,7 @@ private:
         
         // Pressure
         register_unit("psia", Unit::Pascal() * 6894.75729, "Pounds per square inch absolute [Pressure]");
-        register_unit("psig", {6894.75729, {1, -1, -2, 0, 0}, 14.69595}, "Pounds per square inch gauge (relative to 1 atm) [Pressure]");
+        register_unit("psig", {6894.75729, {1, -1, -2, 0, 0, 0}, 14.69595}, "Pounds per square inch gauge (relative to 1 atm) [Pressure]");
 
         // Energy & Power
         register_unit("BTU", Unit::Joule() * 1055.056, "British Thermal Unit [Energy]");
@@ -111,8 +174,8 @@ private:
         register_unit("hp", Unit::Watt() * 745.69987, "Horsepower [Power]");
         
         // Temperature
-        register_unit("F", {5.0/9.0, {0, 0, 0, 1, 0}, 459.67}, "Fahrenheit [Temperature]");
-        register_unit("R", {5.0/9.0, {0, 0, 0, 1, 0}, 0.0}, "Rankine [Temperature]");
+        register_unit("F", {5.0/9.0, {0, 0, 0, 1, 0, 0}, 459.67}, "Fahrenheit [Temperature]");
+        register_unit("R", {5.0/9.0, {0, 0, 0, 1, 0, 0}, 0.0}, "Rankine [Temperature]");
     }
 };
 

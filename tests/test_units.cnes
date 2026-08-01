@@ -5,7 +5,7 @@ F := 5 [N]
 Power = v * F  // Should inherit [m/s] * [N]
 
 // 2. Unit Casting & Conversion
-T1 := 25 [C]   // 25 Celsius
+T1 := 25 [degC]   // 25 Celsius
 T2 = T1 [K]    // Should convert to 298.15 Kelvin
 
 // 3. Chain inheritance

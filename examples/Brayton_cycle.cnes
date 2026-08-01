@@ -2,7 +2,7 @@
 // As converted from the EES code: https://fchartsoftware.com/assets/downloads/eesysolns/eesysol43.pdf
 
 // Input conditions (Fixed)
-T_amb := 20 [C]
+T_amb := 20 [degC]
 P_atm := 101.325 [kPa]
 PR := 5
 T_t_in := 1400 [K]

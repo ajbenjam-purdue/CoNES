@@ -13,7 +13,7 @@ int main() {
             r := 5 [m]
             pi := 3.14159265
             A.guess := 50
-            A = pi * r^2\n)";
+            A = pi * r^2)";
 
         std::cout << "--- CoNES Script ---\n" << script << "--------------------\n" << std::endl;
 

@@ -1,5 +1,23 @@
 ## CoNES Changelog
-CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.2.3`.
+CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is `0.2.4`.
+
+### Version 0.2.4
+  - Electrical Engineering Integration
+    - Expanded base SI dimension vector to 6 dimensions to track Coulombs ($C$) alongside the five other base SI units
+    - Implemented EE units as assembled base units:
+      - Current: `A` (Amperes, including `nA`, `uA`, `mA`, `kA`)
+      - Potential: `V` (Volts, including `nV`, `uV`, `mV`, `kV`)
+      - Resistance: `Ohm` (Ohms, including `uOhm`, `mOhm`, `kOhm`, `MOhm`)
+      - Inductance: `H` (Henries, including `uH`, `mH`, `kH`)
+      - Frequency: `Hz` (Hertz, including `mHz`, `kHz`, `MHz`)
+      - Electric Charge: `C` (Coulombs)
+      - Capacitance: `F` (Farads, including `pF`, `nF`, `uF`, `mF`, `kF`)
+      - Magnetic Flux: `Wb` (Webers, including `pWb`, `nWb`, `uWb`, `mWb`)
+      - Magnetic Flux Density: `Ga` (Gauss, including `mGa`, `kGa`, `MGa`) & `T` (Tesla, including `nT`, `uT`, `mT`)
+    - Added explicit unit aliases for Celsius (`degC`, `deg_C`) to allow non-ambiguous differentiation from Coulombs (`C`)
+    - Added new bindings for new EE unit factory methods and updated from 5D to 6D unit representation
+  - Language Standard & Documentation
+    - Updated CoNES Language Standard to version 1.3 to reflect the shift in legacy Celcius and addition of new units
 
 ### Version 0.2.3
   - Implemented Solver Block Decomposition to encourage fast convergence and allow for physically separate systems

@@ -25,8 +25,8 @@
     {
       "label": "cnes-module.wasm",
       "path": "/runtime/cnes-module.wasm",
-      "bytes": 867993,
-      "sha256": "9deecec153a60427cd10d59f985e77a050508392654a5aa8ae1819b864e97e7c"
+      "bytes": 901284,
+      "sha256": "597e308445719fdac46c83e2206da29b3901aa3d3b2f9d3c0edf7c611b24cb2e"
     }
   ],
   "artifactSummary": {
@@ -42,8 +42,8 @@
     },
     "moduleWasm": {
       "path": "/runtime/cnes-module.wasm",
-      "bytes": 867993,
-      "sha256": "9deecec153a60427cd10d59f985e77a050508392654a5aa8ae1819b864e97e7c"
+      "bytes": 901284,
+      "sha256": "597e308445719fdac46c83e2206da29b3901aa3d3b2f9d3c0edf7c611b24cb2e"
     }
   },
   "manifests": [
@@ -69,13 +69,13 @@
       "label": "libs",
       "path": "/runtime-data/libs/manifest.json",
       "bytes": 1880,
-      "sha256": "c0fb35107ccca6948f34ee2b5c52fd4d807a2f200c62090bfb8e208100848935",
+      "sha256": "6595f24ddb5d4e1a7250dd273a59e6b735f68f366be95d153ea7fcf660c4c8e4",
       "kind": "cones-libs",
       "mountRoot": "/app/libs",
       "integrity": "sha256",
       "count": 7,
-      "totalBytes": 22232,
-      "manifestSha256": "c0fb35107ccca6948f34ee2b5c52fd4d807a2f200c62090bfb8e208100848935",
+      "totalBytes": 22241,
+      "manifestSha256": "6595f24ddb5d4e1a7250dd273a59e6b735f68f366be95d153ea7fcf660c4c8e4",
       "perFileSha256": {
         "exists": true,
         "complete": true,
@@ -107,13 +107,13 @@
       "label": "libs",
       "path": "/runtime-data/libs/manifest.json",
       "bytes": 1880,
-      "sha256": "c0fb35107ccca6948f34ee2b5c52fd4d807a2f200c62090bfb8e208100848935",
+      "sha256": "6595f24ddb5d4e1a7250dd273a59e6b735f68f366be95d153ea7fcf660c4c8e4",
       "kind": "cones-libs",
       "mountRoot": "/app/libs",
       "integrity": "sha256",
       "count": 7,
-      "totalBytes": 22232,
-      "manifestSha256": "c0fb35107ccca6948f34ee2b5c52fd4d807a2f200c62090bfb8e208100848935",
+      "totalBytes": 22241,
+      "manifestSha256": "6595f24ddb5d4e1a7250dd273a59e6b735f68f366be95d153ea7fcf660c4c8e4",
       "perFileSha256": {
         "exists": true,
         "complete": true,

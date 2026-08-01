@@ -40,15 +40,15 @@ end function
 
 // Temperature distribution
 function temperature_plane_wall (L_wall, delta_T, T_s1, x)
-  return (T_s1 [K] + delta_T [K] * (x [m]) / (L_wall [m])) [C]
+  return (T_s1 [K] + delta_T [K] * (x [m]) / (L_wall [m])) [degC]
 end function
 
 function temperature_cylindrical_wall (r_1, r_2, delta_T, T_s2, r)
-  return (T_s2 [K] + delta_T [K] * (log(r [m] / r_2 [m]) / log(r_1 [m] / r_2 [m]))) [C]
+  return (T_s2 [K] + delta_T [K] * (log(r [m] / r_2 [m]) / log(r_1 [m] / r_2 [m]))) [degC]
 end function
 
 function temperature_spherical_wall (r_1, r_2, delta_T, T_s1, r)
-  return (T_s1 [K] - delta_T [K] * ((1 - log(r [m] / r_2 [m])) / (1 - log(r_1 [m] / r_2 [m])))) [C]
+  return (T_s1 [K] - delta_T [K] * ((1 - log(r [m] / r_2 [m])) / (1 - log(r_1 [m] / r_2 [m])))) [degC]
 end function
 
 // Assumptions: One-dimensional, steady-state, uniform generation

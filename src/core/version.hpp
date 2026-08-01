@@ -13,11 +13,11 @@ struct Version {
     // Binary
     static constexpr int MAJOR = 0;
     static constexpr int MINOR = 2;
-    static constexpr int PATCH = 3;
+    static constexpr int PATCH = 4;
 
     // Lang standards
     static constexpr int LANG_MAJOR = 1;
-    static constexpr int LANG_MINOR = 2;
+    static constexpr int LANG_MINOR = 3;
     
     static std::string string() {
         return std::to_string(MAJOR) + "." + 

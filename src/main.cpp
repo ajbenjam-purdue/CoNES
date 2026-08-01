@@ -304,6 +304,21 @@ int open_ide(const std::filesystem::path& exe_path, std::string py_interp_path =
 
 int main(int argc, char *argv[])
 {
+    // Fast path for standalone info flags before loading resources
+    for (int i = 1; i < argc; ++i)
+    {
+        std::string flag = argv[i];
+        if (flag == "--help" || flag == "-h")
+        {
+            print_help();
+            return 0;
+        }
+        if (flag == "--version")
+        {
+            std::cout << Version::full() << " / " << Version::lang_full() << "\nCopyright (c) 2026 ajbenjam-purdue.\nThis is free and open-sourced software available under an MIT license.\nThere is NO warranty." << std::endl;
+            return 0;
+        }
+    }
 
     // Get executable directory for portable material loading
     std::filesystem::path actual_exe_path = get_executable_path();
@@ -337,7 +352,11 @@ int main(int argc, char *argv[])
     }
     else
     {
-        build_substances(actual_exe_path);
+        std::filesystem::path export_script = (exe_path / "tools/export_props.py").lexically_normal();
+        if (std::filesystem::exists(export_script))
+        {
+            build_substances(actual_exe_path);
+        }
     }
 
     // Register Built-in Functions (Math & Property)
