@@ -21,39 +21,29 @@ def run_demo():
     # Initialize the system
     system = cones.System()
 
-    # Register constants, substances, and functions
-    # This prepares the environment with standard thermodynamic data and routines
-    # We aren't finding the actual substances here, just loading in ideal gases
+    # Register constants, ideal gases, tabulated materials, and builtin functions
     system.constant_registry().load_standard_constants()
     system.substance_manager().register_ideal_gasses()
-    
-    # Expose custom math & property functions (e.g. SpecificVolume, Entropy, etc.)
+    if os.path.exists("materials"):
+        system.substance_manager().load_materials("materials")
     cones.register_builtin_functions(system.function_registry(), system.substance_manager())
 
-    # Define a thermodynamic system of equations (Brayton Cycle State 1 & Compression)
+    # Define a thermodynamic system of equations (R410A Two-Phase Evaporator with Temperature Glide)
     cnes_script = """
-    // State 1: Air at ambient conditions
-    T_1 := 300 [K]
-    P_1 := 101325 [Pa]
-    r_comp := 8
-    
-    // Compute State 1 properties
-    v_1 = SpecificVolume(Air, T=T_1, P=P_1)
-    s_1 = Entropy(Air, T=T_1, P=P_1)
-    u_1 = InternalEnergy(Air, T=T_1, P=P_1)
-    
-    // State 2: Isentropic Compression
-    v_2 = v_1 / r_comp
-    s_2 = s_1
-    
-    // Find pressure and temperature at State 2
-    v_2 = SpecificVolume(Air, T=T_2, P=P_2)
-    s_2 = Entropy(Air, T=T_2, P=P_2)
-    u_2 = InternalEnergy(Air, T=T_2, P=P_2)
-    
-    // Guess values to guide the solver
-    T_2.guess := 680
-    P_2.guess := 1.8e6
+    P_evap := 500000 [Pa]
+    x_in := 0.2
+    x_out := 1.0
+
+    // Saturation & Two-Phase Temperatures with Glide
+    T_bubble = Tsat_f(R410A=1, P=P_evap)
+    T_dew = Tsat_g(R410A=1, P=P_evap)
+    T_in = Temperature(R410A=1, P=P_evap, x=x_in)
+    T_out = Temperature(R410A=1, P=P_evap, x=x_out)
+
+    // Enthalpy & Specific Heat Calculations
+    h_in = Enthalpy(R410A=1, P=P_evap, x=x_in)
+    h_out = Enthalpy(R410A=1, P=P_evap, x=x_out)
+    q_evap = h_out - h_in
     """
 
     print("\nScanning and parsing CNES script...")
@@ -67,12 +57,7 @@ def run_demo():
     print(f"Successfully loaded {system.get_equation_count()} equations.")
 
     # Instantiate the Newton-Raphson Solver
-    #   Arguments: tolerance (default: 1e-9), max_iterations (default: 1000), verbose (default: false)
     solver = cones.NewtonSolver(1e-9, 500, False)
-    
-    # Enable or disable the newly implemented Block Decomposition solver
-    # When enabled, the solver groups dependent equations and variables into sequentials blocks
-    # For this example this will do next to nothing
     solver.set_blocking(True)
     
     print("\nSolving thermodynamic system...")
@@ -81,25 +66,35 @@ def run_demo():
     if report.success:
         print(f"Convergence achieved in {report.iterations} iterations!")
         
-        # 5. Retrieve and print results from the variable registry
+        # Retrieve and print results from the variable registry
         registry = system.registry()
-        print("\n==========================================")
-        print(f" {'Variable':<12} | {'Value':<14} | {'Unit':<10}")
-        print("------------------------------------------")
+        print("\n=====================================================")
+        print(f" {'Variable':<14} | {'Value':<14} | {'Unit':<10}")
+        print("-----------------------------------------------------")
         for i in range(registry.size()):
             var = registry.get_variable(i)
-            # Skip substance identifiers which are dummy variables
-            if var.name == "Air":
+            if var.name == "R410A":
                 continue
             
-            # Format value
             if abs(var.value) > 1e4 or (0 < abs(var.value) < 1e-3):
                 val_str = f"{var.value:.4e}"
             else:
                 val_str = f"{var.value:.4f}"
                 
-            print(f" {var.name:<12} | {val_str:>14} | {var.unit_name:<10}")
-        print("==========================================")
+            print(f" {var.name:<14} | {val_str:>14} | {var.unit_name:<10}")
+        print("=====================================================")
+
+        # Direct Python C++ Dual Property Evaluation Demo
+        r410a = system.substance_manager().get("R410A")
+        if r410a:
+            p_val = cones.DualNumber(500000.0, 1.0)
+            x_val = cones.DualNumber(0.5, 0.0)
+            t_eval = r410a.evaluate(cones.PropertyType.TEMPERATURE, [
+                cones.PropertyArg(cones.PropertyType.PRESSURE, p_val),
+                cones.PropertyArg(cones.PropertyType.QUALITY, x_val)
+            ])
+            print(f"\nDirect C++ Python Binding Evaluation:")
+            print(f" R410A T(P=500kPa, x=0.5) = {t_eval.val:.2f} K (dT/dP = {t_eval.der:.6e})")
     else:
         print(f"Solver failed to converge: {report.error_msg}", file=sys.stderr)
 

@@ -16,8 +16,15 @@ CoNES versioning follows the `Major.Minor.Patch` pattern. The current version is
       - Magnetic Flux Density: `Ga` (Gauss, including `mGa`, `kGa`, `MGa`) & `T` (Tesla, including `nT`, `uT`, `mT`)
     - Added explicit unit aliases for Celsius (`degC`, `deg_C`) to allow non-ambiguous differentiation from Coulombs (`C`)
     - Added new bindings for new EE unit factory methods and updated from 5D to 6D unit representation
-  - Language Standard & Documentation
-    - Updated CoNES Language Standard to version 1.3 to reflect the shift in legacy Celcius and addition of new units
+  - Mechanical Engineering Improvements
+    - Added proper temperature glide approximations, particularly useful for azeotropic substances
+    - Added helper CoNES functions `T_SAT_F` (bubble, alt: `T_sat_f`, `Tsat_f`) and `T_SAT_G` (dew, alt: `T_sat_g`, `Tsat_g`)
+  - Documentation improvements
+    - Cleared out `tests/` in preparation for an improved testing protocol in the future
+    - Sweeping documentation improvements across [the language standard](/CoNES-Standards.md), [the readme](/README.md), and [the contribution guidelines](/CONTRIBUTING.md)
+      - Updated CoNES Language Standard to version 1.3 to reflect the shift in legacy Celcius and addition of new units
+  - Bug fixes
+    - Fixed an issue where launching the binary from a location without access to CoolProp/other Python dependencies would exit out with a very unhelpful message
 
 ### Version 0.2.3
   - Implemented Solver Block Decomposition to encourage fast convergence and allow for physically separate systems

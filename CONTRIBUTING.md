@@ -12,11 +12,9 @@ Here is a high-level overview of the files and directories in the repository:
     *   `src/solver/`: The numerical solver implementation (Newton-Raphson with backtracking line search)
     *   `src/bindings.cpp`: Exposes C++ structures (Lexer, Parser, NewtonSolver, DualNumber, etc.) to Python via `nanobind`
     *   `src/main.cpp`: Entry point for the C++ standalone command-line interpreter (`cnes`)
-*   **`cones/`**: The namespace package directory for Python. It contains `__init__.py` which initializes the `_cones` binary module and provides clean Pythonic imports
+*   **`cones/`**: The namespace package directory for Python. It contains `__init__.py` which initializes the `_cones` binary module and provides imports
 *   **`cones_studio/`**: A lightweight tkinter/customtkinter IDE for editing and running `.cnes` scripts
 *   **`tools/`**: Python utility scripts (e.g., `export_props.py` which builds tabulated property tables from CoolProp)
-*   **`materials/`**: The local directory containing prebuilt `.cnesbin` files (tabulated substances) used by the engine
-*   **`tests/`**: Unit and integration tests for both Python bindings and C++ engines
 *   **`CMakeLists.txt`**: Build configuration file for building both Python bindings and standalone executables
 *   **`pyproject.toml`**: Packaging configuration utilizing `scikit-build-core` and `nanobind`
 *   **`.github/workflows/wheels.yml`**: CI/CD automation workflow to build standalone CLI binaries and compile wheel distributions
@@ -36,51 +34,50 @@ CoNES relies on the incredible Eigen library for matrix mathematics and linear s
 
 ## 3. Building From Source
 
-### Building the C++ Standalone CLI
-To build only the C++ command-line tool `cnes` without Python bindings:
+CoNES supports four distinct build options depending on whether you are building the standalone C++ CLI, developing Python bindings, or generating release packages:
 
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCONES_BUILD_PYTHON=OFF
-cmake --build build --config Release --target cnes
-```
-This produces the executable in `build/cnes` (Linux/macOS) or `build/Release/cnes.exe` (Windows).
+### Option 1: Standalone C++ CLI via CMake
+* **Purpose**: Compiles only the C++ command-line tool (`cnes` / `cnes.exe`) without requiring Python or `nanobind`
+* **Command**:
+  ```bash
+  cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCONES_BUILD_PYTHON=OFF
+  cmake --build build --config Release --target cnes
+  ```
+* **Output**: Executable located at `build/cnes` (Linux/macOS) or `build/Release/cnes.exe` (Windows). *As a reminder, the binary will look for the `tools/` and `materials/` directories from its own directory*
 
-### Building Python Bindings and Package
-CoNES uses `scikit-build-core` as the build backend, which wraps CMake and compiles the C++ codebase as a native Python extension
+### Option 2: Direct Compiler Invocation (Minimal CLI Build)
+* **Purpose**: Single-command compile directly from source when CMake is not present (requires `Eigen/` in the project root)
+* **Command**:
+  * **macOS / Linux**: `g++ -O3 -std=c++20 -I . src/main.cpp -o cnes`
+  * **Windows (MSVC)**: `cl /O2 /std:c++20 /I . src/main.cpp /Fe:cnes.exe`
+  * **Windows (MinGW)**: `g++ -O3 -std=c++20 -I . src/main.cpp -o cnes.exe`
 
-1.  **Prerequisites**:
-    ```bash
-    pip install scikit-build-core nanobind
-    ```
-2.  **Editable Mode (Development)**:
-    For local development, install the package in editable mode so changes to the C++ bindings or Python wrappers take effect immediately upon recompilation:
-    ```bash
-    pip install --editable .
-    ```
-3.  **Regular Package Installation**:
-    ```bash
-    pip install .
-    ```
+### Option 3: Python Package & Bindings Installation via `pip`
+* **Purpose**: Compiles the C++ core via `scikit-build-core` and `nanobind` into a native Python module (`_cones`), installs the `cones` Python package (`import cones`), and installs the `cnes` CLI globally into your system `PATH`
+* **Command**:
+  * **Development / Editable Mode**: `pip install --editable .`
+  * **Standard Installation**: `pip install .`
 
-### Packaging Wheels and Source Distributions
-To build distribution packages (source distributions and binary wheels) to upload to GitHub Releases:
-```bash
-pip install build
-python -m build
-```
-The output wheel (`.whl`) and source distribution (`.tar.gz`) files will be generated under the `dist/` directory
+### Option 4: Packaging Wheels and Source Distributions
+* **Purpose**: Generates distribution packages (binary wheels `.whl` and source archives `.tar.gz`) for GitHub Releases (maybe PyPI in the future, too)
+* **Command**:
+  ```bash
+  pip install build
+  python -m build
+  ```
+* **Output**: Package files generated in `dist/`
 
 ## 4. Run-Time Resource Resolution (`find_package_path`)
 
 To ensure that the globally installed standalone `cnes` executable runs correctly without requiring a local repository checkout:
 1.  On startup, `cnes` looks for the `materials/` folder in its current executable directory.
-2.  If the folder is missing, it invokes the fallback function `find_package_path` inside [src/core/python_manager.hpp](src/core/python_manager.hpp).
-3.  This calls Python internally (`import cones; os.path.dirname(cones.__file__)`) to fetch the installation directory of the `cones` Python package.
-4.  It then uses that package directory to locate `materials/`, `tools/`, and `cones_studio/`.
+2.  If the folder is missing, it invokes the fallback function `find_package_path` inside [src/core/python_manager.hpp](src/core/python_manager.hpp);
+3.  this calls Python internally (`import cones; os.path.dirname(cones.__file__)`) to fetch the installation directory of the `cones` Python package, which it then
+4.  uses that package directory to locate `materials/`, `tools/`, and `cones_studio/`.
 
 ## 5. Substance Database Table Creation
 
-Tabulated fluids (such as `Water` or `R134a`) must be exported into `.cnesbin` files to be loaded by the engine. CoNES uses CoolProp to query and export these grids
+Tabulated fluids (such as `Water` or `R134a`) must be exported into `.cnesbin` files to be loaded by the engine. CoNES uses CoolProp to query and export these grids. These precompiled binary tables are attached to each release for your convenience
 
 To generate or rebuild the substance databases:
 1.  Install CoolProp:
@@ -95,18 +92,8 @@ To generate or rebuild the substance databases:
 
 ## 6. Running Tests
 
-### C++ Tests
-You can run compiled tests in the `tests/` directory:
-- Linux/macOS: Run `/tests/test_lexer` or other compiled binaries
-- Windows: Run `test_relationships.exe`, `test_lexer.exe`, etc
-
-### Python Bindings Tests
-To test the C++ bindings from Python:
-1.  Make sure you have built the bindings locally (or installed in editable mode)
-2.  Run the tests using standard `unittest`:
-    ```bash
-    python -m unittest tests/test_bindings.py
-    ```
+### C++ & Python Tests
+`tests/` have been removed in preparation for an improved, more uniform testing procedure in response to this project's growth.
 
 ## 7. CI/CD Workflow (GitHub Actions)
 
