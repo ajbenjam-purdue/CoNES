@@ -2,8 +2,8 @@
 // You will observe all enthalpies are cast to kJ/kg. This is only for nicer display! You can remove any and all casts; the results will be functionally identical.
 // To see all available substances, cnes --list-substances
 
-T_evap := 5  [C]     // Evaporator temperature
-T_cond := 40 [C]     // Condenser temperature
+T_evap := 5  [degC]     // Evaporator temperature
+T_cond := 40 [degC]     // Condenser temperature
 eta_comp := 0.8      // Compressor isentropic efficiency
 Q_dot_evap := 5 [kW] // Cooling capacity
 
@@ -40,8 +40,8 @@ COP_HP * W_dot_comp = Q_dot_cond
     Refrigerant$ = 'R134a'
 
     "Given conditions"
-    T_evap = 5        [C]     "Evaporator temperature"
-    T_cond = 40       [C]     "Condenser temperature"
+    T_evap = 5        [degC]     "Evaporator temperature"
+    T_cond = 40       [degC]     "Condenser temperature"
     eta_comp = 0.8             "Compressor isentropic efficiency"
     Q_dot_evap = 5     [kW]    "Cooling capacity"
 
